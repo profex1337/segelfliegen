@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kontakt | Segelflugplatz Altdorf</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header id="main-header"></header>
+
+    <div class="page-header" style="background-image: linear-gradient(135deg, rgba(15, 52, 96, 0.8), rgba(15, 52, 96, 0.6)), url('images/kontakt_hero.jpg');">
+        <div class="container">
+            <h1>Kontakt</h1>
+            <p>Wir freuen uns auf Ihre Nachricht!</p>
+        </div>
+    </div>
+
+    <main class="container section">
+        <div class="contact-grid">
+            
+            <div>
+                <h2>So erreichen Sie uns</h2>
+                <div class="content-block" style="padding: 30px; border-left: 5px solid var(--accent);">
+                    <h3 style="margin-top: 0;">Anschrift & Telefon</h3>
+                    <p>
+                        <strong>Segelflugplatz Altdorf-Hagenhausen</strong><br>
+                        Dan Mollenhauer (Vorstand)<br>
+                        Kastanienweg 6<br>
+                        92348 Berg
+                    </p>
+                    <p>
+                        📞 <a href="tel:+499189310" style="color: var(--primary); font-weight: bold;">09189 - 310</a><br>
+                        📧 <a href="mailto:info@segelfliegen-altdorf.de" style="color: var(--primary); font-weight: bold;">info@segelfliegen-altdorf.de</a>
+                    </p>
+                </div>
+                <div style="margin-top: 40px;">
+                    <h3>Anfahrt</h3>
+                    <iframe src="https://www.google.com/maps/embed/v1/place?key=AIzaSyAO0mVkwXL-qpHD-oI5syKSjgBHkTjl_B4&q=Segelflugplatz%20Altdorf-Hagenhausen%20Post-SV%20N%C3%BCrnberg%2C%20Hagenhausenerstr.%2011%2C%20Altdorf%20bei%20N%C3%BCrnberg%2C%20Deutschland&center=49.3899301,11.4267085&maptype=satellite&zoom=15&language=de" width="100%" height="300" style="border:0; border-radius: var(--radius); box-shadow: var(--shadow);" allowfullscreen="" loading="lazy"></iframe>
+                </div>
+            </div>
+
+            <div>
+                <h2>Schreiben Sie uns</h2>
+                <div class="content-block">
+                    <form action="senden.php" method="POST">
+                        <div class="form-group"><label for="name">Ihr Name *</label><input type="text" id="name" name="name" required placeholder="Max Mustermann"></div>
+                        <div class="form-group"><label for="email">E-Mail Adresse *</label><input type="email" id="email" name="email" required placeholder="beispiel@email.de"></div>
+                        <div class="form-group"><label for="telefon">Telefonnummer</label><input type="tel" id="telefon" name="telefon" placeholder="Für Rückfragen (optional)"></div>
+                        <div class="form-group">
+                            <label for="betreff">Betreff</label>
+                            <select id="betreff" name="betreff" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px;">
+                                <option value="Allgemein">Allgemeine Anfrage</option>
+                                <option value="Gutschein">Gutschein Bestellung</option>
+                                <option value="Ausbildung">Ausbildung / Mitgliedschaft</option>
+                                <option value="Event">Veranstaltung / Hallenfest</option>
+                            </select>
+                        </div>
+                        <div class="form-group"><label for="nachricht">Ihre Nachricht *</label><textarea id="nachricht" name="nachricht" rows="6" required placeholder="Wie können wir Ihnen helfen?"></textarea></div>
+                        <div class="form-group" style="display: flex; align-items: flex-start; gap: 10px;">
+                            <input type="checkbox" id="datenschutz" name="datenschutz" required style="width: auto; margin-top: 5px;">
+                            <label for="datenschutz" style="font-weight: normal; font-size: 0.85rem; color: var(--text-light);">Ich habe die <a href="datenschutz.html" target="_blank" style="text-decoration: underline;">Datenschutzerklärung</a> zur Kenntnis genommen.</label>
+                        </div>
+                        <button type="submit" class="btn" style="width: 100%;">Nachricht senden</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer id="main-footer"></footer>
+    <button id="btn-back-to-top" title="Nach oben">↑</button>
+    <script src="script.js"></script>
+</body>
+</html>

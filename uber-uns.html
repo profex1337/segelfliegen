@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Über uns | Segelflugplatz Altdorf</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Open+Sans:wght@400;600&family=Tangerine:wght@700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- ZENTRALER HEADER -->
+    <header id="main-header"></header>
+
+    <!-- Page Header -->
+    <div class="page-header" style="background-image: linear-gradient(135deg, rgba(15, 52, 96, 0.8), rgba(15, 52, 96, 0.6)), url('images/uber_uns_hero.jpg');">
+        <div class="container">
+            <h1>Über uns</h1>
+            <p>Die Gemeinschaft am Flugplatz Altdorf-Hagenhausen</p>
+        </div>
+    </div>
+
+    <main class="container section">
+        
+        <!-- TEIL 1: Willkommen -->
+        <div class="content-block" style="text-align: center;">
+            <h2>Willkommen auf dem Segelflugplatz Altdorf-Hagenhausen</h2>
+            
+            <!-- Abstand angepasst: margin-bottom statt <br> -->
+            <h3 style="font-family: 'Tangerine', cursive; font-size: 3rem; color: var(--accent); margin-top: -10px; margin-bottom: 15px;">Since 1966</h3>
+            
+            <p style="text-align: left;">
+                Wir besitzen eine Gras-Landebahn, die etwa 1km lang und 50m breit ist, zwei Hallen und eine Kantine, voll erschlossen mit Strom, Wasser und sanitären Anlagen. Die wunderschöne Umgebung lädt außerdem zu ausgiebigen Wanderungen oder Radtouren ein.
+            </p>
+            <p style="text-align: left;">
+                <strong>Erreichbarkeit:</strong> Telefonisch ist der Flugplatz zu den Betriebszeiten (meist März bis Oktober, Samstag und Sonntag) unter <a href="tel:09189310" style="color: var(--accent);">09189-310</a> erreichbar.
+            </p>
+            
+            <!-- Das Panorama Bild -->
+            <div style="margin-top: 30px;">
+                <img src="images/panorama.jpg" alt="Panorama Flugplatz" class="zoomable" style="border-radius: 12px; width: 100%; box-shadow: var(--shadow);" onerror="this.style.display='none'">
+            </div>
+        </div>
+
+        <!-- TEIL 2: Anfahrt (Auto) -->
+        <div class="content-block">
+            <h2>So finden Sie uns</h2>
+            <div class="contact-grid">
+                <div>
+                    <h3>🚗 Mit dem Auto</h3>
+                    <p>Fahren Sie auf der A3 in südlicher Richtung Regensburg. Die erste Ausfahrt nach dem Kreuz Altdorf (Oberölsbach) nehmen. Nach der Ausfahrt rechts abbiegen. Nach 200m kommt ein Kreisverkehr und ab da der Beschilderung "Flugplatz" folgen.</p>
+                    <p>Navigationssysteme kennen normalerweise den Flugplatz Altdorf-Hagenhausen als Sonderziel. Wenn nicht führt die Adresse <strong>"Hagenhausener Str in 92348 Berg"</strong> nahe ans Ziel; Wegweiser Flugplatz führen dann direkt zu uns.</p>
+                </div>
+                <div>
+                    <!-- Interaktive Google Maps Karte -->
+                    <iframe
+                        width="100%"
+                        height="350"
+                        style="border:0; border-radius: 12px; box-shadow: var(--shadow);"
+                        loading="lazy"
+                        allowfullscreen
+                        referrerpolicy="no-referrer-when-downgrade"
+                        src="https://www.google.com/maps/embed/v1/place?key=AIzaSyAO0mVkwXL-qpHD-oI5syKSjgBHkTjl_B4&q=Segelflugplatz%20Altdorf-Hagenhausen%20Post-SV%20N%C3%BCrnberg%2C%20Hagenhausenerstr.%2011%2C%20Altdorf%20bei%20N%C3%BCrnberg%2C%20Deutschland&center=49.3899301,11.4267085&maptype=satellite&zoom=15&language=de">
+                    </iframe>
+                </div>
+            </div>
+        </div>
+
+        <!-- TEIL 3: Für Piloten (Flugzeug) -->
+        <div class="content-block" style="border-left: 5px solid var(--primary);">
+            <h2>✈️ Für Piloten (PPR)</h2>
+            <p>Der Flugplatz liegt ca. 16 nM SE Nürnberg, oder 5 nM ESE Autobahnkreuz Altdorf.</p>
+            
+            <div class="card-grid" style="margin-top: 30px; text-align: left;">
+                <!-- Spalte 1: Daten -->
+                <div>
+                    <h3>Daten</h3>
+                    <ul class="data-list">
+                        <li>GPS Koordinaten: <strong>N49 23 13 / E11 25 19</strong></li>
+                        <li>Frequenz: <strong>129,975</strong></li>
+                        <li>Zulassung: <strong>Segelflugzeuge, Motorsegler und UL (PPR!)</strong></li>
+                        <li>Treibstoff: <strong>nur MoGAS in kleinen Mengen</strong></li>
+                    </ul>
+                </div>
+
+                <!-- Spalte 2: Piste -->
+                <div>
+                    <h3>Piste</h3>
+                    <ul class="data-list">
+                        <li>Landerichtung: <strong>05/23 Gras</strong></li>
+                        <li>Länge: <strong>550m, TORA 900m</strong></li>
+                        <li>Platzrunde Motor: <strong>2.500 ft, nördlich der Piste</strong></li>
+                        <li><span style="color: #d1344f;">Keine Ortschaften überfliegen!</span></li>
+                    </ul>
+                </div>
+
+                <!-- Spalte 3: Karte -->
+                <div>
+                    <h3>Anflugkarte</h3>
+                    <img src="images/anflugkarte.jpg" alt="Anflugkarte Skizze" class="zoomable" style="border: 1px solid #ddd; border-radius: 5px; cursor: pointer;" onclick="window.open(this.src)">
+                    <p style="font-size: 0.8rem; margin-top: 10px;">
+                        <span style="color: #ffd700;">●</span> Gelb: Platzrunde Motor<br>
+                        <span style="color: #d1344f;">●</span> Rot: Platzrunde Segel<br>
+                        <span style="color: #0f3460;">●</span> Blau: Hochspannungsleitung
+                    </p>
+                </div>
+            </div>
+
+            <div class="highlight-box">
+                <h4>⚠️ Zusatzinformationen & Warnhinweise</h4>
+                <ul style="margin: 0; padding-left: 20px;">
+                    <li><strong>Hochspannungsleitung</strong> östlich der Piste beachten!</li>
+                    <li>Bei Ostwind-Lagen oft <strong>starkes Lee</strong> bei Landung 05!</li>
+                    <li><strong>Buschgruppe</strong> ca. 50m vor der Schwelle Piste 05.</li>
+                    <li><strong>Modellflugplatz</strong> südlich des Gegenanfluges der Motor-Platzrunde - nicht unter 2.500 MSL und nicht näher an die Piste heran fliegen!</li>
+                    <li>Flugzeuge mit laufendem Motor vermeiden es bitte strikt, die Ortschaften zu überfliegen.</li>
+                </ul>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- ZENTRALER FOOTER -->
+    <footer id="main-footer"></footer>
+
+    <!-- Button "Nach oben" -->
+    <button id="btn-back-to-top" title="Nach oben">↑</button>
+
+    <!-- Lightbox Skript -->
+    <script src="script.js"></script>
+
+</body>
+</html>
