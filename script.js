@@ -33,7 +33,7 @@ const headerHTML = `
 
 const footerHTML = `
 <div class="container" style="text-align: center;">
-    <h4 style="color: white; margin-bottom: 15px;">Segelflugplatz Altdorf</h4>
+    <h4 style="color: white; margin-bottom: 15px;">Segelflieger im Post-SV Nürnberg e.V.</h4>
     <p style="color: #b0b0b0; line-height: 1.6;">
         <strong>Dan Mollenhauer</strong><br>
         Kastanienweg 6<br>
