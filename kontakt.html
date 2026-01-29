@@ -10,7 +10,7 @@
         /* Spezifische Styles für Kontaktseite */
         html { scroll-padding-top: 120px; scroll-behavior: smooth; }
         
-        /* --- FORMULAR STYLING (Identisch zu Mitfliegen) --- */
+        /* --- FORMULAR STYLING --- */
         
         /* Labels */
         .form-group label {
@@ -53,7 +53,7 @@
             min-height: 150px;
         }
 
-        /* Formular Grid System (NEU HINZUGEFÜGT) */
+        /* Formular Grid System */
         .form-responsive {
             display: grid;
             grid-template-columns: 1fr;
@@ -150,56 +150,55 @@
 
         <!-- UNTERER BEREICH: Formular (Volle Breite) -->
         <div class="content-block" style="border-top: 5px solid var(--primary);">
-            <div style="max-width: 800px; margin: 0 auto;">
-                <h2 style="text-align: center;">Schreiben Sie uns</h2>
-                <p style="text-align: center; color: var(--text-light); margin-bottom: 30px;">Haben Sie Fragen oder möchten Sie einen Gutschein bestellen?</p>
+            <!-- HIER WURDE DER WRAPPER (max-width: 800px) ENTFERNT -->
+            <h2 style="text-align: left; margin-bottom: 10px;">Schreiben Sie uns</h2>
+            <p style="text-align: left; color: var(--text-light); margin-bottom: 30px;">Haben Sie Fragen oder möchten Sie einen Gutschein bestellen?</p>
+            
+            <form action="https://formspree.io/f/meekadza" method="POST">
                 
-                <form action="https://formspree.io/f/meekadza" method="POST">
-                    
-                    <!-- Grid für Name & Email -->
-                    <div class="form-responsive">
-                        <div class="form-group">
-                            <label for="name">Ihr Name *</label>
-                            <input type="text" id="name" name="name" required placeholder="Max Mustermann">
-                        </div>
-                        <div class="form-group">
-                            <label for="email">E-Mail Adresse *</label>
-                            <input type="email" id="email" name="email" required placeholder="beispiel@email.de">
-                        </div>
+                <!-- Grid für Name & Email -->
+                <div class="form-responsive">
+                    <div class="form-group">
+                        <label for="name">Ihr Name *</label>
+                        <input type="text" id="name" name="name" required placeholder="Max Mustermann">
                     </div>
-                    
-                    <!-- Grid für Telefon & Betreff -->
-                    <div class="form-responsive" style="margin-top: 20px;">
-                        <div class="form-group">
-                            <label for="telefon">Telefonnummer</label>
-                            <input type="tel" id="telefon" name="telefon" placeholder="Für Rückfragen (optional)">
-                        </div>
-                        <div class="form-group">
-                            <label for="betreff">Betreff</label>
-                            <select id="betreff" name="betreff">
-                                <option value="Allgemein">Allgemeine Anfrage</option>
-                                <option value="Gutschein">Gutschein Bestellung</option>
-                                <option value="Ausbildung">Ausbildung / Mitgliedschaft</option>
-                                <option value="Event">Veranstaltung / Hallenfest</option>
-                            </select>
-                        </div>
+                    <div class="form-group">
+                        <label for="email">E-Mail Adresse *</label>
+                        <input type="email" id="email" name="email" required placeholder="beispiel@email.de">
                     </div>
-                    
-                    <div class="form-group" style="margin-top: 20px;">
-                        <label for="nachricht">Ihre Nachricht *</label>
-                        <textarea id="nachricht" name="message" rows="6" required placeholder="Wie können wir Ihnen helfen?"></textarea>
+                </div>
+                
+                <!-- Grid für Telefon & Betreff -->
+                <div class="form-responsive" style="margin-top: 20px;">
+                    <div class="form-group">
+                        <label for="telefon">Telefonnummer</label>
+                        <input type="tel" id="telefon" name="telefon" placeholder="Für Rückfragen (optional)">
                     </div>
-                    
-                    <div class="checkbox-wrapper">
-                        <input type="checkbox" id="datenschutz" name="datenschutz" required>
-                        <label for="datenschutz">Ich habe die <a href="datenschutz.html" target="_blank">Datenschutzerklärung</a> zur Kenntnis genommen.</label>
+                    <div class="form-group">
+                        <label for="betreff">Betreff</label>
+                        <select id="betreff" name="betreff">
+                            <option value="Allgemein">Allgemeine Anfrage</option>
+                            <option value="Gutschein">Gutschein Bestellung</option>
+                            <option value="Ausbildung">Ausbildung / Mitgliedschaft</option>
+                            <option value="Event">Veranstaltung / Hallenfest</option>
+                        </select>
                     </div>
-                    
-                    <div style="text-align: center; margin-top: 30px;">
-                        <button type="submit" class="btn" style="min-width: 250px;">Nachricht senden</button>
-                    </div>
-                </form>
-            </div>
+                </div>
+                
+                <div class="form-group" style="margin-top: 20px;">
+                    <label for="nachricht">Ihre Nachricht *</label>
+                    <textarea id="nachricht" name="message" rows="6" required placeholder="Wie können wir Ihnen helfen?"></textarea>
+                </div>
+                
+                <div class="checkbox-wrapper">
+                    <input type="checkbox" id="datenschutz" name="datenschutz" required>
+                    <label for="datenschutz">Ich habe die <a href="datenschutz.html" target="_blank">Datenschutzerklärung</a> zur Kenntnis genommen.</label>
+                </div>
+                
+                <div style="text-align: center; margin-top: 30px;">
+                    <button type="submit" class="btn" style="min-width: 250px;">Nachricht senden</button>
+                </div>
+            </form>
         </div>
     </main>
 
