@@ -44,10 +44,24 @@
             <div>
                 <h2>Schreiben Sie uns</h2>
                 <div class="content-block">
-                    <form action="senden.php" method="POST">
-                        <div class="form-group"><label for="name">Ihr Name *</label><input type="text" id="name" name="name" required placeholder="Max Mustermann"></div>
-                        <div class="form-group"><label for="email">E-Mail Adresse *</label><input type="email" id="email" name="email" required placeholder="beispiel@email.de"></div>
-                        <div class="form-group"><label for="telefon">Telefonnummer</label><input type="tel" id="telefon" name="telefon" placeholder="Für Rückfragen (optional)"></div>
+                    <!-- Formspree Link eingefügt -->
+                    <form action="https://formspree.io/f/meekadza" method="POST">
+                        
+                        <div class="form-group">
+                            <label for="name">Ihr Name *</label>
+                            <input type="text" id="name" name="name" required placeholder="Max Mustermann">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="email">E-Mail Adresse *</label>
+                            <input type="email" id="email" name="email" required placeholder="beispiel@email.de">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="telefon">Telefonnummer</label>
+                            <input type="tel" id="telefon" name="telefon" placeholder="Für Rückfragen (optional)">
+                        </div>
+                        
                         <div class="form-group">
                             <label for="betreff">Betreff</label>
                             <select id="betreff" name="betreff" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px;">
@@ -57,11 +71,17 @@
                                 <option value="Event">Veranstaltung / Hallenfest</option>
                             </select>
                         </div>
-                        <div class="form-group"><label for="nachricht">Ihre Nachricht *</label><textarea id="nachricht" name="nachricht" rows="6" required placeholder="Wie können wir Ihnen helfen?"></textarea></div>
+                        
+                        <div class="form-group">
+                            <label for="nachricht">Ihre Nachricht *</label>
+                            <textarea id="nachricht" name="message" rows="6" required placeholder="Wie können wir Ihnen helfen?"></textarea>
+                        </div>
+                        
                         <div class="form-group" style="display: flex; align-items: flex-start; gap: 10px;">
                             <input type="checkbox" id="datenschutz" name="datenschutz" required style="width: auto; margin-top: 5px;">
                             <label for="datenschutz" style="font-weight: normal; font-size: 0.85rem; color: var(--text-light);">Ich habe die <a href="datenschutz.html" target="_blank" style="text-decoration: underline;">Datenschutzerklärung</a> zur Kenntnis genommen.</label>
                         </div>
+                        
                         <button type="submit" class="btn" style="width: 100%;">Nachricht senden</button>
                     </form>
                 </div>
