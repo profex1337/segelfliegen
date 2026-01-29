@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="style.css">
     <style>
         /* Spezifische Styles für Kontaktseite */
+        html { scroll-padding-top: 120px; scroll-behavior: smooth; }
         
         /* --- FORMULAR STYLING (Identisch zu Mitfliegen) --- */
         
@@ -36,7 +37,7 @@
             appearance: none; /* Entfernt alte OS-Styles */
             -webkit-appearance: none;
             transition: border-color 0.3s, box-shadow 0.3s;
-            box-sizing: border-box; /* Garantiert, dass Padding nicht die Breite sprengt */
+            box-sizing: border-box; 
         }
 
         /* Fokus Effekt */
@@ -50,6 +51,18 @@
         textarea {
             resize: vertical;
             min-height: 150px;
+        }
+
+        /* Formular Grid System (NEU HINZUGEFÜGT) */
+        .form-responsive {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+        @media (min-width: 768px) {
+            .form-responsive {
+                grid-template-columns: 1fr 1fr;
+            }
         }
 
         /* Checkbox Container Styling */
@@ -83,19 +96,16 @@
             color: var(--text-light);
         }
 
-        /* Link in Checkbox Label */
         .checkbox-wrapper a {
             text-decoration: underline;
             color: var(--primary);
         }
 
-        /* Mobile Anpassungen für die Abstände */
+        /* Mobile Anpassungen */
         @media (max-width: 768px) {
             .contact-grid {
-                gap: 30px; /* Weniger Abstand zwischen den Blöcken mobil */
+                gap: 30px; 
             }
-            
-            /* Weniger Innenabstand auf kleinen Screens */
             .content-block {
                 padding: 25px !important; 
             }
@@ -113,51 +123,57 @@
     </div>
 
     <main class="container section">
-        <div class="contact-grid">
+        
+        <!-- OBERER BEREICH: Info & Karte (Nebeneinander) -->
+        <div class="contact-grid" style="margin-bottom: 40px;">
             
             <!-- Linke Spalte: Info -->
-            <div>
-                <h2>So erreichen Sie uns</h2>
-                <div class="content-block" style="padding: 30px; border-left: 5px solid var(--accent);">
-                    <h3 style="margin-top: 0;">Anschrift & Telefon</h3>
-                    <p>
-                        <strong>Segelflugplatz Altdorf-Hagenhausen</strong><br>
-                        Dan Mollenhauer (Vorstand)<br>
-                        Kastanienweg 6<br>
-                        92348 Berg
-                    </p>
-                    <p>
-                        📞 <a href="tel:+499189310" style="color: var(--primary); font-weight: bold;">09189 - 310</a><br>
-                        📧 <a href="mailto:info@segelfliegen-altdorf.de" style="color: var(--primary); font-weight: bold;">info@segelfliegen-altdorf.de</a>
-                    </p>
-                </div>
-                <div style="margin-top: 40px;">
-                    <h3>Anfahrt</h3>
-                    <iframe src="https://www.google.com/maps/embed/v1/place?key=AIzaSyAO0mVkwXL-qpHD-oI5syKSjgBHkTjl_B4&q=Segelflugplatz%20Altdorf-Hagenhausen%20Post-SV%20N%C3%BCrnberg%2C%20Hagenhausenerstr.%2011%2C%20Altdorf%20bei%20N%C3%BCrnberg%2C%20Deutschland&center=49.3899301,11.4267085&maptype=satellite&zoom=15&language=de" width="100%" height="300" style="border:0; border-radius: var(--radius); box-shadow: var(--shadow);" allowfullscreen="" loading="lazy"></iframe>
-                </div>
+            <div class="content-block" style="border-left: 5px solid var(--accent); height: 100%; display: flex; flex-direction: column; justify-content: center;">
+                <h2 style="margin-top: 0;">Anschrift & Telefon</h2>
+                <p>
+                    <strong>Segelflugplatz Altdorf-Hagenhausen</strong><br>
+                    Dan Mollenhauer (Vorstand)<br>
+                    Kastanienweg 6<br>
+                    92348 Berg
+                </p>
+                <p style="margin-bottom: 0;">
+                    📞 <a href="tel:+499189310" style="color: var(--primary); font-weight: bold;">09189 - 310</a><br>
+                    📧 <a href="mailto:info@segelfliegen-altdorf.de" style="color: var(--primary); font-weight: bold;">info@segelfliegen-altdorf.de</a>
+                </p>
             </div>
 
-            <!-- Rechte Spalte: Formular -->
-            <div>
-                <h2>Schreiben Sie uns</h2>
-                <div class="content-block">
-                    <form action="https://formspree.io/f/meekadza" method="POST">
-                        
+            <!-- Rechte Spalte: Karte -->
+            <div class="content-block" style="padding: 10px; height: 100%; min-height: 300px;">
+                <iframe src="https://www.google.com/maps/embed/v1/place?key=AIzaSyAO0mVkwXL-qpHD-oI5syKSjgBHkTjl_B4&q=Segelflugplatz%20Altdorf-Hagenhausen%20Post-SV%20N%C3%BCrnberg%2C%20Hagenhausenerstr.%2011%2C%20Altdorf%20bei%20N%C3%BCrnberg%2C%20Deutschland&center=49.3899301,11.4267085&maptype=satellite&zoom=15&language=de" width="100%" height="100%" style="border:0; border-radius: 8px; min-height: 250px;" allowfullscreen="" loading="lazy"></iframe>
+            </div>
+        </div>
+
+        <!-- UNTERER BEREICH: Formular (Volle Breite) -->
+        <div class="content-block" style="border-top: 5px solid var(--primary);">
+            <div style="max-width: 800px; margin: 0 auto;">
+                <h2 style="text-align: center;">Schreiben Sie uns</h2>
+                <p style="text-align: center; color: var(--text-light); margin-bottom: 30px;">Haben Sie Fragen oder möchten Sie einen Gutschein bestellen?</p>
+                
+                <form action="https://formspree.io/f/meekadza" method="POST">
+                    
+                    <!-- Grid für Name & Email -->
+                    <div class="form-responsive">
                         <div class="form-group">
                             <label for="name">Ihr Name *</label>
                             <input type="text" id="name" name="name" required placeholder="Max Mustermann">
                         </div>
-                        
                         <div class="form-group">
                             <label for="email">E-Mail Adresse *</label>
                             <input type="email" id="email" name="email" required placeholder="beispiel@email.de">
                         </div>
-                        
+                    </div>
+                    
+                    <!-- Grid für Telefon & Betreff -->
+                    <div class="form-responsive" style="margin-top: 20px;">
                         <div class="form-group">
                             <label for="telefon">Telefonnummer</label>
                             <input type="tel" id="telefon" name="telefon" placeholder="Für Rückfragen (optional)">
                         </div>
-                        
                         <div class="form-group">
                             <label for="betreff">Betreff</label>
                             <select id="betreff" name="betreff">
@@ -167,21 +183,22 @@
                                 <option value="Event">Veranstaltung / Hallenfest</option>
                             </select>
                         </div>
-                        
-                        <div class="form-group">
-                            <label for="nachricht">Ihre Nachricht *</label>
-                            <textarea id="nachricht" name="message" rows="6" required placeholder="Wie können wir Ihnen helfen?"></textarea>
-                        </div>
-                        
-                        <!-- Checkbox Wrapper (angepasst an neues Design) -->
-                        <div class="checkbox-wrapper">
-                            <input type="checkbox" id="datenschutz" name="datenschutz" required>
-                            <label for="datenschutz">Ich habe die <a href="datenschutz.html" target="_blank">Datenschutzerklärung</a> zur Kenntnis genommen.</label>
-                        </div>
-                        
-                        <button type="submit" class="btn" style="width: 100%; margin-top: 10px;">Nachricht senden</button>
-                    </form>
-                </div>
+                    </div>
+                    
+                    <div class="form-group" style="margin-top: 20px;">
+                        <label for="nachricht">Ihre Nachricht *</label>
+                        <textarea id="nachricht" name="message" rows="6" required placeholder="Wie können wir Ihnen helfen?"></textarea>
+                    </div>
+                    
+                    <div class="checkbox-wrapper">
+                        <input type="checkbox" id="datenschutz" name="datenschutz" required>
+                        <label for="datenschutz">Ich habe die <a href="datenschutz.html" target="_blank">Datenschutzerklärung</a> zur Kenntnis genommen.</label>
+                    </div>
+                    
+                    <div style="text-align: center; margin-top: 30px;">
+                        <button type="submit" class="btn" style="min-width: 250px;">Nachricht senden</button>
+                    </div>
+                </form>
             </div>
         </div>
     </main>
