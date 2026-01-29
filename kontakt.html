@@ -6,6 +6,101 @@
     <title>Kontakt | Segelflugplatz Altdorf</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
+    <style>
+        /* Spezifische Styles für Kontaktseite */
+        
+        /* --- FORMULAR STYLING (Identisch zu Mitfliegen) --- */
+        
+        /* Labels */
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: var(--text-main);
+        }
+
+        /* Eingabefelder (Modern & Touch-freundlich) */
+        input[type="text"],
+        input[type="email"],
+        input[type="tel"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 12px 15px; /* Angenehmes Padding */
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #fff;
+            font-family: inherit;
+            font-size: 16px; /* WICHTIG: 16px verhindert Auto-Zoom auf iOS */
+            appearance: none; /* Entfernt alte OS-Styles */
+            -webkit-appearance: none;
+            transition: border-color 0.3s, box-shadow 0.3s;
+            box-sizing: border-box; /* Garantiert, dass Padding nicht die Breite sprengt */
+        }
+
+        /* Fokus Effekt */
+        input:focus, textarea:focus, select:focus {
+            border-color: var(--primary);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(15, 52, 96, 0.1);
+        }
+
+        /* Textarea Resizing */
+        textarea {
+            resize: vertical;
+            min-height: 150px;
+        }
+
+        /* Checkbox Container Styling */
+        .checkbox-wrapper {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            border: 1px solid #eee;
+        }
+
+        .checkbox-wrapper input[type="checkbox"] {
+            width: 22px;
+            height: 22px;
+            margin-top: 2px;
+            flex-shrink: 0; 
+            cursor: pointer;
+            -webkit-appearance: checkbox; 
+            appearance: checkbox;
+        }
+
+        .checkbox-wrapper label {
+            font-weight: normal;
+            font-size: 0.85rem;
+            margin: 0;
+            line-height: 1.5;
+            cursor: pointer;
+            color: var(--text-light);
+        }
+
+        /* Link in Checkbox Label */
+        .checkbox-wrapper a {
+            text-decoration: underline;
+            color: var(--primary);
+        }
+
+        /* Mobile Anpassungen für die Abstände */
+        @media (max-width: 768px) {
+            .contact-grid {
+                gap: 30px; /* Weniger Abstand zwischen den Blöcken mobil */
+            }
+            
+            /* Weniger Innenabstand auf kleinen Screens */
+            .content-block {
+                padding: 25px !important; 
+            }
+        }
+    </style>
 </head>
 <body>
     <header id="main-header"></header>
@@ -20,6 +115,7 @@
     <main class="container section">
         <div class="contact-grid">
             
+            <!-- Linke Spalte: Info -->
             <div>
                 <h2>So erreichen Sie uns</h2>
                 <div class="content-block" style="padding: 30px; border-left: 5px solid var(--accent);">
@@ -41,10 +137,10 @@
                 </div>
             </div>
 
+            <!-- Rechte Spalte: Formular -->
             <div>
                 <h2>Schreiben Sie uns</h2>
                 <div class="content-block">
-                    <!-- Formspree Link eingefügt -->
                     <form action="https://formspree.io/f/meekadza" method="POST">
                         
                         <div class="form-group">
@@ -64,7 +160,7 @@
                         
                         <div class="form-group">
                             <label for="betreff">Betreff</label>
-                            <select id="betreff" name="betreff" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px;">
+                            <select id="betreff" name="betreff">
                                 <option value="Allgemein">Allgemeine Anfrage</option>
                                 <option value="Gutschein">Gutschein Bestellung</option>
                                 <option value="Ausbildung">Ausbildung / Mitgliedschaft</option>
@@ -77,12 +173,13 @@
                             <textarea id="nachricht" name="message" rows="6" required placeholder="Wie können wir Ihnen helfen?"></textarea>
                         </div>
                         
-                        <div class="form-group" style="display: flex; align-items: flex-start; gap: 10px;">
-                            <input type="checkbox" id="datenschutz" name="datenschutz" required style="width: auto; margin-top: 5px;">
-                            <label for="datenschutz" style="font-weight: normal; font-size: 0.85rem; color: var(--text-light);">Ich habe die <a href="datenschutz.html" target="_blank" style="text-decoration: underline;">Datenschutzerklärung</a> zur Kenntnis genommen.</label>
+                        <!-- Checkbox Wrapper (angepasst an neues Design) -->
+                        <div class="checkbox-wrapper">
+                            <input type="checkbox" id="datenschutz" name="datenschutz" required>
+                            <label for="datenschutz">Ich habe die <a href="datenschutz.html" target="_blank">Datenschutzerklärung</a> zur Kenntnis genommen.</label>
                         </div>
                         
-                        <button type="submit" class="btn" style="width: 100%;">Nachricht senden</button>
+                        <button type="submit" class="btn" style="width: 100%; margin-top: 10px;">Nachricht senden</button>
                     </form>
                 </div>
             </div>
