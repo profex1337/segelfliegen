@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Veranstaltungen | Segelflugplatz Altdorf</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .event-date { background-color: var(--accent); color: white; padding: 5px 15px; border-radius: 50px; font-weight: bold; font-size: 0.9rem; display: inline-block; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(233, 69, 96, 0.3); }
+        .news-wrapper.reverse { direction: rtl; }
+        .news-wrapper.reverse > div { direction: ltr; }
+        @media (max-width: 991px) { .news-wrapper.reverse { direction: ltr; } }
+        .video-container video { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; border-radius: var(--radius); }
+    </style>
+</head>
+<body>
+    <header id="main-header"></header>
+
+    <div class="page-header" style="background-image: linear-gradient(135deg, rgba(15, 52, 96, 0.8), rgba(15, 52, 96, 0.6)), url('images/veranstaltungen_hero.jpg');">
+        <div class="container">
+            <h1>Veranstaltungen</h1>
+            <p>Gemeinschaft, Feste und Fliegerlager</p>
+        </div>
+    </div>
+
+    <main class="container section">
+
+        <div class="category-nav">
+            <a href="#Feier" class="btn-cat">Feiern & Events</a>
+            <a href="#Hallenfest" class="btn-cat">Hallenfest</a>
+            <a href="#VGC2025" class="btn-cat">VGC 2025</a>
+            <a href="#VGC2022" class="btn-cat">VGC 2022</a>
+        </div>
+
+        <div class="content-block" id="Feier">
+            <div class="news-wrapper">
+                <div>
+                    <h2>Machen Sie Ihre Feier zu einem Erlebnis!</h2>
+                    <h3 style="color: var(--text-light); font-size: 1.1rem; margin-top: -10px; margin-bottom: 20px;">Ob Firmenveranstaltung, Geburtstag oder Action Event</h3>
+                    <p>Der Segelflugplatz bietet für jeden etwas! Wir stellen Ihnen gerne unsere Location und Möglichkeiten zur Verfügung.</p>
+                    <ul class="data-list">
+                        <li><strong>Gastflüge</strong> im Segelflugzeug oder mit Motor</li>
+                        <li>Gemütliche <strong>Grillabende</strong> auf unserem XXL Grill</li>
+                        <li>Entspannen am <strong>Lagerfeuer</strong></li>
+                    </ul>
+                    <a href="kontakt.html" class="btn" style="margin-top: 10px;">Kontaktieren Sie uns!</a>
+                </div>
+                <div class="image-wrapper"><img src="images/feier.jpg" alt="Feier am Flugplatz" class="zoomable" onerror="this.src='images/hero.jpg'"></div>
+            </div>
+        </div>
+
+        <div class="content-block" id="Hallenfest" style="margin-top: 60px;">
+            <div class="news-wrapper reverse">
+                <div>
+                    <span class="event-date">Jedes Jahr im September</span>
+                    <h2>Das Hallenfest</h2>
+                    <h3 style="color: var(--text-light); font-size: 1.2rem;">Partystimmung in unserem großen Flugplatzhangar</h3>
+                    <p>Unser legendäres Hallenfest ist der Fixpunkt im Jahreskalender. Wir räumen die Flugzeuge aus der Halle und verwandeln den Hangar in eine Festhalle mit besonderem Flair.</p>
+                </div>
+                <div>
+                    <div class="slideshow-container" id="slideshow-hallenfest">
+                        <div class="mySlides fade"><img src="images/hallenfest/1.jpg" class="zoomable" onerror="this.parentElement.style.display='none'"></div>
+                        <div class="mySlides fade"><img src="images/hallenfest/2.jpg" class="zoomable" onerror="this.parentElement.style.display='none'"></div>
+                        <div class="mySlides fade"><img src="images/hallenfest/3.jpg" class="zoomable" onerror="this.parentElement.style.display='none'"></div>
+                        <div class="mySlides fade"><img src="images/hallenfest/4.jpg" class="zoomable" onerror="this.parentElement.style.display='none'"></div>
+                        <div class="mySlides fade"><img src="images/hallenfest/5.jpg" class="zoomable" onerror="this.parentElement.style.display='none'"></div>
+                        <div class="mySlides fade"><img src="images/hallenfest/6.jpg" class="zoomable" onerror="this.parentElement.style.display='none'"></div>
+                        <div class="mySlides fade"><img src="images/hallenfest/7.jpg" class="zoomable" onerror="this.parentElement.style.display='none'"></div>
+                        <div class="mySlides fade"><img src="images/hallenfest/8.jpg" class="zoomable" onerror="this.parentElement.style.display='none'"></div>
+                        <div class="mySlides fade"><img src="images/hallenfest/9.jpg" class="zoomable" onerror="this.parentElement.style.display='none'"></div>
+                        <div class="mySlides fade"><img src="images/hallenfest/10.jpg" class="zoomable" onerror="this.parentElement.style.display='none'"></div>
+                        <a class="prev">&#10094;</a><a class="next">&#10095;</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="content-block" id="VGC2025" style="margin-top: 60px;">
+            <div class="news-wrapper">
+                <div>
+                    <span class="event-date">01.05. - 04.05.2025</span>
+                    <h2>Vintage Glider Club (VGC) 2025</h2>
+                    <p><strong>Ein voller Erfolg!</strong> 23 Pilotinnen und Piloten waren zu Gast. Ein Highlight war der <strong>Habicht</strong> vom OSC Wasserkuppe.</p>
+                    <div class="highlight-box">
+                        <strong>Statistik:</strong> 139 Starts, 61:46 Flugstunden, Basis bis 3.000 Meter!
+                    </div>
+                </div>
+                <div>
+                     <div class="slideshow-container" id="slideshow-vgc2025">
+                        <div class="mySlides fade"><img src="images/vgc2025/1.jpg" class="zoomable" onerror="this.parentElement.style.display='none'"></div>
+                        <div class="mySlides fade"><img src="images/vgc2025/2.jpg" class="zoomable" onerror="this.parentElement.style.display='none'"></div>
+                        <div class="mySlides fade"><img src="images/vgc2025/3.jpg" class="zoomable" onerror="this.parentElement.style.display='none'"></div>
+                        <div class="mySlides fade"><img src="images/vgc2025/4.jpg" class="zoomable" onerror="this.parentElement.style.display='none'"></div>
+                        <div class="mySlides fade"><img src="images/vgc2025/5.jpg" class="zoomable" onerror="this.parentElement.style.display='none'"></div>
+                        <div class="mySlides fade"><img src="images/vgc2025/6.jpg" class="zoomable" onerror="this.parentElement.style.display='none'"></div>
+                        <div class="mySlides fade"><img src="images/vgc2025/7.jpg" class="zoomable" onerror="this.parentElement.style.display='none'"></div>
+                        <div class="mySlides fade"><img src="images/vgc2025/8.jpg" class="zoomable" onerror="this.parentElement.style.display='none'"></div>
+                        <div class="mySlides fade"><img src="images/vgc2025/9.jpg" class="zoomable" onerror="this.parentElement.style.display='none'"></div>
+                        <div class="mySlides fade"><img src="images/vgc2025/10.jpg" class="zoomable" onerror="this.parentElement.style.display='none'"></div>
+                        <a class="prev">&#10094;</a><a class="next">&#10095;</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="content-block" id="VGC2022" style="margin-top: 60px;">
+            <div class="news-wrapper reverse">
+                <div>
+                    <span class="event-date">Rückblick 2022</span>
+                    <h2>VGC Saisoneröffnung 2022</h2>
+                    <p>29 Piloten folgten der Einladung. Ein bunter Flugzeugpark von Oldtimern war vertreten. Kulinarisch wurden alle verwöhnt mit Schäufele und Rinderrouladen.</p>
+                </div>
+                <div>
+                    <div class="slideshow-container" id="slideshow-vgc2022">
+                        <div class="mySlides fade"><img src="images/vgc2022/1.jpg" class="zoomable" onerror="this.parentElement.style.display='none'"></div>
+                        <div class="mySlides fade"><img src="images/vgc2022/2.jpg" class="zoomable" onerror="this.parentElement.style.display='none'"></div>
+                        <div class="mySlides fade"><img src="images/vgc2022/3.jpg" class="zoomable" onerror="this.parentElement.style.display='none'"></div>
+                        <div class="mySlides fade"><img src="images/vgc2022/4.jpg" class="zoomable" onerror="this.parentElement.style.display='none'"></div>
+                        <div class="mySlides fade"><img src="images/vgc2022/5.jpg" class="zoomable" onerror="this.parentElement.style.display='none'"></div>
+                        <div class="mySlides fade"><img src="images/vgc2022/6.jpg" class="zoomable" onerror="this.parentElement.style.display='none'"></div>
+                        <div class="mySlides fade"><img src="images/vgc2022/7.jpg" class="zoomable" onerror="this.parentElement.style.display='none'"></div>
+                        <div class="mySlides fade"><img src="images/vgc2022/8.jpg" class="zoomable" onerror="this.parentElement.style.display='none'"></div>
+                        <div class="mySlides fade"><img src="images/vgc2022/9.jpg" class="zoomable" onerror="this.parentElement.style.display='none'"></div>
+                        <div class="mySlides fade"><img src="images/vgc2022/10.jpg" class="zoomable" onerror="this.parentElement.style.display='none'"></div>
+                        <a class="prev">&#10094;</a><a class="next">&#10095;</a>
+                    </div>
+                    <div class="video-container" style="margin-top: 20px;">
+                        <video controls preload="metadata" poster="images/vgc2022/1.jpg">
+                            <source src="videos/vgc2022.mp4" type="video/mp4">
+                            Ihr Browser kann dieses Video nicht wiedergeben.
+                        </video>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer id="main-footer"></footer>
+    <button id="btn-back-to-top" title="Nach oben">↑</button>
+    <script src="script.js"></script>
+</body>
+</html>

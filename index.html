@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Segelflugplatz Altdorf-Hagenhausen | Faszination Fliegen</title>
+    <meta name="description" content="Erleben Sie Segelfliegen und Motorflug im Großraum Nürnberg. Ausbildung, Gastflüge und Events am Flugplatz Altdorf.">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+
+    <style>
+        .hero {
+            position: relative;
+            overflow: hidden;
+            background-color: var(--primary);
+        }
+        .hero-video {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            object-fit: cover; z-index: 0;
+        }
+        .hero-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 52, 96, 0.5); z-index: 1;
+        }
+        .hero-content {
+            position: relative; z-index: 2;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ZENTRALER HEADER (Wird durch script.js gefüllt) -->
+    <!-- WICHTIG: id="main-header" darf nicht fehlen! -->
+    <header id="main-header"></header>
+
+    <!-- Hero Bereich -->
+    <section class="hero">
+        <video class="hero-video" autoplay muted loop playsinline poster="images/hero.jpg">
+            <source src="videos/hero.mp4" type="video/mp4">
+        </video>
+        <div class="hero-overlay"></div>
+
+        <div class="hero-content">
+            <h1>Erleben Sie die Faszination des Fliegens hautnah!</h1>
+            <p style="font-size: 1.5rem; font-weight: bold; margin-bottom: 20px; color: #fff;">Ihr Ziel für unvergessliche Flugerlebnisse</p>
+            <p>Gastflüge im Motor- oder Segelflugzeug<br>Professionelle Flugausbildung mit engagierten Fluglehrern</p>
+            
+            <!-- ANPASSUNG: Weniger Abstand oben (15px), Mehr Abstand unten (40px) -->
+            <div style="margin-top: 15px; margin-bottom: 40px; background: rgba(0,0,0,0.3); padding: 15px; border-radius: 8px; display: inline-block; backdrop-filter: blur(5px);">
+                <p style="margin: 0;"><strong>Kommen Sie am Wochenende vorbei!</strong><br>Für kühle Getränke und Kaffee + Kuchen ist in den Sommermonaten immer gesorgt!</p>
+            </div>
+            <br>
+            <a href="kontakt.html" class="btn">Kontaktieren Sie uns!</a>
+        </div>
+    </section>
+
+    <!-- Neuigkeiten -->
+    <section class="section container">
+        <div class="section-title">
+            <h2>
+                Neuigkeiten 
+                <!-- Der Login Button (klein & unscheinbar) -->
+                <span id="admin-toggle" class="admin-login-link" title="Mitarbeiter Login">🔒 Admin</span>
+            </h2>
+            <p>Aktuelles vom Flugplatz Altdorf-Hagenhausen</p>
+        </div>
+
+        <div class="news-wrapper">
+            <div class="news-list">
+                
+                <!-- ADMIN PANEL (Versteckt, erscheint nach Login) -->
+                <div id="admin-panel" class="admin-panel">
+                    <h3>📝 Neue Nachricht verfassen</h3>
+                    <form id="news-form" class="news-form">
+                        <input type="text" id="news-title" placeholder="Titel der Nachricht" required>
+                        <input type="text" id="news-date" placeholder="Datum (z.B. 15.09.2026)" required>
+                        <textarea id="news-text" rows="4" placeholder="Ihr Text..." required></textarea>
+                        <button type="submit" class="btn">Veröffentlichen</button>
+                    </form>
+                </div>
+
+                <!-- Hier werden die News von JS eingefügt -->
+                <div id="dynamic-news-list">
+                    <p style="text-align:center; color:#999;">Lade Neuigkeiten...</p>
+                </div>
+
+            </div>
+            
+            <div class="news-image-container">
+                <img src="images/news.jpg" alt="Aktuelles Bild vom Flugplatz" class="zoomable" onerror="this.style.display='none'">
+            </div>
+        </div>
+    </section>
+
+    <!-- Angebote -->
+    <section class="section bg-grey">
+        <div class="container">
+            <div class="section-title">
+                <h2>Ihr Segelflugplatz im Großraum Nürnberg</h2>
+                <p>Fliegen Sie mit uns!</p>
+            </div>
+
+            <div class="card-grid">
+                <div class="card">
+                    <div class="card-img-top">
+                        <a href="ausbildung.html"><img src="images/ausbildung.jpg" alt="Ausbildung" onerror="this.src='images/hero.jpg'"></a>
+                    </div>
+                    <div class="card-body">
+                        <h3 class="card-title">Ausbildung</h3>
+                        <p class="card-text">Ausbildung im Segelflug mit professionellen Lehrern und modernster Technik. Schon ab dem 14. Lebensjahr!</p>
+                        <a href="ausbildung.html" class="card-link">Mehr erfahren →</a>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-img-top">
+                        <a href="mitfliegen.html"><img src="images/mitfliegen.jpg" alt="Mitfliegen" onerror="this.src='images/hero.jpg'"></a>
+                    </div>
+                    <div class="card-body">
+                        <h3 class="card-title">Mitfliegen</h3>
+                        <p class="card-text">Gönnen Sie sich einen spektakulären Rundflug mit oder ohne Motor. Unsere erfahrenen Piloten stehen für Sie bereit.</p>
+                        <a href="mitfliegen.html" class="card-link">Preise & Infos →</a>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-img-top">
+                        <a href="veranstaltungen.html"><img src="images/veranstaltungen.jpg" alt="Veranstaltungen" onerror="this.src='images/hero.jpg'"></a>
+                    </div>
+                    <div class="card-body">
+                        <h3 class="card-title">Veranstaltungen</h3>
+                        <p class="card-text">Firmenfeste oder Geburtstage der besonderen Art? Wir beraten Sie gerne!</p>
+                        <a href="veranstaltungen.html" class="card-link">Anfrage stellen →</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ZENTRALER FOOTER (Wird durch script.js gefüllt) -->
+    <footer id="main-footer"></footer>
+    
+    <!-- Button "Nach oben" -->
+    <button id="btn-back-to-top" title="Nach oben">↑</button>
+
+    <!-- 1. BASICS & LAYOUT (Lädt immer!) -->
+    <script src="script.js"></script>
+
+    <!-- 2. DATENBANK (Kann fehlschlagen, ohne die Seite zu töten) -->
+    <script type="module" src="news-db.js"></script>
+
+</body>
+</html>

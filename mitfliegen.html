@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mitfliegen & Gutscheine | Segelflugplatz Altdorf</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .video-container { position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: var(--radius); box-shadow: var(--shadow); background: #000; margin-bottom: 20px; }
+        .video-container iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; }
+        .video-fallback-link { display: block; text-align: right; font-size: 0.8rem; color: var(--text-light); margin-bottom: 20px; }
+        .video-fallback-link:hover { color: var(--accent); text-decoration: underline; }
+        html { scroll-padding-top: 120px; scroll-behavior: smooth; }
+    </style>
+</head>
+<body>
+    <header id="main-header"></header>
+
+    <div class="page-header" style="background-image: linear-gradient(135deg, rgba(15, 52, 96, 0.8), rgba(15, 52, 96, 0.6)), url('images/mitfliegen_hero.jpg');">
+        <div class="container">
+            <h1>Nutzen Sie die Gelegenheit!</h1>
+            <p>Gutscheine und Gastflüge</p>
+        </div>
+    </div>
+
+    <main class="container section">
+        <div class="category-nav">
+            <a href="#Segelflug" class="btn-cat">Segelflug</a>
+            <a href="#Kunstflug" class="btn-cat">Kunstflug</a>
+            <a href="#Motorflug" class="btn-cat">Motorflug</a>
+            <a href="#Gutscheine" class="btn-cat">Gutscheine</a>
+            <a href="#Anfrage" class="btn-cat" style="background-color: var(--accent); border-color: var(--accent); color: white;">Anfrage</a>
+        </div>
+
+        <div class="content-block" id="Segelflug">
+            <div class="news-wrapper">
+                <div>
+                    <h2>Segelflug</h2>
+                    <p>Im Doppelsitzer mit der Seilwinde auf ca. 450m Höhe geschleppt werden. Von dort aus gleiten wir lautlos über die Landschaft und nutzen die Thermik, um Höhe zu gewinnen.</p>
+                </div>
+                <div>
+                    <div class="video-container"><iframe src="https://www.youtube.com/embed/DzY6mGzRw9I?rel=0" title="Segelflug Video" allowfullscreen></iframe></div>
+                    <a href="https://www.youtube.com/watch?v=DzY6mGzRw9I" target="_blank" class="video-fallback-link">Video auf YouTube ansehen ↗</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="content-block" id="Kunstflug">
+            <div class="news-wrapper">
+                 <div>
+                    <div class="video-container"><iframe src="https://www.youtube.com/embed/8khhMEq7YEY?rel=0" title="Kunstflug Video" allowfullscreen></iframe></div>
+                    <a href="https://www.youtube.com/watch?v=8khhMEq7YEY" target="_blank" class="video-fallback-link">Video auf YouTube ansehen ↗</a>
+                 </div>
+                <div>
+                    <h2>Kunstflug</h2>
+                    <h3 style="color: var(--accent);">Achterbahn Feeling pur</h3>
+                    <p>Für die Mutigen bieten wir Kunstflug im Segelflugzeug an. Looping, Rolle, Turn – erleben Sie die Welt kopfstehend. Adrenalin garantiert!</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="content-block" id="Motorflug">
+            <div class="news-wrapper">
+                <div>
+                    <h2>Motorsegler / Rundflug</h2>
+                    <p>Mit unserem Motorsegler sind wir unabhängig von der Thermik. Perfekt, um das eigene Haus von oben zu sehen oder einen Ausflug in die Fränkische Schweiz zu machen.</p>
+                </div>
+                <div>
+                    <div class="video-container"><iframe src="https://www.youtube.com/embed/s67HR0Hc2Ac?rel=0" title="Motorflug Video" allowfullscreen></iframe></div>
+                    <a href="https://www.youtube.com/watch?v=s67HR0Hc2Ac" target="_blank" class="video-fallback-link">Video auf YouTube ansehen ↗</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="content-block" id="Gutscheine" style="background-color: #f0f4f8; border-left: 5px solid var(--primary);">
+            <h2>🎁 Gutscheine verschenken</h2>
+            <p>Schenken Sie unvergessliche Momente! <strong>Wann fliegen wir?</strong> Zwischen April und Oktober an Wochenenden und Feiertagen. <br>
+            Zum Einlösen eines Gutscheins bitte am Wunschtermin ab 9 Uhr unter <a href="tel:09189310">09189 / 310</a> anrufen.</p>
+        </div>
+
+        <div class="content-block" id="Anfrage">
+            <h2 style="text-align: center; margin-bottom: 40px;">Flug- oder Gutschein-Anfrage</h2>
+            <form action="senden.php" method="POST" class="contact-grid" style="grid-template-columns: 1fr; max-width: 800px; margin: 0 auto;">
+                <div class="form-group">
+                    <label for="name">Ihr Name *</label>
+                    <input type="text" id="name" name="name" required placeholder="Max Mustermann">
+                </div>
+                <div class="form-group">
+                    <label for="flugtyp">Interesse an (Motor-, Kunst- oder Segelflug) *</label>
+                    <input type="text" id="flugtyp" name="flugtyp" required placeholder="z.B. Rundflug Motorsegler">
+                </div>
+                <div class="form-group">
+                    <label for="telefon">Telefonnummer</label>
+                    <input type="tel" id="telefon" name="telefon" placeholder="Für Rückfragen">
+                </div>
+                <div class="form-group">
+                    <label for="email">E-Mail Adresse *</label>
+                    <input type="email" id="email" name="email" required placeholder="beispiel@email.de">
+                </div>
+                <div class="form-group">
+                    <label for="nachricht">Zusätzliche Wünsche / Nachricht</label>
+                    <textarea id="nachricht" name="nachricht" rows="5" placeholder="Haben Sie einen Wunschtermin oder spezielle Fragen?"></textarea>
+                </div>
+                <div class="form-group" style="display: flex; align-items: flex-start; gap: 10px;">
+                    <input type="checkbox" id="datenschutz" name="datenschutz" required style="width: auto; margin-top: 5px;">
+                    <label for="datenschutz" style="font-weight: normal; font-size: 0.9rem;">Ich bin damit einverstanden, dass diese Daten zum Zweck der Kontaktaufnahme gespeichert werden.*</label>
+                </div>
+                <div style="text-align: center;">
+                    <button type="submit" class="btn">Anfrage abschicken</button>
+                </div>
+            </form>
+        </div>
+    </main>
+
+    <footer id="main-footer"></footer>
+    <button id="btn-back-to-top" title="Nach oben">↑</button>
+    <script src="script.js"></script>
+</body>
+</html>
