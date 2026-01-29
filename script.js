@@ -1,9 +1,8 @@
 /* ---------------------------------------------------------------------------------------
-   SCRIPT.JS - ZENTRALE STEUERUNG FÜR HEADER, FOOTER & UI
+   SCRIPT.JS - ZENTRALE STEUERUNG FÜR HEADER, FOOTER, UI & FAVICON
 --------------------------------------------------------------------------------------- */
 
 // 1. HEADER & FOOTER HTML TEMPLATES
-// Hier wurde der Burger-Button und die IDs hinzugefügt
 const headerHTML = `
 <div class="container header-inner">
     <div class="logo">
@@ -12,7 +11,6 @@ const headerHTML = `
         </a>
     </div>
 
-    <!-- BURGER BUTTON (NEU) -->
     <div class="hamburger" id="hamburger-btn">
         <span></span>
         <span></span>
@@ -55,12 +53,14 @@ const footerHTML = `
 // 2. HAUPT-INITIALISIERUNG
 document.addEventListener('DOMContentLoaded', () => {
     
+    // --- Favicon automatisch einfügen ---
+    initFavicon();
+
     // --- Header einfügen ---
     const headerElement = document.getElementById('main-header');
     if (headerElement) {
         headerElement.innerHTML = headerHTML;
         
-        // Aktiven Link markieren
         const currentPage = window.location.pathname.split("/").pop() || 'index.html';
         headerElement.querySelectorAll('.nav-menu a').forEach(link => {
             if (link.getAttribute('href') === currentPage) {
@@ -68,7 +68,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        // --- BURGER MENU LOGIK (NEU) ---
         const hamburger = document.getElementById('hamburger-btn');
         const navMenu = document.getElementById('nav-menu');
 
@@ -78,7 +77,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 navMenu.classList.toggle('active');
             });
 
-            // Menü schließen bei Klick auf Link
             navMenu.querySelectorAll('a').forEach(link => {
                 link.addEventListener('click', () => {
                     hamburger.classList.remove('open');
@@ -94,22 +92,25 @@ document.addEventListener('DOMContentLoaded', () => {
         footerElement.innerHTML = footerHTML;
     }
 
-    // --- UI Funktionen starten ---
     initLightbox();
     initBackToTop();
     initSlideshows();
-
-    // --- Admin Toggle (Falls auf der Seite vorhanden) ---
-    const adminToggle = document.getElementById('admin-toggle');
-    const adminPanel = document.getElementById('admin-panel');
-    if(adminToggle && adminPanel) {
-        adminToggle.addEventListener('click', () => {
-            adminPanel.classList.toggle('active');
-        });
-    }
 });
 
 // 3. UI HELFER FUNKTIONEN
+
+// NEU: Funktion um das Favicon dynamisch in den Head zu laden
+function initFavicon() {
+    const faviconPath = 'images/logo.png';
+    let link = document.querySelector("link[rel~='icon']");
+    if (!link) {
+        link = document.createElement('link');
+        link.rel = 'icon';
+        document.head.appendChild(link);
+    }
+    link.href = faviconPath;
+    link.type = 'image/png';
+}
 
 function initLightbox() {
     if (!document.getElementById('lightbox')) {
