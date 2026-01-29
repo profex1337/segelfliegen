@@ -7,10 +7,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <style>
-        .video-container { position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: var(--radius); box-shadow: var(--shadow); background: #000; margin-bottom: 20px; }
+        .video-container { position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: var(--radius); box-shadow: var(--shadow); background: #000; margin-bottom: 0; }
         .video-container iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; }
-        .video-fallback-link { display: block; text-align: right; font-size: 0.8rem; color: var(--text-light); margin-bottom: 20px; }
-        .video-fallback-link:hover { color: var(--accent); text-decoration: underline; }
+        /* Fallback Link Styles entfernt, da nicht mehr benötigt */
         html { scroll-padding-top: 120px; scroll-behavior: smooth; }
     </style>
 </head>
@@ -41,7 +40,6 @@
                 </div>
                 <div>
                     <div class="video-container"><iframe src="https://www.youtube.com/embed/DzY6mGzRw9I?rel=0" title="Segelflug Video" allowfullscreen></iframe></div>
-                    <a href="https://www.youtube.com/watch?v=DzY6mGzRw9I" target="_blank" class="video-fallback-link">Video auf YouTube ansehen ↗</a>
                 </div>
             </div>
         </div>
@@ -49,8 +47,8 @@
         <div class="content-block" id="Kunstflug">
             <div class="news-wrapper">
                  <div>
-                    <div class="video-container"><iframe src="https://www.youtube.com/embed/8khhMEq7YEY?rel=0" title="Kunstflug Video" allowfullscreen></iframe></div>
-                    <a href="https://www.youtube.com/watch?v=8khhMEq7YEY" target="_blank" class="video-fallback-link">Video auf YouTube ansehen ↗</a>
+                    <!-- Video getauscht: Jetzt s67HR0Hc2Ac (war vorher Motorflug) -->
+                    <div class="video-container"><iframe src="https://www.youtube.com/embed/s67HR0Hc2Ac?rel=0" title="Kunstflug Video" allowfullscreen></iframe></div>
                  </div>
                 <div>
                     <h2>Kunstflug</h2>
@@ -67,8 +65,8 @@
                     <p>Mit unserem Motorsegler sind wir unabhängig von der Thermik. Perfekt, um das eigene Haus von oben zu sehen oder einen Ausflug in die Fränkische Schweiz zu machen.</p>
                 </div>
                 <div>
-                    <div class="video-container"><iframe src="https://www.youtube.com/embed/s67HR0Hc2Ac?rel=0" title="Motorflug Video" allowfullscreen></iframe></div>
-                    <a href="https://www.youtube.com/watch?v=s67HR0Hc2Ac" target="_blank" class="video-fallback-link">Video auf YouTube ansehen ↗</a>
+                    <!-- Video getauscht: Jetzt 8khhMEq7YEY (war vorher Kunstflug) -->
+                    <div class="video-container"><iframe src="https://www.youtube.com/embed/8khhMEq7YEY?rel=0" title="Motorflug Video" allowfullscreen></iframe></div>
                 </div>
             </div>
         </div>
