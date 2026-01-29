@@ -10,54 +10,12 @@
         /* Spezifische Styles für Kontaktseite */
         html { scroll-padding-top: 120px; scroll-behavior: smooth; }
         
-        /* --- FORMULAR STYLING --- */
-        
-        /* Labels */
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-            font-size: 0.95rem;
-            color: var(--text-main);
-        }
-
-        /* Eingabefelder (Modern & Touch-freundlich) */
-        input[type="text"],
-        input[type="email"],
-        input[type="tel"],
-        textarea,
-        select {
-            width: 100%;
-            padding: 12px 15px; /* Angenehmes Padding */
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            background-color: #fff;
-            font-family: inherit;
-            font-size: 16px; /* WICHTIG: 16px verhindert Auto-Zoom auf iOS */
-            appearance: none; /* Entfernt alte OS-Styles */
-            -webkit-appearance: none;
-            transition: border-color 0.3s, box-shadow 0.3s;
-            box-sizing: border-box; 
-        }
-
-        /* Fokus Effekt */
-        input:focus, textarea:focus, select:focus {
-            border-color: var(--primary);
-            outline: none;
-            box-shadow: 0 0 0 3px rgba(15, 52, 96, 0.1);
-        }
-
-        /* Textarea Resizing */
-        textarea {
-            resize: vertical;
-            min-height: 150px;
-        }
-
-        /* Formular Grid System */
+        /* --- FORMULAR STYLING OPTIMIERT (Identisch zu mitfliegen.html) --- */
         .form-responsive {
             display: grid;
             grid-template-columns: 1fr;
             gap: 20px;
+            width: 100%;
         }
         @media (min-width: 768px) {
             .form-responsive {
@@ -65,7 +23,43 @@
             }
         }
 
-        /* Checkbox Container Styling */
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: var(--text-main);
+            text-align: left;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="tel"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 12px 15px; 
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #fff;
+            font-family: inherit;
+            font-size: 16px; 
+            appearance: none; 
+            -webkit-appearance: none;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        input:focus, textarea:focus, select:focus {
+            border-color: var(--primary);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(15, 52, 96, 0.1);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 150px;
+        }
+
         .checkbox-wrapper {
             display: flex;
             align-items: flex-start;
@@ -76,39 +70,43 @@
             margin-top: 20px;
             border: 1px solid #eee;
         }
-
         .checkbox-wrapper input[type="checkbox"] {
-            width: 22px;
+            width: 22px; /* Identisch zu mitfliegen.html */
             height: 22px;
             margin-top: 2px;
             flex-shrink: 0; 
             cursor: pointer;
-            -webkit-appearance: checkbox; 
-            appearance: checkbox;
         }
-
         .checkbox-wrapper label {
             font-weight: normal;
-            font-size: 0.85rem;
+            font-size: 0.9rem;
             margin: 0;
             line-height: 1.5;
             cursor: pointer;
             color: var(--text-light);
+            text-align: left;
         }
 
-        .checkbox-wrapper a {
-            text-decoration: underline;
-            color: var(--primary);
+        /* Karte responsiv (16:9 wie Video-Container) */
+        .map-container {
+            position: relative; 
+            padding-bottom: 56.25%; /* 16:9 Format wie bei Videos */
+            height: 0; 
+            overflow: hidden; 
+            border-radius: var(--radius); 
+            box-shadow: var(--shadow); 
+            background: #eef2f5;
+        }
+        .map-container iframe {
+            position: absolute; 
+            top: 0; left: 0; 
+            width: 100%; height: 100%; 
+            border: 0; 
         }
 
-        /* Mobile Anpassungen */
         @media (max-width: 768px) {
-            .contact-grid {
-                gap: 30px; 
-            }
-            .content-block {
-                padding: 25px !important; 
-            }
+            .container { padding-left: 15px !important; padding-right: 15px !important; }
+            .content-block { padding: 25px 20px !important; }
         }
     </style>
 </head>
@@ -124,39 +122,40 @@
 
     <main class="container section">
         
-        <!-- OBERER BEREICH: Info & Karte (Nebeneinander) -->
-        <div class="contact-grid" style="margin-bottom: 40px;">
-            
-            <!-- Linke Spalte: Info -->
-            <div class="content-block" style="border-left: 5px solid var(--accent); height: 100%; display: flex; flex-direction: column; justify-content: center;">
-                <h2 style="margin-top: 0;">Anschrift & Telefon</h2>
-                <p>
-                    <strong>Segelflugplatz Altdorf-Hagenhausen</strong><br>
-                    Dan Mollenhauer (Vorstand)<br>
-                    Kastanienweg 6<br>
-                    92348 Berg
-                </p>
-                <p style="margin-bottom: 0;">
-                    📞 <a href="tel:+499189310" style="color: var(--primary); font-weight: bold;">09189 - 310</a><br>
-                    📧 <a href="mailto:info@segelfliegen-altdorf.de" style="color: var(--primary); font-weight: bold;">info@segelfliegen-altdorf.de</a>
-                </p>
-            </div>
-
-            <!-- Rechte Spalte: Karte -->
-            <div class="content-block" style="padding: 10px; height: 100%; min-height: 300px;">
-                <iframe src="https://www.google.com/maps/embed/v1/place?key=AIzaSyAO0mVkwXL-qpHD-oI5syKSjgBHkTjl_B4&q=Segelflugplatz%20Altdorf-Hagenhausen%20Post-SV%20N%C3%BCrnberg%2C%20Hagenhausenerstr.%2011%2C%20Altdorf%20bei%20N%C3%BCrnberg%2C%20Deutschland&center=49.3899301,11.4267085&maptype=satellite&zoom=15&language=de" width="100%" height="100%" style="border:0; border-radius: 8px; min-height: 250px;" allowfullscreen="" loading="lazy"></iframe>
+        <!-- BLOCK 1: Anschrift & Karte (Zweispaltig, Layout wie Text/Video) -->
+        <div class="content-block" style="border-left: 5px solid var(--accent); margin-bottom: 40px;">
+            <div class="news-wrapper">
+                <div>
+                    <h2 style="margin-top: 0;">Anschrift & Telefon</h2>
+                    <div style="font-size: 1.1rem;">
+                        <p>
+                            <strong>Segelflugplatz Altdorf-Hagenhausen</strong><br>
+                            Dan Mollenhauer (Vorstand)<br>
+                            Kastanienweg 6<br>
+                            92348 Berg
+                        </p>
+                        <p>
+                            📞 <a href="tel:+499189310" style="color: var(--primary); font-weight: bold;">09189 - 310</a><br>
+                            📧 <a href="mailto:info@segelfliegen-altdorf.de" style="color: var(--primary); font-weight: bold;">info@segelfliegen-altdorf.de</a>
+                        </p>
+                    </div>
+                </div>
+                <div>
+                    <div class="map-container">
+                        <iframe src="https://www.google.com/maps/embed/v1/place?key=AIzaSyAO0mVkwXL-qpHD-oI5syKSjgBHkTjl_B4&q=Segelflugplatz%20Altdorf-Hagenhausen%20Post-SV%20N%C3%BCrnberg%2C%20Hagenhausenerstr.%2011%2C%20Altdorf%20bei%20N%C3%BCrnberg%2C%20Deutschland&center=49.3899301,11.4267085&maptype=satellite&zoom=15&language=de" allowfullscreen="" loading="lazy"></iframe>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <!-- UNTERER BEREICH: Formular (Volle Breite) -->
+        <!-- BLOCK 2: Formular (Zentriert & 700px breit wie auf mitfliegen.html) -->
         <div class="content-block" style="border-top: 5px solid var(--primary);">
-            <!-- HIER WURDE DER WRAPPER (max-width: 800px) ENTFERNT -->
-            <h2 style="text-align: left; margin-bottom: 10px;">Schreiben Sie uns</h2>
-            <p style="text-align: left; color: var(--text-light); margin-bottom: 30px;">Haben Sie Fragen oder möchten Sie einen Gutschein bestellen?</p>
+            <h2 style="text-align: center; margin-bottom: 10px;">Schreiben Sie uns</h2>
+            <p style="text-align: center; color: var(--text-light); margin-bottom: 40px;">Haben Sie Fragen oder möchten Sie einen Gutschein bestellen?</p>
             
-            <form action="https://formspree.io/f/meekadza" method="POST">
+            <!-- Wieder auf 700px begrenzt, exakt wie bei Mitfliegen -->
+            <form action="https://formspree.io/f/meekadza" method="POST" style="max-width: 700px; margin: 0 auto;">
                 
-                <!-- Grid für Name & Email -->
                 <div class="form-responsive">
                     <div class="form-group">
                         <label for="name">Ihr Name *</label>
@@ -168,7 +167,6 @@
                     </div>
                 </div>
                 
-                <!-- Grid für Telefon & Betreff -->
                 <div class="form-responsive" style="margin-top: 20px;">
                     <div class="form-group">
                         <label for="telefon">Telefonnummer</label>
@@ -192,7 +190,7 @@
                 
                 <div class="checkbox-wrapper">
                     <input type="checkbox" id="datenschutz" name="datenschutz" required>
-                    <label for="datenschutz">Ich habe die <a href="datenschutz.html" target="_blank">Datenschutzerklärung</a> zur Kenntnis genommen.</label>
+                    <label for="datenschutz">Ich habe die <a href="datenschutz.html" target="_blank" style="text-decoration: underline; color: var(--primary);">Datenschutzerklärung</a> zur Kenntnis genommen und bin mit der Verarbeitung meiner Daten einverstanden.*</label>
                 </div>
                 
                 <div style="text-align: center; margin-top: 30px;">
