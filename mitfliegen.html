@@ -10,7 +10,7 @@
         /* Spezifische Styles für diese Seite */
         html { scroll-padding-top: 120px; scroll-behavior: smooth; }
 
-        /* Videos responsiv machen (falls in style.css nicht greift) */
+        /* Videos responsiv machen */
         .video-container { 
             position: relative; 
             padding-bottom: 56.25%; /* 16:9 Format */
@@ -28,7 +28,9 @@
             border: 0; 
         }
 
-        /* Formular Responsive Grid */
+        /* --- FORMULAR STYLING OPTIMIERT --- */
+        
+        /* Grid Layout */
         .form-responsive {
             display: grid;
             grid-template-columns: 1fr; /* Standard: 1 Spalte (Mobil) */
@@ -42,26 +44,98 @@
             }
         }
 
-        /* Select Box Styling (passend zu Input) */
+        /* Labels */
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: var(--text-main);
+        }
+
+        /* Eingabefelder (Modern & Touch-freundlich) */
+        input[type="text"],
+        input[type="email"],
+        input[type="tel"],
+        textarea,
         select {
             width: 100%;
-            padding: 12px;
+            padding: 12px 15px; /* Etwas mehr Platz innen */
             border: 1px solid #ddd;
             border-radius: 8px;
             background-color: #fff;
             font-family: inherit;
+            font-size: 16px; /* WICHTIG: 16px verhindert Auto-Zoom auf iOS */
+            appearance: none; /* Entfernt alte OS-Styles */
+            -webkit-appearance: none;
+            transition: border-color 0.3s, box-shadow 0.3s;
         }
 
-        /* Buttons auf Mobile etwas kompakter */
+        /* Fokus Effekt */
+        input:focus, textarea:focus, select:focus {
+            border-color: var(--primary);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(15, 52, 96, 0.1);
+        }
+
+        /* Textarea Resizing kontrollieren */
+        textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        /* Checkbox Container Styling */
+        .checkbox-wrapper {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            border: 1px solid #eee;
+        }
+
+        .checkbox-wrapper input[type="checkbox"] {
+            width: 22px;
+            height: 22px;
+            margin-top: 2px;
+            flex-shrink: 0; /* Verhindert das Quetschen der Checkbox */
+            cursor: pointer;
+            -webkit-appearance: checkbox; /* Checkboxen sollen nativ aussehen */
+            appearance: checkbox;
+        }
+
+        .checkbox-wrapper label {
+            font-weight: normal;
+            font-size: 0.9rem;
+            margin: 0;
+            line-height: 1.5;
+            cursor: pointer;
+            color: var(--text-light);
+        }
+
+        /* Mobile Anpassungen */
         @media (max-width: 600px) {
             .category-nav {
-                gap: 10px; /* Weniger Abstand auf kleinen Screens */
+                gap: 10px;
             }
             .btn-cat {
                 padding: 8px 12px;
                 font-size: 0.8rem;
-                flex-grow: 1; /* Buttons füllen die Breite */
+                flex-grow: 1;
                 text-align: center;
+            }
+            /* Formular Padding auf Mobile reduzieren für mehr Platz */
+            .content-block#Anfrage {
+                padding: 20px;
+            }
+        }
+
+        /* --- FIX FÜR KUNSTFLUG REIHENFOLGE --- */
+        @media (max-width: 991px) {
+            .swap-mobile > div:last-child {
+                order: -1;
             }
         }
     </style>
@@ -100,7 +174,8 @@
         </div>
 
         <div class="content-block" id="Kunstflug">
-            <div class="news-wrapper">
+            <!-- HIER WURDE DIE KLASSE "swap-mobile" HINZUGEFÜGT -->
+            <div class="news-wrapper swap-mobile">
                  <div>
                     <div class="video-container"><iframe src="https://www.youtube.com/embed/s67HR0Hc2Ac?rel=0" title="Kunstflug Video" allowfullscreen></iframe></div>
                  </div>
@@ -130,14 +205,13 @@
             Zum Einlösen eines Gutscheins bitte am Wunschtermin ab 9 Uhr unter <a href="tel:09189310">09189 / 310</a> anrufen.</p>
         </div>
 
-        <!-- ANFRAGE FORMULAR (Jetzt Mobile-Optimiert) -->
+        <!-- ANFRAGE FORMULAR -->
         <div class="content-block" id="Anfrage" style="border-top: 5px solid var(--accent);">
             <h2 style="text-align: center; margin-bottom: 10px;">Flug- oder Gutschein-Anfrage</h2>
             <p style="text-align: center; margin-bottom: 40px; color: var(--text-light);">Senden Sie uns unverbindlich Ihren Wunschtermin.</p>
             
             <form action="https://formspree.io/f/meekadza" method="POST" style="max-width: 700px; margin: 0 auto;">
                 
-                <!-- Zeile 1: Name & Email -->
                 <div class="form-responsive">
                     <div class="form-group">
                         <label for="name">Ihr Name *</label>
@@ -149,7 +223,6 @@
                     </div>
                 </div>
 
-                <!-- Zeile 2: Telefon & Flugtyp -->
                 <div class="form-responsive" style="margin-top: 20px;">
                     <div class="form-group">
                         <label for="telefon">Telefonnummer</label>
@@ -173,9 +246,10 @@
                     <textarea id="nachricht" name="message" rows="5" placeholder="Haben Sie einen Wunschtermin oder spezielle Fragen?"></textarea>
                 </div>
 
-                <div class="form-group" style="display: flex; align-items: flex-start; gap: 15px; background: #f9f9f9; padding: 15px; border-radius: 8px; margin-top: 20px;">
-                    <input type="checkbox" id="datenschutz" name="datenschutz" required style="width: 20px; height: 20px; margin-top: 3px; flex-shrink: 0;">
-                    <label for="datenschutz" style="font-weight: normal; font-size: 0.9rem; margin: 0; line-height: 1.4;">Ich bin damit einverstanden, dass diese Daten zum Zweck der Kontaktaufnahme gespeichert werden.*</label>
+                <!-- Optimierte Checkbox -->
+                <div class="checkbox-wrapper">
+                    <input type="checkbox" id="datenschutz" name="datenschutz" required>
+                    <label for="datenschutz">Ich bin damit einverstanden, dass diese Daten zum Zweck der Kontaktaufnahme gespeichert werden.*</label>
                 </div>
 
                 <div style="text-align: center; margin-top: 30px;">
