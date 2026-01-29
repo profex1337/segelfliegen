@@ -1,17 +1,25 @@
 /* ---------------------------------------------------------------------------------------
-   SCRIPT.JS - NUR FÜR DESIGN & LAYOUT (Keine Datenbank)
-   Diese Datei läuft immer stabil, egal ob Online oder Offline.
+   SCRIPT.JS - ZENTRALE STEUERUNG FÜR HEADER, FOOTER & UI
 --------------------------------------------------------------------------------------- */
 
-// 1. HEADER & FOOTER HTML
+// 1. HEADER & FOOTER HTML TEMPLATES
+// Hier wurde der Burger-Button und die IDs hinzugefügt
 const headerHTML = `
 <div class="container header-inner">
     <div class="logo">
         <a href="index.html">
-            <img src="images/logo.png" alt="Segelflugplatz Altdorf" onerror="this.style.display='none'; this.parentElement.innerHTML='<span style=\\'font-weight:800; font-size:1.5rem; color:#0f3460\\'>Segelflugplatz Altdorf</span>'">
+            <img src="images/logo.png" alt="Segelflugplatz Altdorf" onerror="this.style.display='none'; this.parentElement.innerHTML='<span style=\\'font-weight:800; font-size:1.2rem; color:#0f3460; line-height:1.2; display:block;\\'>Segelflugplatz<br>Altdorf</span>'">
         </a>
     </div>
-    <nav class="nav-menu">
+
+    <!-- BURGER BUTTON (NEU) -->
+    <div class="hamburger" id="hamburger-btn">
+        <span></span>
+        <span></span>
+        <span></span>
+    </div>
+
+    <nav class="nav-menu" id="nav-menu">
         <a href="index.html">Start</a>
         <a href="uber-uns.html">Über uns</a>
         <a href="mitfliegen.html">Mitfliegen</a>
@@ -44,7 +52,7 @@ const footerHTML = `
 </div>
 `;
 
-// 2. HAUPT-INITIALISIERUNG (Sobald die Seite geladen ist)
+// 2. HAUPT-INITIALISIERUNG
 document.addEventListener('DOMContentLoaded', () => {
     
     // --- Header einfügen ---
@@ -59,6 +67,25 @@ document.addEventListener('DOMContentLoaded', () => {
                 link.classList.add('active');
             }
         });
+
+        // --- BURGER MENU LOGIK (NEU) ---
+        const hamburger = document.getElementById('hamburger-btn');
+        const navMenu = document.getElementById('nav-menu');
+
+        if (hamburger && navMenu) {
+            hamburger.addEventListener('click', () => {
+                hamburger.classList.toggle('open');
+                navMenu.classList.toggle('active');
+            });
+
+            // Menü schließen bei Klick auf Link
+            navMenu.querySelectorAll('a').forEach(link => {
+                link.addEventListener('click', () => {
+                    hamburger.classList.remove('open');
+                    navMenu.classList.remove('active');
+                });
+            });
+        }
     }
 
     // --- Footer einfügen ---
@@ -71,9 +98,18 @@ document.addEventListener('DOMContentLoaded', () => {
     initLightbox();
     initBackToTop();
     initSlideshows();
+
+    // --- Admin Toggle (Falls auf der Seite vorhanden) ---
+    const adminToggle = document.getElementById('admin-toggle');
+    const adminPanel = document.getElementById('admin-panel');
+    if(adminToggle && adminPanel) {
+        adminToggle.addEventListener('click', () => {
+            adminPanel.classList.toggle('active');
+        });
+    }
 });
 
-// 3. UI HELFER FUNKTIONEN (Lightbox, Slideshow etc.)
+// 3. UI HELFER FUNKTIONEN
 
 function initLightbox() {
     if (!document.getElementById('lightbox')) {
@@ -86,7 +122,6 @@ function initLightbox() {
         const lightboxImg = document.getElementById('lightbox-img');
         const caption = document.getElementById('lightbox-caption');
         
-        // Funktion zum Öffnen global verfügbar machen (falls nötig)
         window.openLightbox = (src, alt) => {
             lightbox.style.display = "block";
             lightboxImg.src = src;

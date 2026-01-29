@@ -9,6 +9,7 @@
     --white: #ffffff;
     --shadow: 0 10px 30px rgba(0,0,0,0.08);
     --radius: 12px;
+    --header-height: 80px;   /* Konsistente Header Höhe */
 }
 
 /* --- 2. GRUNDLAGEN --- */
@@ -24,6 +25,8 @@ body {
     display: flex;
     flex-direction: column;
     min-height: 100vh;
+    /* WICHTIG: Platz für den fixierten Header schaffen */
+    padding-top: var(--header-height);
 }
 
 h1, h2, h3, h4 {
@@ -35,6 +38,7 @@ h1, h2, h3, h4 {
 
 a { text-decoration: none; color: inherit; transition: all 0.3s ease; }
 img { width: 100%; height: auto; display: block; }
+html { scroll-padding-top: 120px; scroll-behavior: smooth; }
 
 /* Container Utility */
 .container {
@@ -50,23 +54,26 @@ main { flex: 1; }
 header {
     background-color: var(--white);
     box-shadow: 0 2px 15px rgba(0,0,0,0.05);
-    position: sticky;
+    /* NEU: Fixierte Positionierung */
+    position: fixed;
     top: 0;
+    left: 0;
+    width: 100%;
     z-index: 1000;
-    padding: 10px 0;
-    height: 80px; 
+    height: var(--header-height); 
     display: flex;
     align-items: center;
 }
 
 .header-inner {
     display: flex;
-    justify-content: flex-end; /* Menü nach RECHTS */
+    justify-content: space-between; /* Logo links, Menü rechts */
     align-items: center;
     width: 100%;
+    height: 100%;
 }
 
-/* LOGO: Groß, LINKS & Überlappend */
+/* LOGO: Standard Desktop Ansicht */
 .logo {
     position: absolute;
     top: 0;
@@ -76,18 +83,22 @@ header {
     border-radius: 0 0 15px 15px; 
     padding: 10px 15px 15px 15px;
     box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
 }
 
 .logo img { 
     height: 130px; 
     width: auto; 
     display: block;
+    transition: all 0.3s ease;
 }
 
-/* Menü */
+/* Menü: Standard Desktop Ansicht */
 .nav-menu { 
     display: flex; 
     gap: 30px; 
+    margin-left: auto;
+    padding-right: 20px;
 }
 
 .nav-menu a {
@@ -97,6 +108,7 @@ header {
     position: relative;
     text-transform: uppercase;
     letter-spacing: 0.5px;
+    padding: 5px 0;
 }
 
 .nav-menu a::after {
@@ -104,36 +116,77 @@ header {
     position: absolute;
     width: 0;
     height: 2px;
-    bottom: -5px;
+    bottom: 0;
     left: 0;
     background-color: var(--accent);
     transition: width 0.3s;
 }
 .nav-menu a:hover::after, .nav-menu a.active::after { width: 100%; }
 
+/* HAMBURGER ICON (Standardmäßig versteckt) */
+.hamburger {
+    display: none;
+    cursor: pointer;
+    width: 30px;
+    height: 20px;
+    position: relative;
+    z-index: 1002;
+    margin-right: 10px;
+}
+
+.hamburger span {
+    display: block;
+    position: absolute;
+    height: 3px;
+    width: 100%;
+    background: var(--primary);
+    border-radius: 3px;
+    opacity: 1;
+    left: 0;
+    transform: rotate(0deg);
+    transition: .25s ease-in-out;
+}
+
+.hamburger span:nth-child(1) { top: 0px; }
+.hamburger span:nth-child(2) { top: 9px; }
+.hamburger span:nth-child(3) { top: 18px; }
+
+/* Hamburger Animation (wenn Klasse .open aktiv ist) */
+.hamburger.open span:nth-child(1) { top: 9px; transform: rotate(135deg); background: var(--accent); }
+.hamburger.open span:nth-child(2) { opacity: 0; left: -60px; }
+.hamburger.open span:nth-child(3) { top: 9px; transform: rotate(-135deg); background: var(--accent); }
+
 /* --- 4. HERO SECTIONS --- */
 .hero {
     position: relative;
     height: 80vh;
     min-height: 500px;
-    background-image: url('images/hero.jpg');
-    background-size: cover;
-    background-position: center;
+    background-color: var(--primary); /* Fallback */
+    /* Kein background-image hier, das kommt inline oder via video */
     display: flex;
     align-items: center;
     justify-content: center;
     text-align: center;
     color: var(--white);
+    overflow: hidden;
 }
-.hero::before {
-    content: '';
+
+/* Video Backgrounds */
+.hero-video {
     position: absolute;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background: linear-gradient(135deg, rgba(15, 52, 96, 0.8), rgba(15, 52, 96, 0.4));
+    top: 0; left: 0; width: 100%; height: 100%;
+    object-fit: cover; z-index: 0;
 }
+.hero-overlay {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: linear-gradient(135deg, rgba(15, 52, 96, 0.8), rgba(15, 52, 96, 0.4));
+    z-index: 1;
+}
+
 .hero-content {
     position: relative;
-    z-index: 1;
+    z-index: 2;
     max-width: 800px;
     padding: 20px;
 }
@@ -155,14 +208,24 @@ header {
     color: var(--white);
     padding: 80px 0;
     text-align: center;
-    background-image: linear-gradient(135deg, rgba(15, 52, 96, 0.9), rgba(15, 52, 96, 0.8)), url('images/hero.jpg');
     background-size: cover;
     background-position: center;
+    position: relative;
 }
+/* Overlay für bessere Lesbarkeit auf Unterseiten-Headern */
+.page-header::before {
+    content: '';
+    position: absolute;
+    top:0; left:0; right:0; bottom:0;
+    background: rgba(15, 52, 96, 0.5);
+    z-index: 0;
+}
+.page-header .container { position: relative; z-index: 1; }
+
 .page-header h1 { color: var(--white); font-size: 3rem; margin: 0; }
 .page-header p { color: rgba(255,255,255,0.8); font-size: 1.2rem; margin-top: 10px; }
 
-/* --- 5. INHALTE --- */
+/* --- 5. INHALTE & COMPONENTS --- */
 .section { padding: 60px 0; }
 .section-title { text-align: center; margin-bottom: 60px; }
 .bg-grey { background-color: #eef2f5; }
@@ -194,7 +257,7 @@ header {
     transform: translateY(-3px);
 }
 
-/* --- 6. GRIDS --- */
+/* --- 6. GRIDS & CARDS --- */
 .card-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -214,7 +277,7 @@ header {
 .card:hover { transform: translateY(-5px); }
 
 .card-img-top { height: 250px; overflow: hidden; }
-.card-img-top img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s ease; }
+.card-img-top img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s ease; image-rendering: -webkit-optimize-contrast; }
 .card:hover .card-img-top img { transform: scale(1.1); }
 
 .card-body { padding: 25px; flex-grow: 1; display: flex; flex-direction: column; }
@@ -222,7 +285,14 @@ header {
 .card-text { color: var(--text-light); flex-grow: 1; margin-bottom: 20px; }
 .card-link { font-weight: 700; color: var(--primary); text-transform: uppercase; font-size: 0.9rem; }
 
+/* News Wrapper */
 .news-wrapper { display: grid; grid-template-columns: 1fr; gap: 50px; align-items: center; }
+@media (min-width: 992px) {
+    .news-wrapper { grid-template-columns: 1fr 1fr; }
+    .news-wrapper.reverse { direction: rtl; }
+    .news-wrapper.reverse > div { direction: ltr; }
+}
+
 .news-item {
     background: var(--white);
     padding: 30px;
@@ -236,15 +306,7 @@ header {
 .news-date { font-size: 0.85rem; font-weight: 700; color: var(--accent); text-transform: uppercase; display: block; margin-bottom: 5px; }
 .news-image-container img { border-radius: var(--radius); box-shadow: var(--shadow); }
 
-/* --- 7. KONTAKT --- */
-.contact-grid { display: grid; grid-template-columns: 1fr; gap: 50px; }
-.form-group { margin-bottom: 20px; }
-.form-group label { display: block; margin-bottom: 8px; font-weight: 600; }
-.form-group input, .form-group textarea {
-    width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-family: inherit;
-}
-
-/* --- 8. FOOTER --- */
+/* --- 7. FOOTER --- */
 footer {
     background-color: #1a1a2e;
     color: #b0b0b0;
@@ -261,31 +323,12 @@ footer {
 .footer a:hover { color: var(--accent); }
 .footer-bottom { text-align: center; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px; font-size: 0.9rem; }
 
-/* --- 9. RESPONSIVE --- */
-@media (min-width: 992px) {
-    .news-wrapper { grid-template-columns: 1fr 1fr; }
-    .contact-grid { grid-template-columns: 1fr 1fr; }
-}
+/* --- 8. SPEZIAL-ELEMENTE (Video, Zitate, Slideshows) --- */
 
-@media (max-width: 768px) {
-    .header-inner { flex-direction: column; gap: 15px; align-items: center; justify-content: center; }
-    .nav-menu { flex-wrap: wrap; justify-content: center; gap: 15px; font-size: 14px; margin-right: 0; }
-    
-    .logo { 
-        position: static; 
-        transform: none; 
-        border-radius: var(--radius); 
-        margin-bottom: 10px; 
-        padding: 5px;
-    } 
-    .logo img { height: 70px; }
-    header { height: auto; }
-}
-
-/* --- 10. NEU: VIDEO CONTAINER --- */
+/* Video Container (Responsive) */
 .video-container {
     position: relative;
-    padding-bottom: 56.25%;
+    padding-bottom: 56.25%; /* 16:9 */
     height: 0;
     overflow: hidden;
     border-radius: var(--radius);
@@ -293,12 +336,13 @@ footer {
     background: #000;
     margin-bottom: 20px;
 }
-.video-container iframe {
+.video-container iframe, 
+.video-container video {
     position: absolute;
-    top: 0; left: 0; width: 100%; height: 100%; border: 0;
+    top: 0; left: 0; width: 100%; height: 100%; border: 0; object-fit: cover;
 }
 
-/* --- 11. NEU: KATEGORIE BUTTONS --- */
+/* Kategorie Buttons */
 .category-nav {
     display: flex;
     justify-content: center;
@@ -325,7 +369,7 @@ footer {
     transform: translateY(-2px);
 }
 
-/* --- 12. NEU: ZITAT BOX --- */
+/* Zitat Box */
 .quote-wrapper {
     display: grid;
     grid-template-columns: 1fr;
@@ -378,7 +422,7 @@ footer {
     box-shadow: var(--shadow);
 }
 
-/* --- 13. NEU: BACK TO TOP BUTTON --- */
+/* Back to Top */
 #btn-back-to-top {
     position: fixed;
     bottom: 30px;
@@ -405,9 +449,7 @@ footer {
     box-shadow: 0 6px 15px rgba(0,0,0,0.4);
 }
 
-html { scroll-padding-top: 120px; scroll-behavior: smooth; }
-
-/* --- 14. NEU: LIGHTBOX --- */
+/* Lightbox */
 .lightbox {
     display: none;
     position: fixed;
@@ -476,15 +518,8 @@ html { scroll-padding-top: 120px; scroll-behavior: smooth; }
     transform: scale(1.02);
 }
 
-@keyframes zoomIn {
-    from {transform:scale(0.8); opacity: 0;}
-    to {transform:scale(1); opacity: 1;}
-}
-
-@keyframes fadeIn {
-    from {opacity: 0;}
-    to {opacity: 1;}
-}
+@keyframes zoomIn { from {transform:scale(0.8); opacity: 0;} to {transform:scale(1); opacity: 1;} }
+@keyframes fadeIn { from {opacity: 0;} to {opacity: 1;} }
 
 @media only screen and (max-width: 700px) {
     .lightbox-content {
@@ -493,29 +528,13 @@ html { scroll-padding-top: 120px; scroll-behavior: smooth; }
     }
 }
 
-/* --- ZUSATZ: PILOTEN DATEN --- */
-.data-list {
-    list-style: none;
-    padding: 0;
-}
-.data-list li {
-    margin-bottom: 15px;
-    border-bottom: 1px solid #eee;
-    padding-bottom: 15px;
-}
-.data-list strong {
-    color: var(--primary);
-    display: block;
-}
-.highlight-box {
-    background-color: #fff3cd;
-    border-left: 5px solid #ffc107;
-    padding: 15px;
-    margin-top: 20px;
-    border-radius: 5px;
-}
+/* Daten Listen (Flugzeugpark etc.) */
+.data-list { list-style: none; padding: 0; }
+.data-list li { margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 15px; }
+.data-list strong { color: var(--primary); display: block; }
+.highlight-box { background-color: #fff3cd; border-left: 5px solid #ffc107; padding: 15px; margin-top: 20px; border-radius: 5px; }
 
-/* --- 15. NEU: SLIDESHOW --- */
+/* Slideshow */
 .slideshow-container {
     max-width: 100%;
     position: relative;
@@ -525,19 +544,8 @@ html { scroll-padding-top: 120px; scroll-behavior: smooth; }
     overflow: hidden;
     min-height: 300px;
 }
-
-.mySlides {
-    display: none;
-    height: 350px;
-    width: 100%;
-}
-
-.mySlides img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
+.mySlides { display: none; height: 350px; width: 100%; }
+.mySlides img { width: 100%; height: 100%; object-fit: cover; }
 .prev, .next {
     cursor: pointer;
     position: absolute;
@@ -553,79 +561,86 @@ html { scroll-padding-top: 120px; scroll-behavior: smooth; }
     user-select: none;
     background-color: rgba(0,0,0,0.3);
 }
+.next { right: 0; border-radius: 3px 0 0 3px; }
+.prev:hover, .next:hover { background-color: var(--accent); }
+.fade { animation-name: fade; animation-duration: 1.5s; }
+@keyframes fade { from {opacity: .4} to {opacity: 1} }
+@media only screen and (max-width: 600px) { .mySlides { height: 250px; } }
 
-.next {
-    right: 0;
-    border-radius: 3px 0 0 3px;
-}
-
-.prev:hover, .next:hover {
-    background-color: var(--accent);
-}
-
-.fade {
-    animation-name: fade;
-    animation-duration: 1.5s;
-}
-
-@keyframes fade {
-    from {opacity: .4}
-    to {opacity: 1}
-}
-
-@media only screen and (max-width: 600px) {
-    .mySlides { height: 250px; }
-}
-
-/* --- 16. NEU: ADMIN / NEWS CMS --- */
-.admin-login-link {
-    font-size: 0.8rem;
-    color: #e0e0e0;
-    cursor: pointer;
-    margin-left: 10px;
-    text-decoration: none;
-    transition: color 0.3s;
-}
+/* Admin / CMS Styles */
+.admin-login-link { font-size: 0.8rem; color: #e0e0e0; cursor: pointer; margin-left: 10px; text-decoration: none; transition: color 0.3s; }
 .admin-login-link:hover { color: var(--accent); }
-
-.admin-panel {
-    display: none;
-    background: var(--white);
-    padding: 25px;
-    margin-bottom: 30px;
-    border-radius: var(--radius);
-    box-shadow: var(--shadow);
-    border-left: 5px solid var(--accent);
-    animation: fadeIn 0.5s;
-}
-
+.admin-panel { display: none; background: var(--white); padding: 25px; margin-bottom: 30px; border-radius: var(--radius); box-shadow: var(--shadow); border-left: 5px solid var(--accent); animation: fadeIn 0.5s; }
 .admin-panel.active { display: block; }
-
 .admin-panel h3 { margin-top: 0; font-size: 1.2rem; }
-
-.news-form input, 
-.news-form textarea {
-    width: 100%;
-    padding: 10px;
-    margin-bottom: 15px;
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    font-family: inherit;
-}
-
-.delete-btn {
-    float: right;
-    background-color: #ff4d4d;
-    color: white;
-    border: none;
-    padding: 5px 10px;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 0.8rem;
-    margin-left: 10px;
-    display: none;
-}
-
+.news-form input, .news-form textarea { width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 6px; font-family: inherit; }
+.delete-btn { float: right; background-color: #ff4d4d; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 0.8rem; margin-left: 10px; display: none; }
 .delete-btn:hover { background-color: #d63030; }
-
 body.admin-mode .delete-btn { display: inline-block; }
+
+/* ---------------------------------------------------- */
+/* --- 9. MOBILE OPTIMIERUNG (MEDIA QUERIES) --- */
+/* ---------------------------------------------------- */
+
+@media (max-width: 992px) {
+    /* Header & Navigation */
+    .logo {
+        position: relative; /* In den Flow zurück */
+        top: auto; left: auto;
+        background: transparent;
+        box-shadow: none;
+        padding: 5px 0;
+        border-radius: 0;
+    }
+    .logo img { height: 50px; /* Kleineres Logo */ }
+    
+    .hamburger { display: block; /* Burger anzeigen */ }
+    
+    .nav-menu {
+        position: fixed;
+        top: var(--header-height);
+        right: -100%; /* Versteckt rechts */
+        width: 100%;
+        height: calc(100vh - var(--header-height));
+        background-color: var(--white);
+        flex-direction: column;
+        justify-content: flex-start;
+        padding: 40px 20px;
+        transition: right 0.3s ease-in-out;
+        box-shadow: inset 0 10px 10px -10px rgba(0,0,0,0.1);
+        margin-left: 0;
+        gap: 0;
+        overflow-y: auto; /* Scrollbar wenn nötig */
+    }
+    .nav-menu.active { right: 0; /* Menü rein */ }
+
+    .nav-menu a {
+        font-size: 1.2rem;
+        padding: 15px 0;
+        border-bottom: 1px solid #eee;
+        width: 100%;
+        text-align: center;
+    }
+    .nav-menu a:last-child { border-bottom: none; }
+    .nav-menu a::after { display: none; }
+    
+    /* Layout Anpassungen */
+    .hero h1, .page-header h1 { font-size: 2.2rem; }
+    .hero p { font-size: 1rem; }
+    .section { padding: 40px 0; }
+    .content-block { padding: 25px; }
+    .section-image { min-height: 200px; }
+    
+    /* Grid & Flex */
+    .news-wrapper { grid-template-columns: 1fr; gap: 30px; }
+    .contact-grid, .impressum-grid { grid-template-columns: 1fr; }
+    
+    /* Speziell: Events Reverse Grid (Rückgängig auf Mobile) */
+    .news-wrapper.reverse { direction: ltr; }
+    .news-wrapper.reverse > div { direction: ltr; }
+}
+
+@media (max-width: 500px) {
+    .hero h1, .page-header h1 { font-size: 1.8rem; }
+    .header-inner { padding: 0 15px; }
+}
