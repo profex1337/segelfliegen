@@ -69,12 +69,17 @@
                 
                 <!-- ADMIN PANEL (Versteckt, erscheint nach Login) -->
                 <div id="admin-panel" class="admin-panel">
-                    <h3>📝 Neue Nachricht verfassen</h3>
+                    <h3 id="form-headline">📝 Neue Nachricht verfassen</h3>
                     <form id="news-form" class="news-form">
                         <input type="text" id="news-title" placeholder="Titel der Nachricht" required>
                         <input type="text" id="news-date" placeholder="Datum (z.B. 15.09.2026)" required>
                         <textarea id="news-text" rows="4" placeholder="Ihr Text..." required></textarea>
-                        <button type="submit" class="btn">Veröffentlichen</button>
+                        
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            <button type="submit" id="news-submit-btn" class="btn">Veröffentlichen</button>
+                            <!-- Neuer Abbrechen Button (Standardmäßig versteckt) -->
+                            <button type="button" id="news-cancel-btn" class="btn btn-secondary" style="display: none;">Abbrechen</button>
+                        </div>
                     </form>
                 </div>
 
@@ -102,11 +107,9 @@
             <h3>Admin Login</h3>
             <p>Bitte geben Sie das Passwort ein:</p>
             
-            <!-- NEU: Jetzt in einem FORM Tag, um den Browserfehler zu beheben -->
             <form id="admin-login-form">
                 <input type="password" id="admin-password-input" placeholder="Passwort" autocomplete="current-password">
                 <p id="login-error" style="color: red; font-size: 0.8rem; display: none;">Falsches Passwort!</p>
-                <!-- type="submit" sorgt dafür, dass Enter automatisch funktioniert -->
                 <button type="submit" id="admin-login-btn" class="btn" style="width: 100%; margin-top: 10px;">Anmelden</button>
             </form>
 

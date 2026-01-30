@@ -3,9 +3,11 @@
    Diese Datei wird als Modul geladen. Wenn sie fehlschlägt, fehlt nur der News-Teil.
 --------------------------------------------------------------------------------------- */
 
+console.log("1. news-db.js wurde geladen."); 
+
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
 import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-import { getFirestore, collection, addDoc, deleteDoc, doc, onSnapshot, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
 // DEINE KONFIGURATION
 const YOUR_OWN_CONFIG = {
@@ -21,6 +23,7 @@ const YOUR_OWN_CONFIG = {
 // Globale Variablen für dieses Modul
 let app, auth, db;
 let collectionPath = null; 
+let editingId = null; // Speichert die ID der Nachricht, die gerade bearbeitet wird
 
 // Hilfsfunktion zum Hashen des Passworts (SHA-256)
 async function hashPassword(string) {
@@ -73,7 +76,10 @@ async function startNewsLogic() {
     const adminToggle = document.getElementById('admin-toggle');
     const adminPanel = document.getElementById('admin-panel');
     const newsForm = document.getElementById('news-form');
-    
+    const cancelBtn = document.getElementById('news-cancel-btn'); // Neuer Button
+    const submitBtn = document.getElementById('news-submit-btn'); // Button mit ID
+    const formHeadline = document.getElementById('form-headline');
+
     // Login Modal Elemente
     const loginModal = document.getElementById('login-modal');
     const loginClose = document.getElementById('login-close');
@@ -106,44 +112,119 @@ async function startNewsLogic() {
 
             newsContainer.innerHTML = '';
             if (newsItems.length === 0) {
-                checkAndImportData(newsCollection);
+                // HIER WURDE DER AUTO-IMPORT ENTFERNT
+                // checkAndImportData(newsCollection); 
                 newsContainer.innerHTML = '<p style="text-align:center;">Keine Nachrichten gefunden.</p>';
             } else {
                 newsItems.forEach(item => {
                     const div = document.createElement('div');
                     div.className = 'news-item';
+                    
+                    // Buttons nur sichtbar im Admin Mode
+                    const adminStyle = document.body.classList.contains('admin-mode') ? 'block' : 'none';
+                    
                     div.innerHTML = `
-                        <button class="delete-btn" style="float:right; background:red; color:white; border:none; padding:5px; display:${document.body.classList.contains('admin-mode') ? 'block' : 'none'}">Löschen</button>
+                        <div class="admin-controls" style="float:right; display:${adminStyle}">
+                            <button class="edit-btn" style="background:#e94560; color:white; border:none; padding:5px 10px; margin-right:5px; cursor:pointer; border-radius:4px;">Ändern</button>
+                            <button class="delete-btn" style="background:red; color:white; border:none; padding:5px 10px; cursor:pointer; border-radius:4px;">Löschen</button>
+                        </div>
                         <span class="news-date">${item.date || ''}</span>
                         <h3>${item.title || 'Kein Titel'}</h3>
-                        <p>${item.text || ''}</p>
+                        <p style="white-space: pre-wrap;">${item.text || ''}</p>
                     `;
+                    
+                    // Event Listener direkt anhängen
                     const delBtn = div.querySelector('.delete-btn');
                     delBtn.onclick = () => deleteNewsItem(item.id);
+
+                    const editButton = div.querySelector('.edit-btn');
+                    editButton.onclick = () => loadIntoForm(item);
                     
                     newsContainer.appendChild(div);
                 });
             }
         });
 
-        // Formular
+        // Formular Absenden (Erstellen ODER Ändern)
         if (newsForm) {
             newsForm.onsubmit = async (e) => {
                 e.preventDefault();
+                const titleVal = document.getElementById('news-title').value;
+                const dateVal = document.getElementById('news-date').value;
+                const textVal = document.getElementById('news-text').value;
+
                 try {
-                    await addDoc(newsCollection, {
-                        title: document.getElementById('news-title').value,
-                        date: document.getElementById('news-date').value,
-                        text: document.getElementById('news-text').value,
-                        timestamp: Date.now()
-                    });
-                    newsForm.reset();
+                    if (editingId) {
+                        // UPDATE Modus
+                        let collectionName = YOUR_OWN_CONFIG && Object.keys(YOUR_OWN_CONFIG).length > 0 ? 'news' : null;
+                        let docRef;
+                        
+                        if(!collectionName) {
+                            const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+                            docRef = doc(db, 'artifacts', appId, 'public', 'data', 'news', editingId);
+                        } else {
+                            docRef = doc(db, collectionName, editingId);
+                        }
+
+                        await updateDoc(docRef, {
+                            title: titleVal,
+                            date: dateVal,
+                            text: textVal,
+                            // timestamp nicht updaten, damit die Reihenfolge bleibt? 
+                            // Oder: timestamp: Date.now() wenn es nach oben rutschen soll.
+                        });
+                        alert("Änderungen gespeichert!");
+                    } else {
+                        // CREATE Modus
+                        await addDoc(newsCollection, {
+                            title: titleVal,
+                            date: dateVal,
+                            text: textVal,
+                            timestamp: Date.now()
+                        });
+                    }
+                    
+                    resetForm();
+
                 } catch (err) {
                     console.error("Fehler beim Speichern:", err);
+                    alert("Fehler beim Speichern: " + err.message);
                 }
             };
         }
     });
+
+    // --- FUNKTIONEN FÜR EDITIEREN ---
+
+    function loadIntoForm(item) {
+        editingId = item.id;
+        document.getElementById('news-title').value = item.title;
+        document.getElementById('news-date').value = item.date;
+        document.getElementById('news-text').value = item.text;
+
+        // UI anpassen
+        if(formHeadline) formHeadline.textContent = "📝 Nachricht bearbeiten";
+        if(submitBtn) submitBtn.textContent = "Änderungen speichern";
+        if(cancelBtn) cancelBtn.style.display = "inline-block";
+        
+        // Zum Formular scrollen
+        adminPanel.scrollIntoView({behavior: "smooth"});
+    }
+
+    function resetForm() {
+        editingId = null;
+        if(newsForm) newsForm.reset();
+        
+        // UI zurücksetzen
+        if(formHeadline) formHeadline.textContent = "📝 Neue Nachricht verfassen";
+        if(submitBtn) submitBtn.textContent = "Veröffentlichen";
+        if(cancelBtn) cancelBtn.style.display = "none";
+    }
+
+    if (cancelBtn) {
+        cancelBtn.onclick = resetForm;
+    }
+
 
     // --- LOGIN LOGIK ---
     
@@ -173,35 +254,31 @@ async function startNewsLogic() {
 
         input = input.normalize('NFC');
         const inputHash = await hashPassword(input);
-        
-        // Hash für "stöckelsberg" (Verifiziert aus Browser-Log)
         const targetHash = "88340151310a94e871db8d912c26129a18d9658d3fe4d41565a13fe4b7089795";
 
         if (inputHash === targetHash) {
             document.body.classList.add('admin-mode');
-            
             if(adminPanel) adminPanel.classList.add('active');
             
             loginModal.style.display = 'none';
             passwordInput.value = '';
             loginError.style.display = 'none';
             
-            document.querySelectorAll('.delete-btn').forEach(btn => btn.style.display = 'block');
+            // Alle Admin-Controls anzeigen (Löschen & Ändern Buttons)
+            document.querySelectorAll('.admin-controls').forEach(el => el.style.display = 'block');
         } else {
             loginError.style.display = 'block';
             passwordInput.value = '';
         }
     };
 
-    // Formular Submit Event
     if (loginFormTag) {
         loginFormTag.addEventListener('submit', (e) => {
-            e.preventDefault(); // Verhindert das Neuladen der Seite
+            e.preventDefault();
             handleLogin();
         });
     }
 
-    // Klick außerhalb des Modals schließt es
     window.onclick = (event) => {
         if (event.target == loginModal) {
             loginModal.style.display = "none";
@@ -228,21 +305,9 @@ async function deleteNewsItem(docId) {
     }
 }
 
-// Auto Import
+// Funktion leer, damit keine alten Daten mehr geladen werden
 async function checkAndImportData(collectionRef) {
-    try {
-        const snapshot = await getDocs(collectionRef);
-        if (snapshot.empty) {
-             const oldNews = [
-                { title: "Hallenfest", date: "14.09.2025", text: "Vielen Dank für euren Besuch auf unserem Hallenfest!", timestamp: Date.now() },
-                { title: "VGC Treffen!", date: "05.05.2025", text: "Ein voller Erfolg war das VGC Treffen.", timestamp: Date.now() - 10000 },
-                { title: "Traumwetter!", date: "08.04.2025", text: "Bei Traumwetter starten wir in die Saison!", timestamp: Date.now() - 20000 }
-            ];
-            for (const item of oldNews) {
-                await addDoc(collectionRef, item);
-            }
-        }
-    } catch(e) { console.log(e); }
+    // Leer gelassen, wie gewünscht
 }
 
 initFirebase();
