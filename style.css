@@ -1,5 +1,4 @@
-/* (Bestehende Styles bleiben erhalten...) */
-
+/* --- 1. DESIGN VARIABLEN --- */
 :root {
     --primary: #0f3460;      /* Dunkles Navy Blau */
     --accent: #e94560;       /* Energetisches Rot/Pink */
@@ -302,6 +301,7 @@ header {
     border-left: 5px solid var(--primary);
     margin-bottom: 30px;
     transition: transform 0.3s ease;
+    position: relative; /* Wichtig für float/absolute positioning der buttons */
 }
 .news-item:hover { transform: translateX(10px); }
 .news-date { font-size: 0.85rem; font-weight: 700; color: var(--accent); text-transform: uppercase; display: block; margin-bottom: 5px; }
@@ -323,6 +323,20 @@ footer {
 .footer h4 { color: var(--white); margin-bottom: 20px; }
 .footer a:hover { color: var(--accent); }
 .footer-bottom { text-align: center; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px; font-size: 0.9rem; }
+
+/* NEU: Social Icons im Footer Styling */
+.social-icons a {
+    display: inline-block;
+    margin: 0 12px;
+    color: #b0b0b0;
+    transition: all 0.3s ease;
+    padding: 5px; /* Vergrößert die Klickfläche etwas */
+}
+
+.social-icons a:hover {
+    color: var(--accent);
+    transform: translateY(-3px); /* Leichter Schwebe-Effekt beim Drüberfahren */
+}
 
 /* --- 8. SPEZIAL-ELEMENTE (Video, Zitate, Slideshows) --- */
 
@@ -718,4 +732,47 @@ body.admin-mode .delete-btn { display: inline-block; }
 /* Edit Button Hover */
 .edit-btn:hover {
     background-color: #d1344f !important;
+}
+
+/* --- 11. COOKIE BANNER --- */
+.cookie-banner {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    right: 20px;
+    max-width: 500px;
+    background-color: var(--white);
+    padding: 25px;
+    border-radius: var(--radius);
+    box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+    z-index: 9999;
+    border-left: 5px solid var(--accent);
+    animation: slideUp 0.5s ease-out;
+}
+
+.cookie-content h3 {
+    margin-top: 0;
+    font-size: 1.1rem;
+    margin-bottom: 10px;
+}
+
+.cookie-content p {
+    font-size: 0.9rem;
+    color: var(--text-light);
+    margin-bottom: 20px;
+}
+
+.cookie-buttons {
+    display: flex;
+    gap: 10px;
+}
+
+/* Mobile Anpassung für Banner */
+@media (max-width: 600px) {
+    .cookie-banner {
+        left: 10px; 
+        right: 10px; 
+        bottom: 10px;
+        padding: 20px;
+    }
 }
