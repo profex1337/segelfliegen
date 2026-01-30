@@ -75,93 +75,125 @@
         /* Grid Layout */
         .form-responsive {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: 1fr; /* Standard: 1 Spalte (Mobil) */
             gap: 20px;
         }
-        
-        /* Full Width Elemente im Grid */
-        .form-full-width {
-            grid-column: 1 / -1;
+
+        /* Ab Tablet/Desktop: 2 Spalten */
+        @media (min-width: 768px) {
+            .form-responsive {
+                grid-template-columns: 1fr 1fr;
+            }
         }
 
-        /* Formular Gruppen */
-        .form-group {
-            display: flex;
-            flex-direction: column;
-        }
-
+        /* Labels */
         .form-group label {
-            font-weight: 600;
+            display: block;
             margin-bottom: 8px;
-            color: var(--primary);
+            font-weight: 600;
             font-size: 0.95rem;
+            color: var(--text-main);
         }
 
-        .form-group input, 
-        .form-group select, 
-        .form-group textarea {
-            padding: 12px 15px;
+        /* Eingabefelder (Modern & Touch-freundlich) */
+        input[type="text"],
+        input[type="email"],
+        input[type="tel"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 12px 15px; /* Etwas mehr Platz innen */
             border: 1px solid #ddd;
             border-radius: 8px;
-            font-size: 1rem;
-            font-family: inherit;
-            transition: border-color 0.3s, box-shadow 0.3s;
-            background-color: #f9f9f9;
-        }
-
-        .form-group input:focus, 
-        .form-group select:focus, 
-        .form-group textarea:focus {
-            border-color: var(--accent);
-            outline: none;
-            box-shadow: 0 0 0 3px rgba(233, 69, 96, 0.1);
             background-color: #fff;
+            font-family: inherit;
+            font-size: 16px; /* WICHTIG: 16px verhindert Auto-Zoom auf iOS */
+            appearance: none; /* Entfernt alte OS-Styles */
+            -webkit-appearance: none;
+            transition: border-color 0.3s, box-shadow 0.3s;
         }
 
-        /* Checkbox Custom Style */
+        /* Fokus Effekt */
+        input:focus, textarea:focus, select:focus {
+            border-color: var(--primary);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(15, 52, 96, 0.1);
+        }
+
+        /* Textarea Resizing kontrollieren */
+        textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        /* Checkbox Container Styling */
         .checkbox-wrapper {
             display: flex;
             align-items: flex-start;
-            gap: 10px;
-            margin-top: 15px;
-            font-size: 0.9rem;
-            color: var(--text-light);
-            grid-column: 1 / -1;
-        }
-        
-        .checkbox-wrapper input[type="checkbox"] {
-            margin-top: 4px;
-            width: 18px;
-            height: 18px;
-            accent-color: var(--accent);
+            gap: 12px;
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            border: 1px solid #eee;
         }
 
-        /* Mobile Anpassung */
-        @media (max-width: 700px) {
-            .form-responsive {
-                grid-template-columns: 1fr; /* Alles untereinander */
-                gap: 15px;
+        .checkbox-wrapper input[type="checkbox"] {
+            width: 22px;
+            height: 22px;
+            margin-top: 2px;
+            flex-shrink: 0; /* Verhindert das Quetschen der Checkbox */
+            cursor: pointer;
+            -webkit-appearance: checkbox; /* Checkboxen sollen nativ aussehen */
+            appearance: checkbox;
+        }
+
+        .checkbox-wrapper label {
+            font-weight: normal;
+            font-size: 0.9rem;
+            margin: 0;
+            line-height: 1.5;
+            cursor: pointer;
+            color: var(--text-light);
+        }
+
+        /* Mobile Anpassungen */
+        @media (max-width: 600px) {
+            .category-nav {
+                gap: 10px;
+            }
+            .btn-cat {
+                padding: 8px 12px;
+                font-size: 0.8rem;
+                flex-grow: 1;
+                text-align: center;
+            }
+            /* Formular Padding auf Mobile reduzieren für mehr Platz */
+            .content-block#Anfrage {
+                padding: 20px;
+            }
+        }
+
+        /* --- FIX FÜR KUNSTFLUG REIHENFOLGE --- */
+        @media (max-width: 991px) {
+            .swap-mobile > div:last-child {
+                order: -1;
             }
         }
     </style>
 </head>
 <body>
-
-    <!-- ZENTRALER HEADER -->
     <header id="main-header"></header>
 
-    <!-- Page Header -->
     <div class="page-header" style="background-image: linear-gradient(135deg, rgba(15, 52, 96, 0.8), rgba(15, 52, 96, 0.6)), url('images/mitfliegen_hero.jpg');">
         <div class="container">
-            <h1>Mitfliegen</h1>
-            <p>Erleben Sie die Welt von oben</p>
+            <h1>Nutzen Sie die Gelegenheit!</h1>
+            <p>Gutscheine und Gastflüge</p>
         </div>
     </div>
 
-    <!-- Main Content -->
     <main class="container section">
-        
-        <!-- NEU: KATEGORIE BUTTONS -->
+        <!-- Kategorie Buttons -->
         <div class="category-nav">
             <a href="#infos" class="btn-cat">Infos</a>
             <a href="#preise" class="btn-cat">Preise</a>
@@ -225,14 +257,46 @@
         </div>
 
         <!-- Preisliste & Info -->
+        <!-- ID HINZUGEFÜGT: id="preise" für den Anker-Link -->
         <div class="content-block" id="preise">
-            <h2>Preise & Kostenbeteiligung</h2>
-            <p>Wir führen Gastflüge zum Selbstkostenpreis durch. Die Preise decken die Betriebskosten der Flugzeuge.</p>
+            <h2>Gastfluggebühren</h2>
             
             <ul class="data-list" style="margin-top: 20px;">
-                <li><strong>Segelflug (Windenstart)</strong> <span>ca. 5-10 Min. Flugzeit</span> <span style="float:right; font-weight:bold; color:var(--primary);">30,00 €</span></li>
-                <li><strong>Segelflug (F-Schlepp)</strong> <span>auf 600m Höhe, ca. 20 Min.</span> <span style="float:right; font-weight:bold; color:var(--primary);">60,00 €</span></li>
-                <li><strong>Motorsegler</strong> <span>pro Minute Flugzeit</span> <span style="float:right; font-weight:bold; color:var(--primary);">2,50 € / Min</span></li>
+                <li>
+                    <strong>Segelflug (Windenstart)</strong> 
+                    <span>bis 20 Minuten Flugzeit</span> 
+                    <span style="float:right; font-weight:bold; color:var(--primary);">35,00 €</span>
+                </li>
+                <li>
+                    <strong>Gruppen ab 10 Personen</strong> 
+                    <span>bis 20 Minuten, Windenstart</span> 
+                    <span style="float:right; font-weight:bold; color:var(--primary);">23,00 €</span>
+                </li>
+                <li>
+                    <strong>Segelflug (F-Schlepp)</strong> 
+                    <span>bis 20 Minuten</span> 
+                    <span style="float:right; font-weight:bold; color:var(--primary);">58,00 €</span>
+                </li>
+                <li>
+                    <strong>Verlängerung Segelflug</strong> 
+                    <span>Jede weitere Minute über 20 Min. Flugzeit</span> 
+                    <span style="float:right; font-weight:bold; color:var(--primary);">0,60 €</span>
+                </li>
+                <li>
+                    <strong>Motorsegler</strong> 
+                    <span>bis 15 Minuten</span> 
+                    <span style="float:right; font-weight:bold; color:var(--primary);">45,00 €</span>
+                </li>
+                <li>
+                    <strong>Verlängerung Motorsegler</strong> 
+                    <span>jede weitere Minute</span> 
+                    <span style="float:right; font-weight:bold; color:var(--primary);">2,30 €</span>
+                </li>
+                <li>
+                    <strong>Segelkunstflug</strong> 
+                    <span>mit F-Schlepp pauschal</span> 
+                    <span style="float:right; font-weight:bold; color:var(--primary);">120,00 €</span>
+                </li>
             </ul>
 
             <div class="highlight-box">
@@ -246,33 +310,31 @@
             </div>
         </div>
 
-        <!-- Anfrage Formular -->
-        <div id="anfrage-formular" class="content-block" style="margin-top: 40px;">
-            <div class="section-title" style="margin-bottom: 30px;">
-                <h2>Anfrage & Gutscheine</h2>
-                <p>Schreiben Sie uns für Terminabsprachen oder Gutschein-Bestellungen.</p>
-            </div>
-
-            <form action="https://formspree.io/f/xbjnqyjz" method="POST" class="form-wrapper">
+        <!-- ANFRAGE FORMULAR -->
+        <div class="content-block" id="anfrage-formular" style="border-top: 5px solid var(--accent); margin-top: 40px;">
+            <h2 style="text-align: center; margin-bottom: 10px;">Flug- oder Gutschein-Anfrage</h2>
+            <p style="text-align: center; margin-bottom: 40px; color: var(--text-light);">Senden Sie uns unverbindlich Ihren Wunschtermin.</p>
+            
+            <form action="https://formspree.io/f/meekadza" method="POST" style="max-width: 700px; margin: 0 auto;">
                 
                 <div class="form-responsive">
                     <div class="form-group">
-                        <label for="name">Ihr Name*</label>
-                        <input type="text" id="name" name="name" required placeholder="Vor- und Nachname">
+                        <label for="name">Ihr Name *</label>
+                        <input type="text" id="name" name="name" required placeholder="Max Mustermann">
                     </div>
-
                     <div class="form-group">
-                        <label for="email">E-Mail Adresse*</label>
+                        <label for="email">E-Mail Adresse *</label>
                         <input type="email" id="email" name="email" required placeholder="beispiel@email.de">
                     </div>
+                </div>
 
+                <div class="form-responsive" style="margin-top: 20px;">
                     <div class="form-group">
-                        <label for="telefon">Telefonnummer (optional)</label>
-                        <input type="tel" id="telefon" name="phone" placeholder="Für Rückfragen">
+                        <label for="telefon">Telefonnummer</label>
+                        <input type="tel" id="telefon" name="telefon" placeholder="Für Rückfragen">
                     </div>
-
                     <div class="form-group">
-                        <label for="interesse">Interesse an*</label>
+                        <label for="interesse">Interesse an *</label>
                         <select id="interesse" name="interest" required>
                             <option value="" disabled selected>Bitte wählen...</option>
                             <option value="Segelflug (Winde)">Segelflug (Winde)</option>
