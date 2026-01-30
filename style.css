@@ -330,12 +330,12 @@ footer {
     margin: 0 12px;
     color: #b0b0b0;
     transition: all 0.3s ease;
-    padding: 5px; 
+    padding: 5px; /* Vergrößert die Klickfläche etwas */
 }
 
 .social-icons a:hover {
     color: var(--accent);
-    transform: translateY(-3px); 
+    transform: translateY(-3px); /* Leichter Schwebe-Effekt beim Drüberfahren */
 }
 
 /* --- 8. SPEZIAL-ELEMENTE (Video, Zitate, Slideshows) --- */
@@ -719,7 +719,7 @@ body.admin-mode .delete-btn { display: inline-block; }
     font-size: 1rem;
 }
 
-/* Button Styles für Sekundär-Aktionen */
+/* NEU: Button Styles für Sekundär-Aktionen */
 .btn-secondary {
     background-color: #999;
     box-shadow: none;
@@ -826,40 +826,4 @@ body.admin-mode .delete-btn { display: inline-block; }
         width: 24px; /* Etwas größer auf Handy */
         height: 24px;
     }
-}
-
-/* --- 13. MAUS FLUGZEUG EFFEKT (Global) --- */
-#mouse-plane {
-    position: fixed;
-    top: 0; 
-    left: 0;
-    width: 32px; 
-    height: 32px;
-    pointer-events: none; /* Klicks gehen durch */
-    z-index: 10000;
-    display: none; /* Wird per JS auf Desktop aktiviert */
-    will-change: transform;
-    /* Ankerpunkt zentrieren */
-    margin-left: -16px; 
-    margin-top: -16px;
-}
-
-#mouse-plane svg {
-    width: 100%;
-    height: 100%;
-    fill: var(--primary); 
-    filter: drop-shadow(2px 4px 6px rgba(0,0,0,0.2));
-}
-
-/* Der Kondensstreifen hinter dem Flugzeug */
-.plane-trail {
-    position: absolute;
-    bottom: 0px; /* Startet am Heck */
-    left: 50%;
-    width: 4px; /* Breite des Streifens */
-    height: 0px; /* Länge (wird dynamisch) */
-    background: linear-gradient(to top, transparent, rgba(15, 52, 96, 0.6)); /* Verblasst nach hinten */
-    transform: translateX(-50%);
-    border-radius: 2px;
-    pointer-events: none;
 }

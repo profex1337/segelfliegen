@@ -26,7 +26,6 @@ const headerHTML = `
         <a href="veranstaltungen.html">Events</a>
         <a href="kontakt.html">Kontakt</a>
         
-        <!-- Social Media Icons im Header -->
         <div class="header-socials">
             <a href="https://www.facebook.com/Segelflieger.PostSV/?locale=de_DE" target="_blank" title="Facebook" class="header-social-link">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg>
@@ -55,7 +54,6 @@ const footerHTML = `
         <a href="mailto:info@segelfliegen-altdorf.de" style="text-decoration: none; color: #b0b0b0;">📧 info@segelfliegen-altdorf.de</a>
     </p>
 
-    <!-- Social Media Icons (Footer) -->
     <div class="social-icons" style="margin-top: 25px; margin-bottom: 10px;">
         <a href="https://www.facebook.com/Segelflieger.PostSV/?locale=de_DE" target="_blank" title="Facebook">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg>
@@ -79,11 +77,8 @@ const footerHTML = `
 
 // 2. HAUPT-INITIALISIERUNG
 document.addEventListener('DOMContentLoaded', () => {
-    
-    // --- Favicon automatisch einfügen ---
     initFavicon();
 
-    // --- Header einfügen ---
     const headerElement = document.getElementById('main-header');
     if (headerElement) {
         headerElement.innerHTML = headerHTML;
@@ -113,7 +108,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- Footer einfügen ---
     const footerElement = document.getElementById('main-footer');
     if (footerElement) {
         footerElement.innerHTML = footerHTML;
@@ -122,74 +116,11 @@ document.addEventListener('DOMContentLoaded', () => {
     initLightbox();
     initBackToTop();
     initSlideshows();
-    
-    // DSGVO Cookie Banner starten
     initCookieConsent();
-
-    // Maus Flugzeug starten
-    initMousePlane();
 });
 
 // 3. UI HELFER FUNKTIONEN
 
-// NEU: Maus Flugzeug Animation (Zentral für alle Seiten)
-function initMousePlane() {
-    // Nur bei Maus-Geräten aktivieren (nicht auf Touchscreens)
-    if (!window.matchMedia("(pointer: fine)").matches) return;
-
-    // HTML in den Body injizieren
-    const planeHTML = `
-        <div id="mouse-plane">
-            <div class="plane-trail" id="plane-trail"></div>
-            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path d="M21,16V14L13,9V3.5A1.5,1.5,0,0,0,11.5,2A1.5,1.5,0,0,0,10,3.5V9L2,14V16L10,13.5V19L8,20.5V22L11.5,21L15,22V20.5L13,19V13.5L21,16Z"/>
-            </svg>
-        </div>
-    `;
-    document.body.insertAdjacentHTML('beforeend', planeHTML);
-
-    const plane = document.getElementById('mouse-plane');
-    const trail = document.getElementById('plane-trail');
-    plane.style.display = 'block';
-
-    let mouseX = -100, mouseY = -100;
-    let planeX = -100, planeY = -100;
-
-    document.addEventListener('mousemove', e => {
-        mouseX = e.clientX;
-        mouseY = e.clientY;
-    });
-
-    function movePlane() {
-        // Weiche Bewegung zum Mauszeiger (Trägheit)
-        planeX += (mouseX - planeX) * 0.15;
-        planeY += (mouseY - planeY) * 0.15;
-        
-        const dx = mouseX - planeX;
-        const dy = mouseY - planeY;
-        
-        // Winkel berechnen (offset 90deg da Icon nach oben zeigt)
-        const angle = Math.atan2(dy, dx) * 180 / Math.PI;
-        
-        // Geschwindigkeit berechnen
-        const speed = Math.sqrt(dx*dx + dy*dy);
-        
-        // Schweif-Länge an Geschwindigkeit anpassen (Max 80px)
-        const trailLen = Math.min(speed * 2.5, 80); 
-        
-        // Transformation anwenden
-        plane.style.transform = `translate(${planeX}px, ${planeY}px) rotate(${angle + 90}deg)`;
-        
-        // Schweif aktualisieren
-        trail.style.height = trailLen + 'px';
-        trail.style.opacity = Math.min(speed / 15, 0.6); // Sichtbarer bei Bewegung
-        
-        requestAnimationFrame(movePlane);
-    }
-    movePlane();
-}
-
-// Cookie Banner Logik
 function initCookieConsent() {
     if (localStorage.getItem('dsgvo-consent')) return;
 
