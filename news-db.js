@@ -3,6 +3,8 @@
    Diese Datei wird als Modul geladen. Wenn sie fehlschlägt, fehlt nur der News-Teil.
 --------------------------------------------------------------------------------------- */
 
+console.log("1. news-db.js wurde geladen."); // DEBUG
+
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
 import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 import { getFirestore, collection, addDoc, deleteDoc, doc, onSnapshot, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
@@ -30,10 +32,15 @@ async function hashPassword(string) {
     return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
 }
 
+// DEBUG: Hash Test beim Start
+hashPassword("stöckelsberg").then(h => console.log("DEBUG: Erwarteter Hash für 'stöckelsberg' ist:", h));
+
 // Initialisierung versuchen
 async function initFirebase() {
+    console.log("2. initFirebase gestartet");
     const newsContainer = document.getElementById('dynamic-news-list');
-    if (!newsContainer) return; // Wir sind nicht auf der Seite mit News
+    
+    if (!newsContainer) return;
 
     try {
         if (YOUR_OWN_CONFIG && Object.keys(YOUR_OWN_CONFIG).length > 0) {
@@ -52,20 +59,25 @@ async function initFirebase() {
             throw new Error("Keine Konfiguration gefunden");
         }
 
+        console.log("3. Firebase initialisiert");
         await startNewsLogic();
 
     } catch (e) {
         console.warn("Datenbank Fehler (Offline?):", e);
-        newsContainer.innerHTML = `
-            <div class="news-item">
-                <span class="news-date">Hinweis</span>
-                <h3>Offline Modus</h3>
-                <p>Die Neuigkeiten konnten nicht geladen werden.</p>
-            </div>`;
+        if(newsContainer) {
+            newsContainer.innerHTML = `
+                <div class="news-item">
+                    <span class="news-date">Hinweis</span>
+                    <h3>Offline Modus</h3>
+                    <p>Die Neuigkeiten konnten nicht geladen werden.</p>
+                </div>`;
+        }
     }
 }
 
 async function startNewsLogic() {
+    console.log("4. startNewsLogic läuft");
+    
     const newsContainer = document.getElementById('dynamic-news-list');
     const adminToggle = document.getElementById('admin-toggle');
     const adminPanel = document.getElementById('admin-panel');
@@ -75,8 +87,8 @@ async function startNewsLogic() {
     const loginModal = document.getElementById('login-modal');
     const loginClose = document.getElementById('login-close');
     const passwordInput = document.getElementById('admin-password-input');
-    const loginBtn = document.getElementById('admin-login-btn');
     const loginError = document.getElementById('login-error');
+    const loginFormTag = document.getElementById('admin-login-form'); // NEU
 
     // Auth
     try {
@@ -147,8 +159,10 @@ async function startNewsLogic() {
     // Modal öffnen
     if (adminToggle) {
         adminToggle.addEventListener('click', () => {
-            loginModal.style.display = 'flex';
-            passwordInput.focus();
+            if (loginModal) {
+                loginModal.style.display = 'flex';
+                if (passwordInput) passwordInput.focus();
+            }
         });
     }
 
@@ -163,38 +177,42 @@ async function startNewsLogic() {
 
     // Login ausführen
     const handleLogin = async () => {
-        // .trim() entfernt Leerzeichen vorne/hinten
         let input = passwordInput.value.trim();
         if (!input) return;
 
-        // Normalisieren für Umlaute
         input = input.normalize('NFC');
-
         const inputHash = await hashPassword(input);
         
-        // Debugging: Hash in der Konsole anzeigen
-        console.log("Eingegebenes Passwort:", input);
+        console.log("Eingabe:", input);
         console.log("Berechneter Hash:", inputHash);
 
-        // Hash für "stöckelsberg" (alles kleingeschrieben)
+        // Hash für "stöckelsberg"
         const targetHash = "f6339d29c36214197592815616f91d094770387532395632007823700055745e";
 
         if (inputHash === targetHash) {
+            console.log("Passwort KORREKT!");
             document.body.classList.add('admin-mode');
-            adminPanel.classList.add('active');
+            
+            if(adminPanel) adminPanel.classList.add('active');
+            
             loginModal.style.display = 'none';
             passwordInput.value = '';
             loginError.style.display = 'none';
+            
             document.querySelectorAll('.delete-btn').forEach(btn => btn.style.display = 'block');
         } else {
+            console.log("Passwort FALSCH.");
             loginError.style.display = 'block';
             passwordInput.value = '';
         }
     };
 
-    if (loginBtn) loginBtn.onclick = handleLogin;
-    if (passwordInput) {
-        passwordInput.onkeypress = (e) => { if (e.key === 'Enter') handleLogin(); };
+    // Formular Submit Event (Wichtig für Browser Kompatibilität)
+    if (loginFormTag) {
+        loginFormTag.addEventListener('submit', (e) => {
+            e.preventDefault(); // Verhindert das Neuladen der Seite
+            handleLogin();
+        });
     }
 
     // Klick außerhalb des Modals schließt es

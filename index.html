@@ -101,9 +101,15 @@
             <span class="modal-close" id="login-close">&times;</span>
             <h3>Admin Login</h3>
             <p>Bitte geben Sie das Passwort ein:</p>
-            <input type="password" id="admin-password-input" placeholder="Passwort">
-            <p id="login-error" style="color: red; font-size: 0.8rem; display: none;">Falsches Passwort!</p>
-            <button id="admin-login-btn" class="btn" style="width: 100%; margin-top: 10px;">Anmelden</button>
+            
+            <!-- NEU: Jetzt in einem FORM Tag, um den Browserfehler zu beheben -->
+            <form id="admin-login-form">
+                <input type="password" id="admin-password-input" placeholder="Passwort" autocomplete="current-password">
+                <p id="login-error" style="color: red; font-size: 0.8rem; display: none;">Falsches Passwort!</p>
+                <!-- type="submit" sorgt dafür, dass Enter automatisch funktioniert -->
+                <button type="submit" id="admin-login-btn" class="btn" style="width: 100%; margin-top: 10px;">Anmelden</button>
+            </form>
+
         </div>
     </div>
 
