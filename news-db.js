@@ -76,8 +76,11 @@ async function startNewsLogic() {
     const adminToggle = document.getElementById('admin-toggle');
     const adminPanel = document.getElementById('admin-panel');
     const newsForm = document.getElementById('news-form');
-    const cancelBtn = document.getElementById('news-cancel-btn'); // Neuer Button
-    const submitBtn = document.getElementById('news-submit-btn'); // Button mit ID
+    
+    // Buttons
+    const logoutBtn = document.getElementById('admin-logout-btn');
+    const cancelBtn = document.getElementById('news-cancel-btn');
+    const submitBtn = document.getElementById('news-submit-btn');
     const formHeadline = document.getElementById('form-headline');
 
     // Login Modal Elemente
@@ -112,28 +115,28 @@ async function startNewsLogic() {
 
             newsContainer.innerHTML = '';
             if (newsItems.length === 0) {
-                // HIER WURDE DER AUTO-IMPORT ENTFERNT
-                // checkAndImportData(newsCollection); 
                 newsContainer.innerHTML = '<p style="text-align:center;">Keine Nachrichten gefunden.</p>';
             } else {
                 newsItems.forEach(item => {
                     const div = document.createElement('div');
                     div.className = 'news-item';
                     
-                    // Buttons nur sichtbar im Admin Mode
-                    const adminStyle = document.body.classList.contains('admin-mode') ? 'block' : 'none';
+                    // Style für Admin Mode prüfen
+                    const isAdmin = document.body.classList.contains('admin-mode');
+                    const adminDisplay = isAdmin ? 'flex' : 'none'; // Flexbox für Alignment!
                     
                     div.innerHTML = `
-                        <div class="admin-controls" style="float:right; display:${adminStyle}">
-                            <button class="edit-btn" style="background:#e94560; color:white; border:none; padding:5px 10px; margin-right:5px; cursor:pointer; border-radius:4px;">Ändern</button>
-                            <button class="delete-btn" style="background:red; color:white; border:none; padding:5px 10px; cursor:pointer; border-radius:4px;">Löschen</button>
+                        <!-- Buttons Container mit Flexbox -->
+                        <div class="admin-controls" style="float:right; display:${adminDisplay}; gap: 5px; align-items: center;">
+                            <button class="edit-btn" style="background:#e94560; color:white; border:none; padding:5px 10px; cursor:pointer; border-radius:4px; height: 30px;">Ändern</button>
+                            <button class="delete-btn" style="background:red; color:white; border:none; padding:5px 10px; cursor:pointer; border-radius:4px; height: 30px;">Löschen</button>
                         </div>
                         <span class="news-date">${item.date || ''}</span>
                         <h3>${item.title || 'Kein Titel'}</h3>
                         <p style="white-space: pre-wrap;">${item.text || ''}</p>
                     `;
                     
-                    // Event Listener direkt anhängen
+                    // Event Listener
                     const delBtn = div.querySelector('.delete-btn');
                     delBtn.onclick = () => deleteNewsItem(item.id);
 
@@ -145,7 +148,7 @@ async function startNewsLogic() {
             }
         });
 
-        // Formular Absenden (Erstellen ODER Ändern)
+        // Formular Absenden
         if (newsForm) {
             newsForm.onsubmit = async (e) => {
                 e.preventDefault();
@@ -155,35 +158,21 @@ async function startNewsLogic() {
 
                 try {
                     if (editingId) {
-                        // UPDATE Modus
+                        // UPDATE
                         let collectionName = YOUR_OWN_CONFIG && Object.keys(YOUR_OWN_CONFIG).length > 0 ? 'news' : null;
                         let docRef;
-                        
                         if(!collectionName) {
                             const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
                             docRef = doc(db, 'artifacts', appId, 'public', 'data', 'news', editingId);
                         } else {
                             docRef = doc(db, collectionName, editingId);
                         }
-
-                        await updateDoc(docRef, {
-                            title: titleVal,
-                            date: dateVal,
-                            text: textVal,
-                            // timestamp nicht updaten, damit die Reihenfolge bleibt? 
-                            // Oder: timestamp: Date.now() wenn es nach oben rutschen soll.
-                        });
+                        await updateDoc(docRef, { title: titleVal, date: dateVal, text: textVal });
                         alert("Änderungen gespeichert!");
                     } else {
-                        // CREATE Modus
-                        await addDoc(newsCollection, {
-                            title: titleVal,
-                            date: dateVal,
-                            text: textVal,
-                            timestamp: Date.now()
-                        });
+                        // CREATE
+                        await addDoc(newsCollection, { title: titleVal, date: dateVal, text: textVal, timestamp: Date.now() });
                     }
-                    
                     resetForm();
 
                 } catch (err) {
@@ -194,7 +183,7 @@ async function startNewsLogic() {
         }
     });
 
-    // --- FUNKTIONEN FÜR EDITIEREN ---
+    // --- HELPER ---
 
     function loadIntoForm(item) {
         editingId = item.id;
@@ -202,12 +191,11 @@ async function startNewsLogic() {
         document.getElementById('news-date').value = item.date;
         document.getElementById('news-text').value = item.text;
 
-        // UI anpassen
         if(formHeadline) formHeadline.textContent = "📝 Nachricht bearbeiten";
         if(submitBtn) submitBtn.textContent = "Änderungen speichern";
         if(cancelBtn) cancelBtn.style.display = "inline-block";
+        if(logoutBtn) logoutBtn.style.display = "none"; // Logout ausblenden beim Editieren, um Verwirrung zu vermeiden
         
-        // Zum Formular scrollen
         adminPanel.scrollIntoView({behavior: "smooth"});
     }
 
@@ -215,16 +203,29 @@ async function startNewsLogic() {
         editingId = null;
         if(newsForm) newsForm.reset();
         
-        // UI zurücksetzen
         if(formHeadline) formHeadline.textContent = "📝 Neue Nachricht verfassen";
         if(submitBtn) submitBtn.textContent = "Veröffentlichen";
         if(cancelBtn) cancelBtn.style.display = "none";
+        if(logoutBtn) logoutBtn.style.display = "inline-block"; // Logout wieder zeigen
     }
 
-    if (cancelBtn) {
-        cancelBtn.onclick = resetForm;
-    }
+    // Cancel Button Klick (Editieren abbrechen)
+    if (cancelBtn) cancelBtn.onclick = resetForm;
 
+    // Logout Button Klick (Admin Modus beenden)
+    if (logoutBtn) {
+        logoutBtn.onclick = () => {
+            if (confirm("Admin Modus beenden?")) {
+                document.body.classList.remove('admin-mode');
+                adminPanel.classList.remove('active');
+                
+                // Alle Admin-Controls verstecken
+                document.querySelectorAll('.admin-controls').forEach(el => el.style.display = 'none');
+                
+                resetForm(); // Formular leeren falls was drin stand
+            }
+        };
+    }
 
     // --- LOGIN LOGIK ---
     
@@ -264,8 +265,8 @@ async function startNewsLogic() {
             passwordInput.value = '';
             loginError.style.display = 'none';
             
-            // Alle Admin-Controls anzeigen (Löschen & Ändern Buttons)
-            document.querySelectorAll('.admin-controls').forEach(el => el.style.display = 'block');
+            // Buttons anzeigen (mit Flexbox style setzen)
+            document.querySelectorAll('.admin-controls').forEach(el => el.style.display = 'flex');
         } else {
             loginError.style.display = 'block';
             passwordInput.value = '';
