@@ -647,7 +647,7 @@ body.admin-mode .delete-btn { display: inline-block; }
 
 /* --- 10. MODAL & LOGIN STYLES --- */
 .modal {
-    display: none;
+    display: none; /* Standardmäßig versteckt */
     position: fixed;
     z-index: 3000;
     left: 0;
@@ -658,6 +658,12 @@ body.admin-mode .delete-btn { display: inline-block; }
     backdrop-filter: blur(8px);
     align-items: center;
     justify-content: center;
+}
+
+/* WICHTIG: Flexbox aktivieren, wenn Klasse 'active' oder via JS gesetzt */
+.modal[style*="display: block"], 
+.modal[style*="display: flex"] {
+    display: flex !important;
 }
 
 .modal-content {
