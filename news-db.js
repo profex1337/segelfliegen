@@ -3,8 +3,6 @@
    Diese Datei wird als Modul geladen. Wenn sie fehlschlägt, fehlt nur der News-Teil.
 --------------------------------------------------------------------------------------- */
 
-console.log("1. news-db.js wurde geladen."); // DEBUG
-
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
 import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 import { getFirestore, collection, addDoc, deleteDoc, doc, onSnapshot, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
@@ -32,12 +30,8 @@ async function hashPassword(string) {
     return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
 }
 
-// DEBUG: Hash Test beim Start
-hashPassword("stöckelsberg").then(h => console.log("DEBUG: Erwarteter Hash für 'stöckelsberg' ist:", h));
-
 // Initialisierung versuchen
 async function initFirebase() {
-    console.log("2. initFirebase gestartet");
     const newsContainer = document.getElementById('dynamic-news-list');
     
     if (!newsContainer) return;
@@ -59,7 +53,6 @@ async function initFirebase() {
             throw new Error("Keine Konfiguration gefunden");
         }
 
-        console.log("3. Firebase initialisiert");
         await startNewsLogic();
 
     } catch (e) {
@@ -76,8 +69,6 @@ async function initFirebase() {
 }
 
 async function startNewsLogic() {
-    console.log("4. startNewsLogic läuft");
-    
     const newsContainer = document.getElementById('dynamic-news-list');
     const adminToggle = document.getElementById('admin-toggle');
     const adminPanel = document.getElementById('admin-panel');
@@ -88,7 +79,7 @@ async function startNewsLogic() {
     const loginClose = document.getElementById('login-close');
     const passwordInput = document.getElementById('admin-password-input');
     const loginError = document.getElementById('login-error');
-    const loginFormTag = document.getElementById('admin-login-form'); // NEU
+    const loginFormTag = document.getElementById('admin-login-form');
 
     // Auth
     try {
@@ -183,14 +174,10 @@ async function startNewsLogic() {
         input = input.normalize('NFC');
         const inputHash = await hashPassword(input);
         
-        console.log("Eingabe:", input);
-        console.log("Berechneter Hash:", inputHash);
-
-        // Hash für "stöckelsberg"
-        const targetHash = "f6339d29c36214197592815616f91d094770387532395632007823700055745e";
+        // Hash für "stöckelsberg" (Verifiziert aus Browser-Log)
+        const targetHash = "88340151310a94e871db8d912c26129a18d9658d3fe4d41565a13fe4b7089795";
 
         if (inputHash === targetHash) {
-            console.log("Passwort KORREKT!");
             document.body.classList.add('admin-mode');
             
             if(adminPanel) adminPanel.classList.add('active');
@@ -201,13 +188,12 @@ async function startNewsLogic() {
             
             document.querySelectorAll('.delete-btn').forEach(btn => btn.style.display = 'block');
         } else {
-            console.log("Passwort FALSCH.");
             loginError.style.display = 'block';
             passwordInput.value = '';
         }
     };
 
-    // Formular Submit Event (Wichtig für Browser Kompatibilität)
+    // Formular Submit Event
     if (loginFormTag) {
         loginFormTag.addEventListener('submit', (e) => {
             e.preventDefault(); // Verhindert das Neuladen der Seite
