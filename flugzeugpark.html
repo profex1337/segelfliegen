@@ -3,13 +3,70 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Flugzeugpark | Segelflugplatz Altdorf</title>
+    
+    <!-- SEO OPTIMIERUNG -->
+    <title>Flugzeugpark & Flotte | Segelflugplatz Altdorf</title>
+    <meta name="description" content="Unsere Flotte: Vom modernen Hochleistungs-Segelflugzeug DG-1001e neo über Schulungsflugzeuge bis zu Oldtimern und Motorseglern.">
+    <meta name="keywords" content="Flugzeugpark, Segelflugzeuge, DG-1001e neo, FES, Grob Twin, ASK 21, LS4, Motorsegler, Dynamic WT9, Oldtimer Ka 6, Winde">
+    <meta name="robots" content="index, follow">
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Unsere Flotte | Segelflugplatz Altdorf">
+    <meta property="og:description" content="Entdecken Sie unsere Flugzeuge - inklusive der seltenen DG-1001e neo!">
+    <meta property="og:image" content="https://segelfliegen-altdorf.de/images/flugzeugpark_hero.jpg">
+
+    <!-- Local SEO -->
+    <meta name="geo.region" content="DE-BY">
+    <meta name="geo.placename" content="Berg bei Neumarkt in der Oberpfalz">
+    <meta name="geo.position" content="49.3899;11.4267">
+    <meta name="ICBM" content="49.3899, 11.4267">
+
+    <!-- Strukturierte Daten -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SportsClub",
+      "name": "Segelflieger im Post-SV Nürnberg e.V.",
+      "image": "https://segelfliegen-altdorf.de/images/logo.png",
+      "url": "https://segelfliegen-altdorf.de/flugzeugpark.html",
+      "telephone": "+499189310",
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": "Kastanienweg 6",
+        "addressLocality": "Berg bei Neumarkt",
+        "postalCode": "92348",
+        "addressCountry": "DE"
+      },
+      "geo": {
+        "@type": "GeoCoordinates",
+        "latitude": 49.3899301,
+        "longitude": 11.4267085
+      }
+    }
+    </script>
+
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <style>
         @media (min-width: 992px) { .card-grid { grid-template-columns: repeat(3, 1fr) !important; } }
         .card-img-top img { width: 100%; height: 100%; object-fit: cover; image-rendering: -webkit-optimize-contrast; }
         html { scroll-padding-top: 120px; scroll-behavior: smooth; }
+        
+        /* Highlight Badge für DG-1001e */
+        .badge-highlight {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background-color: var(--accent);
+            color: white;
+            padding: 5px 12px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 0.8rem;
+            z-index: 10;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+        }
     </style>
 </head>
 <body>
@@ -36,18 +93,23 @@
         </div>
 
         <div class="card-grid">
-            <div class="card">
+            
+            <!-- HIGHLIGHT DG-1001e -->
+            <div class="card" style="border: 2px solid var(--accent); transform: scale(1.02);">
+                <div class="badge-highlight">★ Highlight</div>
                 <div class="card-img-top"><img src="images/dg1001.jpg" alt="DG-1001e neo D-KSFP" class="zoomable" onerror="this.src='images/hero.jpg'"></div>
                 <div class="card-body">
-                    <h3 class="card-title">DG-1001e neo <span style="font-weight:normal; font-size: 0.9rem; color:#666;">(D-KSFP)</span></h3>
+                    <h3 class="card-title" style="color: var(--accent);">DG-1001e neo <span style="font-weight:normal; font-size: 0.9rem; color:#666;">(D-KSFP)</span></h3>
+                    <p style="font-size: 0.9rem; margin-bottom: 10px; font-weight: 600;">Unser seltenes Hochleistungs-Flaggschiff mit innovativem FES-Antrieb.</p>
                     <ul class="data-list" style="font-size: 0.9rem; margin-top: 10px;">
-                        <li><strong>Typ:</strong> Segelflugzeug (FES)</li>
-                        <li><strong>Sitzplätze:</strong> 2</li>
-                        <li><strong>Spannweite:</strong> 17,2 - 20 m</li>
-                        <li><strong>Gleitzahl:</strong> 46,6</li>
+                        <li><strong>Typ:</strong> Hochleistungs-Doppelsitzer</li>
+                        <li><strong>Besonderheit:</strong> Front Electric Sustainer (FES)</li>
+                        <li><strong>Spannweite:</strong> 20 m</li>
+                        <li><strong>Gleitzahl:</strong> 46,5 (Top Leistung!)</li>
                     </ul>
                 </div>
             </div>
+
             <div class="card">
                 <div class="card-img-top"><img src="images/grob-twin-4419.jpg" alt="Grob Twin III D-4419" class="zoomable" onerror="this.src='images/hero.jpg'"></div>
                 <div class="card-body">

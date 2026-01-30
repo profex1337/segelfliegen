@@ -3,8 +3,57 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Segelflugplatz Altdorf-Hagenhausen | Faszination Fliegen</title>
-    <meta name="description" content="Erleben Sie Segelfliegen und Motorflug im Großraum Nürnberg. Ausbildung, Gastflüge und Events am Flugplatz Altdorf.">
+    
+    <!-- SEO: Titel & Beschreibung -->
+    <title>Segelflugplatz Altdorf-Hagenhausen | Faszination Fliegen bei Nürnberg</title>
+    <meta name="description" content="Erleben Sie Segelfliegen und Motorflug im Großraum Nürnberg. Ausbildung, Gastflüge, Gutscheine und Events am Flugplatz Altdorf-Hagenhausen.">
+    
+    <!-- SEO: Keywords & Robots -->
+    <meta name="keywords" content="Segelfliegen, Flugplatz Altdorf, Nürnberg, Rundflug, Gastflug, Flugausbildung, Segelflugschein, Motorsegler, Post-SV Nürnberg, Fliegen lernen, Gutschein Flug">
+    <meta name="robots" content="index, follow">
+    <meta name="author" content="Segelflieger im Post-SV Nürnberg e.V.">
+    
+    <!-- Open Graph (Für schöne Vorschau auf Facebook/WhatsApp) -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://segelfliegen-altdorf.de/">
+    <meta property="og:title" content="Segelflugplatz Altdorf-Hagenhausen | Komm fliegen!">
+    <meta property="og:description" content="Gastflüge, Ausbildung und Events. Besuchen Sie uns am Wochenende!">
+    <meta property="og:image" content="https://segelfliegen-altdorf.de/images/hero.jpg">
+    
+    <!-- Local SEO (Geo-Tags für lokale Suche) -->
+    <meta name="geo.region" content="DE-BY">
+    <meta name="geo.placename" content="Berg bei Neumarkt in der Oberpfalz">
+    <meta name="geo.position" content="49.3899;11.4267">
+    <meta name="ICBM" content="49.3899, 11.4267">
+
+    <!-- Strukturierte Daten (Schema.org) für Google Business -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SportsClub",
+      "name": "Segelflieger im Post-SV Nürnberg e.V.",
+      "image": "https://segelfliegen-altdorf.de/images/logo.png",
+      "url": "https://segelfliegen-altdorf.de",
+      "telephone": "+499189310",
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": "Kastanienweg 6",
+        "addressLocality": "Berg bei Neumarkt",
+        "postalCode": "92348",
+        "addressCountry": "DE"
+      },
+      "geo": {
+        "@type": "GeoCoordinates",
+        "latitude": 49.3899301,
+        "longitude": 11.4267085
+      },
+      "sameAs": [
+        "https://www.facebook.com/Segelflieger.PostSV",
+        "https://www.instagram.com/segelflieger.psv",
+        "https://www.youtube.com/channel/UCPiG85TTftKcU4jr4Vjuhvg"
+      ]
+    }
+    </script>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -35,6 +84,7 @@
 <body>
 
     <!-- ZENTRALER HEADER (Wird durch script.js gefüllt) -->
+    <!-- WICHTIG: id="main-header" darf nicht fehlen! -->
     <header id="main-header"></header>
 
     <!-- Hero Bereich -->
@@ -49,6 +99,7 @@
             <p style="font-size: 1.5rem; font-weight: bold; margin-bottom: 20px; color: #fff;">Ihr Ziel für unvergessliche Flugerlebnisse</p>
             <p>Gastflüge im Motor- oder Segelflugzeug<br>Professionelle Flugausbildung mit engagierten Fluglehrern</p>
             
+            <!-- ANPASSUNG: Weniger Abstand oben (15px), Mehr Abstand unten (40px) -->
             <div style="margin-top: 15px; margin-bottom: 40px; background: rgba(0,0,0,0.3); padding: 15px; border-radius: 8px; display: inline-block; backdrop-filter: blur(5px);">
                 <p style="margin: 0;"><strong>Kommen Sie am Wochenende vorbei!</strong><br>Für kühle Getränke und Kaffee + Kuchen ist in den Sommermonaten immer gesorgt!</p>
             </div>
@@ -60,7 +111,11 @@
     <!-- Neuigkeiten -->
     <section class="section container">
         <div class="section-title">
-            <h2>Neuigkeiten</h2>
+            <h2>
+                Neuigkeiten 
+                <!-- Der Login Button (klein & unscheinbar) -->
+                <span id="admin-toggle" class="admin-login-link" title="Mitarbeiter Login">🔒 Admin</span>
+            </h2>
             <p>Aktuelles vom Flugplatz Altdorf-Hagenhausen</p>
         </div>
 
@@ -69,17 +124,12 @@
                 
                 <!-- ADMIN PANEL (Versteckt, erscheint nach Login) -->
                 <div id="admin-panel" class="admin-panel">
-                    <h3 id="form-headline">📝 Neue Nachricht verfassen</h3>
+                    <h3>📝 Neue Nachricht verfassen</h3>
                     <form id="news-form" class="news-form">
                         <input type="text" id="news-title" placeholder="Titel der Nachricht" required>
                         <input type="text" id="news-date" placeholder="Datum (z.B. 15.09.2026)" required>
                         <textarea id="news-text" rows="4" placeholder="Ihr Text..." required></textarea>
-                        
-                        <div style="display: flex; gap: 10px; align-items: center;">
-                            <button type="submit" id="news-submit-btn" class="btn">Veröffentlichen</button>
-                            <!-- Neuer Abbrechen Button (Standardmäßig versteckt) -->
-                            <button type="button" id="news-cancel-btn" class="btn btn-secondary" style="display: none;">Abbrechen</button>
-                        </div>
+                        <button type="submit" class="btn">Veröffentlichen</button>
                     </form>
                 </div>
 
@@ -92,29 +142,9 @@
             
             <div class="news-image-container">
                 <img src="images/news.jpg" alt="Aktuelles Bild vom Flugplatz" class="zoomable" onerror="this.style.display='none'">
-                <!-- Admin Login jetzt hier unter dem Bild -->
-                <div style="text-align: right; margin-top: 10px;">
-                    <span id="admin-toggle" class="admin-login-link" style="color: #bbb; cursor: pointer; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px;" title="Mitarbeiter Login">🔒 Admin Login</span>
-                </div>
             </div>
         </div>
     </section>
-
-    <!-- LOGIN MODAL (Standardmäßig versteckt) -->
-    <div id="login-modal" class="modal" style="display: none;">
-        <div class="modal-content admin-login-card">
-            <span class="modal-close" id="login-close">&times;</span>
-            <h3>Admin Login</h3>
-            <p>Bitte geben Sie das Passwort ein:</p>
-            
-            <form id="admin-login-form">
-                <input type="password" id="admin-password-input" placeholder="Passwort" autocomplete="current-password">
-                <p id="login-error" style="color: red; font-size: 0.8rem; display: none;">Falsches Passwort!</p>
-                <button type="submit" id="admin-login-btn" class="btn" style="width: 100%; margin-top: 10px;">Anmelden</button>
-            </form>
-
-        </div>
-    </div>
 
     <!-- Angebote -->
     <section class="section bg-grey">
@@ -165,7 +195,10 @@
     <!-- Button "Nach oben" -->
     <button id="btn-back-to-top" title="Nach oben">↑</button>
 
+    <!-- 1. BASICS & LAYOUT (Lädt immer!) -->
     <script src="script.js"></script>
+
+    <!-- 2. DATENBANK (Kann fehlschlagen, ohne die Seite zu töten) -->
     <script type="module" src="news-db.js"></script>
 
 </body>
