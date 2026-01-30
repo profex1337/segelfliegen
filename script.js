@@ -110,9 +110,48 @@ document.addEventListener('DOMContentLoaded', () => {
     initLightbox();
     initBackToTop();
     initSlideshows();
+    
+    // DSGVO Cookie Banner starten
+    initCookieConsent();
 });
 
 // 3. UI HELFER FUNKTIONEN
+
+// NEU: Cookie Banner Logik
+function initCookieConsent() {
+    // Prüfen ob bereits entschieden wurde
+    if (localStorage.getItem('dsgvo-consent')) return;
+
+    const bannerHTML = `
+    <div id="cookie-banner" class="cookie-banner">
+        <div class="cookie-content">
+            <h3>🍪 Datenschutzeinstellungen</h3>
+            <p>
+                Wir nutzen Cookies und externe Dienste (Google Maps, YouTube, Firebase), um Inhalte anzuzeigen. 
+                <a href="datenschutz.html" style="text-decoration: underline;">Mehr erfahren</a>.
+            </p>
+            <div class="cookie-buttons">
+                <button id="cookie-accept" class="btn" style="padding: 8px 15px; font-size: 0.9rem;">Alle akzeptieren</button>
+                <button id="cookie-decline" class="btn btn-secondary" style="padding: 8px 15px; font-size: 0.9rem;">Nur Essenzielle</button>
+            </div>
+        </div>
+    </div>`;
+
+    document.body.insertAdjacentHTML('beforeend', bannerHTML);
+
+    const banner = document.getElementById('cookie-banner');
+    
+    document.getElementById('cookie-accept').onclick = () => {
+        localStorage.setItem('dsgvo-consent', 'accepted');
+        banner.style.display = 'none';
+        // Hier könnte man Skripte nachladen, die vorher blockiert waren
+    };
+
+    document.getElementById('cookie-decline').onclick = () => {
+        localStorage.setItem('dsgvo-consent', 'declined');
+        banner.style.display = 'none';
+    };
+}
 
 // NEU: Funktion um das Favicon dynamisch in den Head zu laden
 function initFavicon() {

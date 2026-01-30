@@ -9,7 +9,7 @@
     <style>
         .impressum-grid { display: grid; grid-template-columns: 1fr; gap: 40px; }
         @media (min-width: 768px) { .impressum-grid { grid-template-columns: 1fr 1fr; } }
-        h3 { margin-bottom: 10px; font-size: 1.2rem; }
+        h3 { margin-bottom: 10px; font-size: 1.2rem; color: var(--primary); }
         .impressum-item { margin-bottom: 30px; }
     </style>
 </head>
@@ -27,27 +27,60 @@
         <div class="content-block">
             <h2>Impressum</h2>
             <p style="margin-bottom: 40px;">Angaben gemäß § 5 TMG</p>
+            
             <div class="impressum-grid">
                 <div>
-                    <div class="impressum-item"><h3>Name des Vereins</h3><p>Segelflieger im Post-SV Nürnberg e.V.</p></div>
-                    <div class="impressum-item"><h3>Eingetragener Vereinssitz</h3><p>Kastanienweg 6<br>92348 Berg / Stöckelsberg</p></div>
-                    <div class="impressum-item"><h3>Vereinsregister</h3><p>Amtsgericht Nürnberg, Nr. VR 200126</p></div>
+                    <div class="impressum-item">
+                        <h3>Name des Vereins</h3>
+                        <p><strong>Segelflieger im Post-SV Nürnberg e.V.</strong></p>
+                    </div>
+                    <div class="impressum-item">
+                        <h3>Eingetragener Vereinssitz</h3>
+                        <p>Kastanienweg 6<br>92348 Berg / Stöckelsberg<br>Deutschland</p>
+                    </div>
+                    <div class="impressum-item">
+                        <h3>Vereinsregister</h3>
+                        <p>Amtsgericht Nürnberg<br>Registernummer: <strong>VR 200126</strong></p>
+                    </div>
                 </div>
                 <div>
                     <div class="impressum-item">
-                        <h3>Vertretungsberechtigter Vorstand (gem. §26 BGB)</h3>
-                        <p><strong>Dan Mollenhauer</strong> (1. Vorsitzender)<br><strong>Benjamin Knoll</strong> (stellvertretender Vorstand)</p>
+                        <h3>Vertretungsberechtigter Vorstand (gem. § 26 BGB)</h3>
+                        <p>
+                            <strong>Dan Mollenhauer</strong> (1. Vorsitzender)<br>
+                            <strong>Benjamin Knoll</strong> (stellvertretender Vorstand)
+                        </p>
                     </div>
                     <div class="impressum-item">
-                        <h3>Kontaktinformationen</h3>
-                        <p>Tel.: <a href="tel:09189310" style="color: var(--accent); font-weight: bold;">09189 310</a><br>E-Mail: <a href="mailto:info@segelfliegen-altdorf.de" style="color: var(--accent); font-weight: bold;">info@segelfliegen-altdorf.de</a></p>
+                        <h3>Kontakt</h3>
+                        <p>
+                            Telefon: <a href="tel:+499189310" style="color: var(--accent); font-weight: bold;">09189 310</a><br>
+                            E-Mail: <a href="mailto:info@segelfliegen-altdorf.de" style="color: var(--accent); font-weight: bold;">info@segelfliegen-altdorf.de</a>
+                        </p>
                     </div>
                 </div>
             </div>
-            <hr style="margin: 20px 0 40px 0; border: 0; border-top: 1px solid #eee;">
+
+            <hr style="margin: 40px 0; border: 0; border-top: 1px solid #eee;">
+
             <div>
-                <h3>Haftungsausschluss</h3>
-                <p style="font-size: 0.9rem; color: #666;">Als Diensteanbieter sind wir gemäß § 7 Abs.1 TMG für eigene Inhalte verantwortlich...</p>
+                <h3>Redaktionell verantwortlich</h3>
+                <p>Verantwortlich für den Inhalt nach § 18 Abs. 2 MStV:</p>
+                <p>
+                    Dan Mollenhauer<br>
+                    Kastanienweg 6<br>
+                    92348 Berg / Stöckelsberg
+                </p>
+            </div>
+
+            <hr style="margin: 40px 0; border: 0; border-top: 1px solid #eee;">
+
+            <div>
+                <h3>EU-Streitschlichtung</h3>
+                <p>Die Europäische Kommission stellt eine Plattform zur Online-Streitbeilegung (OS) bereit: <a href="https://ec.europa.eu/consumers/odr/" target="_blank" rel="noopener noreferrer">https://ec.europa.eu/consumers/odr/</a>.<br> Unsere E-Mail-Adresse finden Sie oben im Impressum.</p>
+
+                <h3>Verbraucherstreitbeilegung / Universalschlichtungsstelle</h3>
+                <p>Wir sind nicht bereit oder verpflichtet, an Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle teilzunehmen.</p>
             </div>
         </div>
     </main>
