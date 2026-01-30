@@ -776,3 +776,54 @@ body.admin-mode .delete-btn { display: inline-block; }
         padding: 20px;
     }
 }
+
+/* --- 12. HEADER SOCIAL ICONS --- */
+.header-socials {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-left: 20px;
+    padding-left: 20px;
+    border-left: 1px solid #eee; /* Trennlinie auf Desktop */
+}
+
+.header-social-link {
+    color: var(--primary);
+    padding: 0;
+    transition: all 0.3s ease;
+    display: flex; /* Zentriert SVG */
+    align-items: center;
+}
+
+.header-social-link:hover {
+    color: var(--accent);
+    transform: translateY(-2px);
+}
+
+/* Verhindert, dass der rote Unterstrich (vom Nav-Menu) bei den Icons erscheint */
+.nav-menu .header-social-link::after {
+    display: none;
+}
+
+/* Mobile Anpassung */
+@media (max-width: 992px) {
+    .header-socials {
+        margin-left: 0;
+        padding-left: 0;
+        border-left: none;
+        margin-top: 30px; /* Abstand nach oben */
+        justify-content: center; /* Zentriert */
+        width: 100%;
+        border-top: 1px solid #eee; /* Trennlinie oben */
+        padding-top: 20px;
+    }
+    
+    .header-social-link {
+        padding: 10px; /* Größere Klickfläche auf Handy */
+    }
+    
+    .header-social-link svg {
+        width: 24px; /* Etwas größer auf Handy */
+        height: 24px;
+    }
+}
