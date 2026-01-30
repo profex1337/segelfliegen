@@ -84,7 +84,6 @@
 <body>
 
     <!-- ZENTRALER HEADER (Wird durch script.js gefüllt) -->
-    <!-- WICHTIG: id="main-header" darf nicht fehlen! -->
     <header id="main-header"></header>
 
     <!-- Hero Bereich -->
@@ -99,7 +98,6 @@
             <p style="font-size: 1.5rem; font-weight: bold; margin-bottom: 20px; color: #fff;">Ihr Ziel für unvergessliche Flugerlebnisse</p>
             <p>Gastflüge im Motor- oder Segelflugzeug<br>Professionelle Flugausbildung mit engagierten Fluglehrern</p>
             
-            <!-- ANPASSUNG: Weniger Abstand oben (15px), Mehr Abstand unten (40px) -->
             <div style="margin-top: 15px; margin-bottom: 40px; background: rgba(0,0,0,0.3); padding: 15px; border-radius: 8px; display: inline-block; backdrop-filter: blur(5px);">
                 <p style="margin: 0;"><strong>Kommen Sie am Wochenende vorbei!</strong><br>Für kühle Getränke und Kaffee + Kuchen ist in den Sommermonaten immer gesorgt!</p>
             </div>
@@ -111,11 +109,7 @@
     <!-- Neuigkeiten -->
     <section class="section container">
         <div class="section-title">
-            <h2>
-                Neuigkeiten 
-                <!-- Der Login Button (klein & unscheinbar) -->
-                <span id="admin-toggle" class="admin-login-link" title="Mitarbeiter Login">🔒 Admin</span>
-            </h2>
+            <h2>Neuigkeiten</h2>
             <p>Aktuelles vom Flugplatz Altdorf-Hagenhausen</p>
         </div>
 
@@ -124,12 +118,21 @@
                 
                 <!-- ADMIN PANEL (Versteckt, erscheint nach Login) -->
                 <div id="admin-panel" class="admin-panel">
-                    <h3>📝 Neue Nachricht verfassen</h3>
+                    <h3 id="form-headline">📝 Neue Nachricht verfassen</h3>
                     <form id="news-form" class="news-form">
                         <input type="text" id="news-title" placeholder="Titel der Nachricht" required>
                         <input type="text" id="news-date" placeholder="Datum (z.B. 15.09.2026)" required>
                         <textarea id="news-text" rows="4" placeholder="Ihr Text..." required></textarea>
-                        <button type="submit" class="btn">Veröffentlichen</button>
+                        
+                        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                            <button type="submit" id="news-submit-btn" class="btn">Veröffentlichen</button>
+                            
+                            <!-- Logout Button (Schließt Admin Modus) -->
+                            <button type="button" id="admin-logout-btn" class="btn btn-secondary">Admin Beenden</button>
+
+                            <!-- Cancel Edit Button (Versteckt, nur beim Bearbeiten sichtbar) -->
+                            <button type="button" id="news-cancel-btn" class="btn btn-secondary" style="display: none;">Bearbeiten abbrechen</button>
+                        </div>
                     </form>
                 </div>
 
@@ -142,9 +145,29 @@
             
             <div class="news-image-container">
                 <img src="images/news.jpg" alt="Aktuelles Bild vom Flugplatz" class="zoomable" onerror="this.style.display='none'">
+                <!-- Admin Login jetzt hier unter dem Bild -->
+                <div style="text-align: right; margin-top: 10px;">
+                    <span id="admin-toggle" class="admin-login-link" style="color: #bbb; cursor: pointer; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px;" title="Mitarbeiter Login">🔒 Admin Login</span>
+                </div>
             </div>
         </div>
     </section>
+
+    <!-- LOGIN MODAL (Standardmäßig versteckt) -->
+    <div id="login-modal" class="modal" style="display: none;">
+        <div class="modal-content admin-login-card">
+            <span class="modal-close" id="login-close">&times;</span>
+            <h3>Admin Login</h3>
+            <p>Bitte geben Sie das Passwort ein:</p>
+            
+            <form id="admin-login-form">
+                <input type="password" id="admin-password-input" placeholder="Passwort" autocomplete="current-password">
+                <p id="login-error" style="color: red; font-size: 0.8rem; display: none;">Falsches Passwort!</p>
+                <button type="submit" id="admin-login-btn" class="btn" style="width: 100%; margin-top: 10px;">Anmelden</button>
+            </form>
+
+        </div>
+    </div>
 
     <!-- Angebote -->
     <section class="section bg-grey">
@@ -195,10 +218,7 @@
     <!-- Button "Nach oben" -->
     <button id="btn-back-to-top" title="Nach oben">↑</button>
 
-    <!-- 1. BASICS & LAYOUT (Lädt immer!) -->
     <script src="script.js"></script>
-
-    <!-- 2. DATENBANK (Kann fehlschlagen, ohne die Seite zu töten) -->
     <script type="module" src="news-db.js"></script>
 
 </body>
