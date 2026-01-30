@@ -163,12 +163,19 @@ async function startNewsLogic() {
 
     // Login ausführen
     const handleLogin = async () => {
-        const input = passwordInput.value;
+        let input = passwordInput.value;
         if (!input) return;
 
+        // Normalisieren um Probleme mit Umlauten (ö) auf verschiedenen Systemen zu vermeiden
+        input = input.normalize('NFC');
+
         const inputHash = await hashPassword(input);
-        // NEUER Hash für "stöckelsberg" (SHA-256)
-        const targetHash = "1b36968434a99136829775317374665476d080c88517596a5839f3714b621419";
+        
+        // Zur Fehlersuche: Hash in Konsole ausgeben
+        console.log("Eingabe Hash:", inputHash);
+
+        // KORREKTER Hash für "stöckelsberg"
+        const targetHash = "67be92658826d56d7734190f845a7090886866f8820c85c2c7867290f930e106";
 
         if (inputHash === targetHash) {
             document.body.classList.add('admin-mode');
