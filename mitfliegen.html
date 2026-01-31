@@ -51,6 +51,13 @@
     <style>
         /* Spezifische Styles für diese Seite */
         html { scroll-padding-top: 120px; scroll-behavior: smooth; }
+        
+        /* Video Header spezifische Styles */
+        .video-header {
+            position: relative;
+            overflow: hidden;
+            background-color: var(--primary); /* Fallback */
+        }
 
         /* Videos responsiv machen */
         .video-container { 
@@ -185,8 +192,18 @@
 <body>
     <header id="main-header"></header>
 
-    <div class="page-header" style="background-image: linear-gradient(135deg, rgba(15, 52, 96, 0.8), rgba(15, 52, 96, 0.6)), url('images/mitfliegen_hero.jpg');">
-        <div class="container">
+    <!-- Page Header mit Video Background -->
+    <div class="page-header video-header">
+        <!-- Video -->
+        <video autoplay muted loop playsinline class="hero-video" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 0;">
+            <source src="videos/mitfliegen_hero.mp4" type="video/mp4">
+        </video>
+        
+        <!-- Overlay für Lesbarkeit (Dunkelblau transparent) -->
+        <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 52, 96, 0.6); z-index: 1;"></div>
+
+        <!-- Text Inhalt -->
+        <div class="container" style="position: relative; z-index: 2;">
             <h1>Nutzen Sie die Gelegenheit!</h1>
             <p>Gutscheine und Gastflüge</p>
         </div>
