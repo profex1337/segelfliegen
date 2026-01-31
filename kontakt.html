@@ -10,6 +10,13 @@
         /* Spezifische Styles für Kontaktseite */
         html { scroll-padding-top: 120px; scroll-behavior: smooth; }
         
+        /* Video Header spezifische Styles */
+        .video-header {
+            position: relative;
+            overflow: hidden;
+            background-color: var(--primary); /* Fallback */
+        }
+
         /* --- FORMULAR STYLING OPTIMIERT (Identisch zu mitfliegen.html) --- */
         .form-responsive {
             display: grid;
@@ -113,8 +120,18 @@
 <body>
     <header id="main-header"></header>
 
-    <div class="page-header" style="background-image: linear-gradient(135deg, rgba(15, 52, 96, 0.8), rgba(15, 52, 96, 0.6)), url('images/kontakt_hero.jpg');">
-        <div class="container">
+    <!-- Page Header mit Video Background -->
+    <div class="page-header video-header">
+        <!-- Video -->
+        <video autoplay muted loop playsinline class="hero-video" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 0;">
+            <source src="videos/kontakt_hero.mp4" type="video/mp4">
+        </video>
+        
+        <!-- Overlay für Lesbarkeit (Dunkelblau transparent) -->
+        <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 52, 96, 0.6); z-index: 1;"></div>
+
+        <!-- Text Inhalt -->
+        <div class="container" style="position: relative; z-index: 2;">
             <h1>Kontakt</h1>
             <p>Wir freuen uns auf Ihre Nachricht!</p>
         </div>
@@ -127,16 +144,16 @@
             <div class="news-wrapper">
                 <div>
                     <h2 style="margin-top: 0;">Anschrift & Telefon</h2>
-                    <div style="font-size: 1.1rem;">
+                    <div style="font-size: 1.1rem; line-height: 1.6;">
                         <p>
-                            <strong>Segelflieger im Post-SV Nürnberg e.V./strong><br>
+                            <strong>Segelflieger im Post-SV Nürnberg e.V.</strong><br>
                             Dan Mollenhauer (Vorstand)<br>
                             Kastanienweg 6<br>
                             92348 Berg
                         </p>
-                        <p>
-                            📞 <a href="tel:+499189310" style="color: var(--primary); font-weight: bold;">09189 - 310</a><br>
-                            📧 <a href="mailto:info@segelfliegen-altdorf.de" style="color: var(--primary); font-weight: bold;">info@segelfliegen-altdorf.de</a>
+                        <p style="margin-top: 20px;">
+                            📞 <a href="tel:+499189310" style="color: var(--primary); font-weight: bold; text-decoration: none;">09189 - 310</a><br>
+                            📧 <a href="mailto:info@segelfliegen-altdorf.de" style="color: var(--primary); font-weight: bold; text-decoration: none;">info@segelfliegen-altdorf.de</a>
                         </p>
                     </div>
                 </div>
