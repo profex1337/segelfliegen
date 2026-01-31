@@ -48,15 +48,33 @@
 
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Open+Sans:wght@400;600&family=Tangerine:wght@700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
+    
+    <style>
+        /* Video Header spezifische Styles */
+        .video-header {
+            position: relative;
+            overflow: hidden;
+            background-color: var(--primary); /* Fallback */
+        }
+    </style>
 </head>
 <body>
 
     <!-- ZENTRALER HEADER -->
     <header id="main-header"></header>
 
-    <!-- Page Header -->
-    <div class="page-header" style="background-image: linear-gradient(135deg, rgba(15, 52, 96, 0.8), rgba(15, 52, 96, 0.6)), url('images/uber_uns_hero.jpg');">
-        <div class="container">
+    <!-- Page Header mit Video Background -->
+    <div class="page-header video-header">
+        <!-- Video -->
+        <video autoplay muted loop playsinline class="hero-video" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 0;">
+            <source src="videos/uber_uns_hero.mp4" type="video/mp4">
+        </video>
+        
+        <!-- Overlay für Lesbarkeit (Dunkelblau transparent) -->
+        <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 52, 96, 0.6); z-index: 1;"></div>
+
+        <!-- Text Inhalt -->
+        <div class="container" style="position: relative; z-index: 2;">
             <h1>Über uns</h1>
             <p>Die Gemeinschaft am Flugplatz Altdorf-Hagenhausen</p>
         </div>
