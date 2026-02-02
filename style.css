@@ -126,7 +126,7 @@ header {
     bottom: 0;
     left: 0;
     /* Verlauf: Links transparent, rechts (am Flieger) volle Farbe */
-    background: linear-gradient(to right, transparent 0%, var(--accent) 30%, var(--accent) 100%);
+    background: linear-gradient(to right, transparent 0%, var(--accent) 50%, var(--accent) 100%);
     transition: width 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
     opacity: 0; 
 }
@@ -136,7 +136,7 @@ header {
     content: '';
     position: absolute;
     /* Vertikal justiert: Icon ist größer, muss tiefer hängen */
-    bottom: -12px; 
+    bottom: -6px; 
     left: 0;
     
     /* Größe (55px Breite) */
@@ -172,7 +172,7 @@ header {
 
 .nav-menu a:hover::after, .nav-menu a.active::after {
     /* Flieger fliegt so weit, dass der Flügel am Textende ist */
-    left: calc(100% - 20px); 
+    left: calc(100% - 30px); 
     opacity: 1;
     transition: left 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 0.4s;
 }
@@ -1023,7 +1023,7 @@ body.admin-mode .delete-btn { display: inline-block; }
     display: flex;
     align-items: center;
     gap: 15px;
-    margin-left: 20px;
+    margin-left: 0px;
     padding-left: 20px;
     border-left: 1px solid #eee; /* Trennlinie auf Desktop */
 }
