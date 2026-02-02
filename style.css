@@ -112,23 +112,73 @@ header {
     text-transform: uppercase;
     letter-spacing: 0.5px;
     padding: 5px 0;
+    overflow: visible; /* Wichtig, damit das Flugzeug über den Rand fliegen kann */
 }
 
-/* WIEDERHERGESTELLT: Einfacher roter Unterstrich */
-.nav-menu a::after {
+/* --- DESKTOP ANIMATION: FLUGZEUG & KONDENSSTREIFEN --- */
+
+/* 1. Die Linie (Kondensstreifen) */
+.nav-menu a::before {
     content: '';
     position: absolute;
     width: 0;
     height: 2px;
     bottom: 0;
     left: 0;
-    background-color: var(--accent);
-    transition: width 0.3s;
+    /* Verlauf: Links transparent, rechts (am Flieger) volle Farbe */
+    background: linear-gradient(to right, transparent 0%, var(--accent) 30%, var(--accent) 100%);
+    transition: width 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    opacity: 0; 
 }
-.nav-menu a:hover::after, .nav-menu a.active::after { width: 100%; }
+
+/* 2. Das Flugzeug (fliegt an der Spitze) */
+.nav-menu a::after {
+    content: '';
+    position: absolute;
+    /* Vertikal justiert: Icon ist größer, muss tiefer hängen */
+    bottom: -12px; 
+    left: 0;
+    
+    /* Größe (55px Breite) */
+    width: 55px; 
+    height: 27px;
+    
+    /* Segelflieger Icon via Maske */
+    background-color: var(--accent);
+    
+    /* SVG direkt eingebettet */
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg version='1.0' xmlns='http://www.w3.org/2000/svg' width='1280pt' height='640pt' viewBox='0 0 1280.000000 640.000000' preserveAspectRatio='xMidYMid meet'%3E%3Cg transform='translate(0.000000,640.000000) scale(0.100000,-0.100000)' fill='%23000000' stroke='none'%3E%3Cpath d='M12524 6346 c-17 -13 -19 -29 -21 -188 -2 -269 -31 -361 -131 -425 -31 -20 -1120 -702 -2419 -1514 -2178 -1362 -2366 -1477 -2415 -1483 -190 -24 -465 -109 -1009 -315 -496 -187 -1051 -345 -2093 -596 -264 -63 -496 -115 -516 -115 -57 0 -99 35 -160 135 -30 50 -184 315 -341 590 -243 425 -284 502 -272 512 8 6 197 107 419 224 222 117 404 217 404 221 0 4 -39 8 -86 8 l-87 0 -396 -171 c-467 -202 -805 -347 -1158 -500 -142 -61 -295 -127 -340 -147 -46 -19 -83 -39 -83 -43 0 -4 33 -10 73 -14 72 -7 73 -6 349 88 l277 95 15 -52 c148 -517 339 -1179 347 -1204 l11 -33 177 6 c97 4 304 22 461 41 157 19 515 61 795 94 281 34 538 64 573 69 34 4 59 4 55 1 -4 -4 -75 -30 -158 -58 -82 -27 -269 -91 -415 -142 -146 -51 -276 -96 -290 -100 -14 -4 -144 -49 -290 -100 -146 -50 -393 -136 -550 -190 -157 -54 -404 -140 -550 -190 -146 -51 -276 -96 -290 -100 -14 -4 -144 -49 -290 -100 -146 -50 -393 -136 -550 -190 -615 -212 -808 -279 -879 -304 l-74 -26 -45 26 c-83 49 -157 105 -286 217 -134 117 -218 177 -248 177 -21 0 -38 -29 -38 -68 0 -87 170 -293 297 -360 140 -74 319 -92 454 -48 41 14 144 47 229 75 231 74 994 319 1328 427 160 52 424 136 585 188 160 52 490 158 732 236 242 78 508 163 590 190 143 46 272 88 618 199 83 27 223 72 310 100 86 28 228 74 315 102 86 28 218 70 292 94 128 42 146 45 340 60 140 11 451 19 985 25 1064 12 1150 17 1485 82 391 75 735 223 824 355 86 125 -44 245 -389 361 -196 65 -622 162 -714 162 -62 0 -124 -45 854 612 259 173 1163 780 2010 1348 847 568 1555 1047 1573 1064 100 93 105 228 16 415 -40 82 -137 191 -170 191 -11 0 -29 -6 -40 -14z'/%3E%3C/g%3E%3C/svg%3E");
+    
+    -webkit-mask-size: contain;
+    mask-size: contain;
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    mask-position: center;
+
+    opacity: 0;
+    /* Keine Rotation mehr, da das SVG schon passt */
+    transform: none; 
+    transition: left 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 0.2s;
+    pointer-events: none;
+}
+
+/* Hover & Active States Animation */
+.nav-menu a:hover::before, .nav-menu a.active::before { 
+    /* Strich geht bis kurz vor den Flieger */
+    width: calc(100% - 15px); 
+    opacity: 1;
+}
+
+.nav-menu a:hover::after, .nav-menu a.active::after {
+    /* Flieger fliegt so weit, dass der Flügel am Textende ist */
+    left: calc(100% - 20px); 
+    opacity: 1;
+    transition: left 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 0.4s;
+}
 
 
-/* HAMBURGER ICON */
+/* HAMBURGER ICON (MIT NEUER ANIMATION) */
 .hamburger {
     display: none;
     cursor: pointer;
@@ -156,15 +206,14 @@ header {
 .hamburger span:nth-child(2) { top: 9px; } /* Mittlere Linie - Der Flieger */
 .hamburger span:nth-child(3) { top: 18px; }
 
-/* Flugzeug am mittleren Strich (Mobile) */
+/* Flugzeug am mittleren Strich (Mobile Hamburger Animation) */
 .hamburger span:nth-child(2)::after {
     content: '';
     position: absolute;
-    /* Positionierung: Links am Strich andocken */
+    /* Positionierung am linken Ende des Strichs */
     left: -60px;
-    top: -14px; /* Zentriert zur 3px Linie */
+    top: -14px; /* (30px Höhe - 3px Strich) / 2 */
     
-    /* Größer: 60px */
     width: 60px;
     height: 30px;
     background-color: var(--accent);
@@ -453,6 +502,7 @@ footer {
     display: flex;
     justify-content: center;
     gap: 15px;
+    margin-top: 20px; /* Optional: Abstand nach oben zu den Kontaktdaten */
 }
 .footer-socials a {
     color: #b0b0b0;
@@ -721,31 +771,32 @@ body.admin-mode .delete-btn { display: inline-block; }
 
 /* ---------------------------------------------------- */
 /* --- 9. MOBILE OPTIMIERUNG (MEDIA QUERIES) --- */
+/* ---------------------------------------------------- */
 
 @media (max-width: 992px) {
     /* Header & Navigation */
     .logo {
-        position: relative; 
+        position: relative; /* In den Flow zurück */
         top: auto; left: auto;
         background: transparent;
         box-shadow: none;
         padding: 5px 0;
         border-radius: 0;
     }
-    .logo img { height: 50px; }
+    .logo img { height: 50px; /* Kleineres Logo */ }
     
-    .hamburger { display: block; }
+    .hamburger { display: block; /* Burger anzeigen */ }
     
     .nav-menu {
         position: fixed;
         top: var(--header-height);
-        right: -100%;
+        right: -100%; /* Versteckt rechts */
         width: 100%;
         height: calc(100vh - var(--header-height));
         
-        /* Glassmorphismus für Mobile Menu */
-        background-color: rgba(255, 255, 255, 0.95); /* Etwas deckender für Lesbarkeit */
-        backdrop-filter: blur(12px);
+        /* Glassmorphismus für Mobile Menu hinzufügen */
+        background-color: rgba(255, 255, 255, 0.85); /* Halbtransparent */
+        backdrop-filter: blur(12px); /* Milchglas-Effekt */
         -webkit-backdrop-filter: blur(12px);
 
         flex-direction: column;
@@ -755,9 +806,9 @@ body.admin-mode .delete-btn { display: inline-block; }
         box-shadow: inset 0 10px 10px -10px rgba(0,0,0,0.1);
         margin-left: 0;
         gap: 0;
-        overflow-y: auto;
+        overflow-y: auto; /* Scrollbar wenn nötig */
     }
-    .nav-menu.active { right: 0; }
+    .nav-menu.active { right: 0; /* Menü rein */ }
 
     .nav-menu a {
         font-size: 1.2rem;
@@ -765,10 +816,10 @@ body.admin-mode .delete-btn { display: inline-block; }
         border-bottom: 1px solid #eee;
         width: 100%;
         text-align: center;
-        overflow: visible; 
     }
     .nav-menu a:last-child { border-bottom: none; }
-    .nav-menu a::after { display: none; }
+    /* WICHTIG: Animation im Mobile Menü ausschalten, da kein Platz für Flugzeug */
+    .nav-menu a::before, .nav-menu a::after { display: none; }
     
     /* Layout Anpassungen */
     .hero h1, .page-header h1 { font-size: 2.2rem; }
@@ -789,19 +840,25 @@ body.admin-mode .delete-btn { display: inline-block; }
     .header-socials {
         margin-left: 0;
         padding-left: 0;
+        margin-right: 0; /* Sicherstellen, dass rechts nichts drückt */
+        padding-right: 0;
+        
         border-left: none;
         margin-top: 30px; /* Abstand nach oben */
         justify-content: center; /* Zentriert */
         width: 100%;
         border-top: 1px solid #eee; /* Trennlinie oben */
         padding-top: 20px;
+        
+        display: flex; /* Flexbox erzwingen */
+        gap: 15px; /* Abstand zwischen den Icons */
     }
     
     /* Social Media Icons NICHT auf 100% Breite ziehen, sondern nebeneinander lassen */
     .header-socials .header-social-link {
         width: auto !important;
         border-bottom: none !important;
-        margin: 0 5px;
+        margin: 0 5px; /* Nur kleiner seitlicher Abstand */
         padding: 10px; /* Klickfläche */
     }
 
