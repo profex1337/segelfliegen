@@ -162,13 +162,13 @@ header {
 
 /* Hover & Active States Animation */
 .nav-menu a:hover::before, .nav-menu a.active::before { 
-    /* Strich geht bis kurz vor den Flieger (der jetzt kleiner ist) */
+    /* Strich geht bis kurz vor den Flieger */
     width: calc(100% - 15px); 
     opacity: 1;
 }
 
 .nav-menu a:hover::after, .nav-menu a.active::after {
-    /* Flieger fliegt so weit, dass der Flügel am Textende ist (angepasst an neue Breite) */
+    /* Flieger fliegt so weit, dass der Flügel am Textende ist */
     left: calc(100% - 20px); 
     opacity: 1;
     transition: left 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 0.4s;
@@ -381,7 +381,7 @@ footer {
     display: flex;
     flex-direction: column;
     gap: 5px; /* Enger zusammen */
-    align-items: center; /* Geändert auf center für mittige Ausrichtung */
+    align-items: center; /* Mittig ausgerichtet */
     justify-content: center; /* Vertikal mittig */
 }
 
@@ -410,6 +410,7 @@ footer {
     font-size: 1.1rem;
     line-height: 1.8;
     transition: color 0.3s;
+    display: block;
 }
 .footer-contact a:hover { color: var(--accent); }
 
@@ -426,7 +427,7 @@ footer {
     max-width: 300px; /* Begrenzung falls zu riesig */
     height: auto;
     /* Das Bild nach oben schieben (negativer Margin), damit es reinragt */
-    margin-top: -30%; /* Angepasst auf ca. 30% Überlappung */
+    margin-top: -30%; /* Überlappung */
     z-index: 20;
     /* Optional: Ein leichter Schatten */
     filter: drop-shadow(0 10px 10px rgba(0,0,0,0.3));
@@ -824,6 +825,11 @@ body.admin-mode .delete-btn { display: inline-block; }
         margin-top: 0;
         transform: none;
         max-width: 200px;
+    }
+
+    /* NEU: Hilfsklasse um Reihenfolge auf Mobile zu tauschen (Bild vor Text) */
+    .swap-mobile > div:last-child {
+        order: -1;
     }
 }
 
