@@ -381,7 +381,7 @@ footer {
     display: flex;
     flex-direction: column;
     gap: 5px; /* Enger zusammen */
-    align-items: flex-start; /* Linksbuendig ausgerichtet */
+    align-items: center; /* Geändert auf center für mittige Ausrichtung */
     justify-content: center; /* Vertikal mittig */
 }
 
