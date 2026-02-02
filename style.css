@@ -620,7 +620,12 @@ body.admin-mode .delete-btn { display: inline-block; }
         right: -100%; /* Versteckt rechts */
         width: 100%;
         height: calc(100vh - var(--header-height));
-        background-color: var(--white);
+        
+        /* Glassmorphismus für Mobile Menu hinzufügen */
+        background-color: rgba(255, 255, 255, 0.85); /* Halbtransparent */
+        backdrop-filter: blur(12px); /* Milchglas-Effekt */
+        -webkit-backdrop-filter: blur(12px);
+
         flex-direction: column;
         justify-content: flex-start;
         padding: 40px 20px;
@@ -656,6 +661,31 @@ body.admin-mode .delete-btn { display: inline-block; }
     /* Speziell: Events Reverse Grid (Rückgängig auf Mobile) */
     .news-wrapper.reverse { direction: ltr; }
     .news-wrapper.reverse > div { direction: ltr; }
+
+    /* Header Socials Mobile */
+    .header-socials {
+        margin-left: 0;
+        padding-left: 0;
+        border-left: none;
+        margin-top: 30px; /* Abstand nach oben */
+        justify-content: center; /* Zentriert */
+        width: 100%;
+        border-top: 1px solid #eee; /* Trennlinie oben */
+        padding-top: 20px;
+    }
+    
+    /* Social Media Icons NICHT auf 100% Breite ziehen, sondern nebeneinander lassen */
+    .header-socials .header-social-link {
+        width: auto !important;
+        border-bottom: none !important;
+        margin: 0 5px;
+        padding: 10px; /* Klickfläche */
+    }
+
+    .header-social-link svg {
+        width: 24px; 
+        height: 24px;
+    }
 }
 
 @media (max-width: 500px) {
@@ -821,12 +851,16 @@ body.admin-mode .delete-btn { display: inline-block; }
         padding-top: 20px;
     }
     
-    .header-social-link {
-        padding: 10px; /* Größere Klickfläche auf Handy */
+    /* Social Media Icons NICHT auf 100% Breite ziehen, sondern nebeneinander lassen */
+    .header-socials .header-social-link {
+        width: auto !important;
+        border-bottom: none !important;
+        margin: 0 5px;
+        padding: 10px; /* Klickfläche */
     }
-    
+
     .header-social-link svg {
-        width: 24px; /* Etwas größer auf Handy */
+        width: 24px; 
         height: 24px;
     }
 }
