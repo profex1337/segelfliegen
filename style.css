@@ -269,7 +269,7 @@ header {
     position: absolute;
     /* Positionierung am linken Ende des Strichs */
     left: -60px;
-    top: -14px; /* (30px Höhe - 3px Strich) / 2 */
+    top: -19px;
     
     width: 60px;
     height: 30px;
