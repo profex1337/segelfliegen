@@ -117,7 +117,7 @@ header {
     /* Logo wird minimal länger/größer */
     padding-bottom: 30px; 
     transform: translateY(5px) scale(1.02);
-    box-shadow: 0 20px 40px rgba(233, 69, 96, 0.25); /* Rötlicher Schein */
+    box-shadow: 0 20px 40px rgba(15, 52, 96, 0.25); /* bläulicher Schein */
 }
 
 .logo:hover img {
