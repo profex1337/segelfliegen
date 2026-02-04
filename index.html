@@ -98,11 +98,33 @@
             <p style="font-size: 1.5rem; font-weight: bold; margin-bottom: 20px; color: #fff;">Ihr Ziel für unvergessliche Flugerlebnisse</p>
             <p>Gastflüge im Motor- oder Segelflugzeug<br>Professionelle Flugausbildung mit engagierten Fluglehrern</p>
             
-            <div style="margin-top: 15px; margin-bottom: 40px; background: rgba(0,0,0,0.3); padding: 15px; border-radius: 8px; display: inline-block; backdrop-filter: blur(5px);">
+            <div style="margin-top: 15px; margin-bottom: 30px; background: rgba(0,0,0,0.3); padding: 15px; border-radius: 8px; display: inline-block; backdrop-filter: blur(5px);">
                 <p style="margin: 0;"><strong>Kommen Sie am Wochenende vorbei!</strong><br>Für kühle Getränke und Kaffee + Kuchen ist in den Sommermonaten immer gesorgt!</p>
             </div>
             <br>
-            <a href="kontakt.html" class="btn">Kontaktieren Sie uns!</a>
+            
+            <!-- Haupt Call-to-Action -->
+            <a href="kontakt.html" class="btn" style="margin-bottom: 25px;">Kontaktieren Sie uns!</a>
+            
+            <!-- Zeilenumbruch für die Positionierung -->
+            <br>
+
+            <!-- NEU: Google Maps Reviews Trigger -->
+            <div class="review-trigger" id="review-trigger-btn" title="Bewertungen ansehen">
+                <div class="review-stars">
+                    <!-- 5 Sterne SVG -->
+                    ★★★★★
+                </div>
+                <div class="review-text">
+                    <span class="rating-score">4.9</span> von 5
+                    <span class="review-cta">| <strong>Bewerten Sie uns!</strong></span>
+                </div>
+                <div class="review-logo">
+                    <!-- Google G Logo (simuliert) -->
+                    <svg viewBox="0 0 24 24" width="18" height="18"><path fill="#fff" d="M21.35 11.1h-9.17v2.73h6.51c-.33 3.81-3.5 5.44-6.5 5.44C8.36 19.27 5 16.25 5 12c0-4.1 3.2-7.27 7.2-7.27 3.09 0 4.9 1.97 4.9 1.97L19 4.72S16.64 2 12 2C6.48 2 2 6.48 2 12s4.48 10 10 10c6.19 0 10-4.34 10-10.9 0-.34-.03-.76-.08-1.1v.1z"/></svg>
+                </div>
+            </div>
+
         </div>
     </section>
 
@@ -168,6 +190,29 @@
 
         </div>
     </div>
+
+    <!-- REVIEWS SIDEBAR (Versteckt, gleitet rein) -->
+    <aside id="reviews-sidebar" class="reviews-sidebar">
+        <div class="reviews-header">
+            <h3>Google Rezensionen</h3>
+            <span id="close-reviews" class="close-reviews">&times;</span>
+        </div>
+        
+        <div class="reviews-summary">
+            <div class="big-rating">4.9</div>
+            <div class="stars-gold">★★★★★</div>
+            <p>Basierend auf Google Maps</p>
+            <a href="https://maps.app.goo.gl/3zCC4Jg6tEwtjyL3A" target="_blank" class="btn-review-google">
+                Auf Google bewerten
+            </a>
+        </div>
+
+        <div class="reviews-list" id="reviews-list-container">
+            <!-- Hier werden JS Reviews eingefügt -->
+        </div>
+    </aside>
+    <!-- Overlay für Sidebar -->
+    <div id="reviews-overlay" class="reviews-overlay"></div>
 
     <!-- Angebote -->
     <section class="section bg-grey">
