@@ -127,12 +127,12 @@ document.addEventListener('DOMContentLoaded', () => {
     initBackToTop();
     initSlideshows();
     initCookieConsent();
-    initReviews(); // NEU: Initialisierung der Google Reviews Sidebar
+    initReviews(); // Google Reviews Sidebar
 });
 
 // 3. UI HELFER FUNKTIONEN & REVIEWS
 
-/* --- GOOGLE REVIEWS MOCK DATEN & LOGIC --- */
+/* --- GOOGLE REVIEWS REALISTIC SNAPSHOT --- */
 function initReviews() {
     const trigger = document.getElementById('review-trigger-btn');
     const sidebar = document.getElementById('reviews-sidebar');
@@ -140,20 +140,45 @@ function initReviews() {
     const overlay = document.getElementById('reviews-overlay');
     const listContainer = document.getElementById('reviews-list-container');
 
-    if (!trigger || !sidebar) return; // Abbrechen, falls nicht auf Startseite
+    if (!trigger || !sidebar) return; 
 
-    // 1. Mock-Daten (Beispiele, die echt wirken)
-    const mockReviews = [
-        { name: "Markus S.", rating: 5, date: "vor 2 Wochen", text: "Tolle Atmosphäre und super freundliche Leute! Der Gastflug war ein einmaliges Erlebnis. Absolut empfehlenswert für jeden, der Nürnberg mal von oben sehen will." },
-        { name: "Julia K.", rating: 5, date: "vor 1 Monat", text: "Wir haben einen Gutschein zum Geburtstag verschenkt. Die Abwicklung war unkompliziert und der Pilot sehr professionell. Gerne wieder!" },
-        { name: "Thomas W.", rating: 5, date: "vor 3 Monaten", text: "Sehr schöner Flugplatz. Man kann am Wochenende auch einfach mal zum Zuschauen kommen. Kuchen war lecker :)" },
-        { name: "Stefan B.", rating: 4, date: "vor 5 Monaten", text: "Schöne Anlage. Leider war das Wetter bei meinem ersten Termin schlecht, aber der Ersatztermin hat super geklappt." },
-        { name: "Lisa M.", rating: 5, date: "vor 6 Monaten", text: "Ein Traum! Segelfliegen ist Faszination pur. Danke an das Team für die tolle Einweisung." }
+    // ECHTE REZENSIONEN (Sortiert nach Datum: Neueste zuerst)
+    const realReviews = [
+        { 
+            name: "Michael Dittrich", 
+            rating: 5, 
+            date: "vor 11 Monaten", 
+            text: "War heute mit meinem Enkel am Flugplatz. Ganz liebe Leute!!!! Uns wurde alles gezeigt und Milo durfte sich sogar in ein Segelflugzeug setzen.<br>Werden im Sommer gerne nochmal kommen.<br>VG Michael" 
+        },
+        { 
+            name: "A. Delino", 
+            rating: 5, 
+            date: "vor einem Jahr", 
+            text: "Tolle zuvorkommende freundliche Mannschaft, die mit Begeisterung ihren Gästen das Segelfliegen zeigen. Kaffee und Kuchen gibt's am Wochenende noch oben drauf. Einfach herrlich und genial." 
+        },
+        { 
+            name: "Gizi Silberhorn", 
+            rating: 5, 
+            date: "vor 3 Jahren", 
+            text: "War nur zur Geburtstagsfeier dort. Hab gleich ne Einladung von nem Mitglied zum Flugtag Anfang August bekommen, finde ich echt nett" 
+        },
+        { 
+            name: "Kevin Fritsch", 
+            rating: 5, 
+            date: "vor 6 Jahren", 
+            text: "Super Flugplatz und ganz liebe Flieger!<br>Man fühlt sich \"wie daheim\", man wird - egal ob per Flugzeug oder zu Fuß - sehr herzlich aufgenommen!<br><br>Auf jeden Fall einen Besuch wert! ;-)" 
+        },
+        { 
+            name: "Smolto van der Bruggenkötter", 
+            rating: 5, 
+            date: "vor 6 Jahren", 
+            text: "Sehr zu empfehlen! Coole Menschen sehr lockere Atmosphäre, sehr freundlich und hilfsbereit.<br>Ein Erlebnis für jung und alt. Hier könnt ihr spontan mitfliegen und einen unvergesslichen Tag erleben!<br>Ich komme wieder! Danke für den sehr schönen Tag" 
+        }
     ];
 
     // 2. HTML generieren
     if (listContainer) {
-        listContainer.innerHTML = mockReviews.map(review => {
+        listContainer.innerHTML = realReviews.map(review => {
             // Initialen für Avatar
             const initials = review.name.split(' ').map(n => n[0]).join('');
             // Sterne generieren
