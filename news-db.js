@@ -1,13 +1,14 @@
 /* ---------------------------------------------------------------------------------------
    NEWS-DB.JS - NUR FÜR DIE DATENBANK (FIREBASE)
-   Diese Datei wird als Modul geladen. Wenn sie fehlschlägt, fehlt nur der News-Teil.
+   Sicherheits-Update: Echte Authentifizierung via Email/Passwort statt Hash.
 --------------------------------------------------------------------------------------- */
 
 console.log("1. news-db.js wurde geladen."); 
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+// NEU: signInWithEmailAndPassword und signOut hinzugefügt
+import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
 // DEINE KONFIGURATION
 const YOUR_OWN_CONFIG = {
@@ -25,15 +26,7 @@ let app, auth, db;
 let collectionPath = null; 
 let editingId = null; // Speichert die ID der Nachricht, die gerade bearbeitet wird
 
-// Hilfsfunktion zum Hashen des Passworts (SHA-256)
-async function hashPassword(string) {
-    const utf8 = new TextEncoder().encode(string);
-    const hashBuffer = await crypto.subtle.digest('SHA-256', utf8);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
-}
-
-// Initialisierung versuchen
+// --- Initialisierung ---
 async function initFirebase() {
     const newsContainer = document.getElementById('dynamic-news-list');
     
@@ -93,27 +86,44 @@ async function startNewsLogic() {
     const loginError = document.getElementById('login-error');
     const loginFormTag = document.getElementById('admin-login-form');
 
-    // Auth
+    // 1. Authentifizierung starten (Erstmal Anonym oder Custom Token)
     try {
         if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token && (!YOUR_OWN_CONFIG || Object.keys(YOUR_OWN_CONFIG).length === 0)) {
             await signInWithCustomToken(auth, __initial_auth_token);
         } else {
-            await signInAnonymously(auth);
+            // Wir versuchen nicht sofort anonym einzuloggen, das regelt der onAuthStateChanged listener,
+            // falls kein User da ist. Aber wir starten es initial einmal, falls noch gar kein Status bekannt ist.
+             // (Optional, onAuthStateChanged feuert auch so)
         }
     } catch (e) {
-        console.error("Login Fehler:", e);
+        console.error("Auth Init Fehler:", e);
     }
 
+    // 2. Auth Status Überwachen (Das Herzstück der Sicherheit)
     onAuthStateChanged(auth, (user) => {
-        if (!user) return;
+        
+        // Fall A: Gar kein User eingeloggt? -> Als Gast (Anonym) einloggen, damit man lesen kann
+        if (!user) {
+            signInAnonymously(auth).catch((err) => console.error("Gast-Login fehlgeschlagen:", err));
+            // UI aufräumen (Admin Zeug weg)
+            toggleAdminUI(false);
+            return; 
+        }
+
+        // Fall B: User ist da. Ist er Admin?
+        // Ein anonymer User ist KEIN Admin. Ein Email-User IST Admin.
+        const isAdmin = !user.isAnonymous;
+        toggleAdminUI(isAdmin);
+
+        // 3. Daten laden (passiert immer, egal ob Gast oder Admin)
         const newsCollection = collectionPath(db);
 
-        // Anzeige
         onSnapshot(newsCollection, (snapshot) => {
             let newsItems = [];
             snapshot.forEach((doc) => {
                 newsItems.push({ id: doc.id, ...doc.data() });
             });
+            // Sortieren nach Datum (neu oben)
             newsItems.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
 
             newsContainer.innerHTML = '';
@@ -124,17 +134,17 @@ async function startNewsLogic() {
                     const div = document.createElement('div');
                     div.className = 'news-item';
                     
-                    // Style für Admin Mode prüfen
-                    const isAdmin = document.body.classList.contains('admin-mode');
-                    const adminDisplay = isAdmin ? 'flex' : 'none';
-                    
-                    // Markieren, wenn ein Bild da ist (für CSS Hover Pointer)
+                    // Markieren, wenn ein Bild da ist
                     if (item.imageUrl) {
                         div.setAttribute('data-has-image', 'true');
                     }
 
+                    // Admin Buttons nur rendern, aber CSS Display wird über Klasse gesteuert (doppelt hält besser)
+                    // Wir setzen display:flex oder none basierend auf dem aktuellen Auth Status
+                    const adminDisplay = isAdmin ? 'flex' : 'none';
+
                     div.innerHTML = `
-                        <!-- Buttons Container mit Flexbox -->
+                        <!-- Buttons Container -->
                         <div class="admin-controls" style="float:right; display:${adminDisplay}; gap: 5px; align-items: center;">
                             <button class="edit-btn" style="background:#e94560; color:white; border:none; padding:5px 10px; cursor:pointer; border-radius:4px; height: 30px;">Ändern</button>
                             <button class="delete-btn" style="background:red; color:white; border:none; padding:5px 10px; cursor:pointer; border-radius:4px; height: 30px;">Löschen</button>
@@ -144,10 +154,9 @@ async function startNewsLogic() {
                         <p style="white-space: pre-wrap;">${item.text || ''}</p>
                     `;
                     
-                    // --- EVENT LISTENER FÜR MOUSEOVER (Bildwechsel) ---
+                    // --- Bildwechsel bei Mouseover ---
                     if (item.imageUrl && displayImage) {
                         div.addEventListener('mouseenter', () => {
-                            // Speichere das Original, falls noch nicht geschehen (Fallback, falls data-Attribut fehlt)
                             if (!displayImage.getAttribute('data-default-src')) {
                                 displayImage.setAttribute('data-default-src', displayImage.src);
                             }
@@ -160,10 +169,10 @@ async function startNewsLogic() {
                         });
                     }
 
-                    // Event Listener für Admin Buttons
+                    // --- Admin Aktionen ---
                     const delBtn = div.querySelector('.delete-btn');
                     delBtn.onclick = (e) => {
-                        e.stopPropagation(); // Verhindert Hover Effekte beim Klicken
+                        e.stopPropagation();
                         deleteNewsItem(item.id);
                     }
 
@@ -182,17 +191,23 @@ async function startNewsLogic() {
         if (newsForm) {
             newsForm.onsubmit = async (e) => {
                 e.preventDefault();
+                // Sicherheitscheck vor dem Senden
+                if (auth.currentUser?.isAnonymous) {
+                    alert("Sie haben keine Berechtigung (Gast-Modus). Bitte einloggen.");
+                    return;
+                }
+
                 const titleVal = document.getElementById('news-title').value;
                 const dateVal = document.getElementById('news-date').value;
                 const textVal = document.getElementById('news-text').value;
-                const imageVal = document.getElementById('news-image-url').value; // Neues Feld
+                const imageVal = document.getElementById('news-image-url').value;
 
                 try {
                     const dataToSave = { 
                         title: titleVal, 
                         date: dateVal, 
                         text: textVal, 
-                        imageUrl: imageVal // Bild speichern
+                        imageUrl: imageVal 
                     };
 
                     if (editingId) {
@@ -216,20 +231,34 @@ async function startNewsLogic() {
 
                 } catch (err) {
                     console.error("Fehler beim Speichern:", err);
-                    alert("Fehler beim Speichern: " + err.message);
+                    alert("Fehler: " + err.message + "\n(Sind Sie als Admin eingeloggt?)");
                 }
             };
         }
     });
 
-    // --- HELPER ---
+    // --- HELPER FUNKTIONEN ---
+
+    // UI umschalten (Admin vs Gast)
+    function toggleAdminUI(isAdmin) {
+        if (isAdmin) {
+            document.body.classList.add('admin-mode');
+            if(adminPanel) adminPanel.classList.add('active');
+            document.querySelectorAll('.admin-controls').forEach(el => el.style.display = 'flex');
+        } else {
+            document.body.classList.remove('admin-mode');
+            if(adminPanel) adminPanel.classList.remove('active');
+            document.querySelectorAll('.admin-controls').forEach(el => el.style.display = 'none');
+            resetForm(); // Formular leeren falls noch offen
+        }
+    }
 
     function loadIntoForm(item) {
         editingId = item.id;
         document.getElementById('news-title').value = item.title;
         document.getElementById('news-date').value = item.date;
         document.getElementById('news-text').value = item.text;
-        document.getElementById('news-image-url').value = item.imageUrl || ''; // Bild laden
+        document.getElementById('news-image-url').value = item.imageUrl || ''; 
 
         if(formHeadline) formHeadline.textContent = "📝 Nachricht bearbeiten";
         if(submitBtn) submitBtn.textContent = "Änderungen speichern";
@@ -249,27 +278,26 @@ async function startNewsLogic() {
         if(logoutBtn) logoutBtn.style.display = "inline-block"; 
     }
 
-    // Cancel Button Klick (Editieren abbrechen)
     if (cancelBtn) cancelBtn.onclick = resetForm;
 
-    // Logout Button Klick (Admin Modus beenden)
+    // --- LOGOUT (Jetzt sicher) ---
     if (logoutBtn) {
-        logoutBtn.onclick = () => {
+        logoutBtn.onclick = async () => {
             if (confirm("Admin Modus beenden?")) {
-                document.body.classList.remove('admin-mode');
-                adminPanel.classList.remove('active');
-                
-                // Alle Admin-Controls verstecken
-                document.querySelectorAll('.admin-controls').forEach(el => el.style.display = 'none');
-                
-                resetForm(); // Formular leeren falls was drin stand
+                try {
+                    await signOut(auth); // Loggt dich bei Google aus
+                    // Der onAuthStateChanged Listener oben bemerkt das,
+                    // setzt user = null, und loggt dich dann automatisch
+                    // wieder als Gast (anonym) ein.
+                } catch(e) {
+                    console.error("Logout Fehler:", e);
+                }
             }
         };
     }
 
-    // --- LOGIN LOGIK ---
+    // --- LOGIN LOGIK (Modal) ---
     
-    // Modal öffnen
     if (adminToggle) {
         adminToggle.addEventListener('click', () => {
             if (loginModal) {
@@ -279,7 +307,6 @@ async function startNewsLogic() {
         });
     }
 
-    // Modal schließen
     if (loginClose) {
         loginClose.onclick = () => {
             loginModal.style.display = 'none';
@@ -288,27 +315,28 @@ async function startNewsLogic() {
         };
     }
 
-    // Login ausführen
+    // SICHERER LOGIN
     const handleLogin = async () => {
-        let input = passwordInput.value.trim();
-        if (!input) return;
+        const password = passwordInput.value.trim();
+        // Hier fest deine Admin-Email eintragen (die du in der Firebase Console angelegt hast)
+        const email = "admin@segelfliegen.de"; 
 
-        input = input.normalize('NFC');
-        const inputHash = await hashPassword(input);
-        const targetHash = "88340151310a94e871db8d912c26129a18d9658d3fe4d41565a13fe4b7089795";
+        if (!password) return;
 
-        if (inputHash === targetHash) {
-            document.body.classList.add('admin-mode');
-            if(adminPanel) adminPanel.classList.add('active');
+        try {
+            // Echter Login gegen Firebase Auth
+            await signInWithEmailAndPassword(auth, email, password);
             
+            // Wenn erfolgreich, schließen wir das Modal
+            // (onAuthStateChanged kümmert sich um den Rest)
             loginModal.style.display = 'none';
             passwordInput.value = '';
             loginError.style.display = 'none';
             
-            // Buttons anzeigen (mit Flexbox style setzen)
-            document.querySelectorAll('.admin-controls').forEach(el => el.style.display = 'flex');
-        } else {
+        } catch (error) {
+            console.error("Login fehlgeschlagen:", error);
             loginError.style.display = 'block';
+            loginError.textContent = "Falsches Passwort!"; // oder Email nicht gefunden
             passwordInput.value = '';
         }
     };
@@ -333,6 +361,12 @@ async function startNewsLogic() {
 async function deleteNewsItem(docId) {
     if (confirm("Wirklich löschen?")) {
         try {
+            // Sicherheitscheck
+            if (auth.currentUser?.isAnonymous) {
+                alert("Fehlende Berechtigung.");
+                return;
+            }
+
             let collectionName = YOUR_OWN_CONFIG && Object.keys(YOUR_OWN_CONFIG).length > 0 ? 'news' : null;
             if(!collectionName) {
                 const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
@@ -342,13 +376,9 @@ async function deleteNewsItem(docId) {
             }
         } catch (e) {
             console.error(e);
+            alert("Löschen fehlgeschlagen: " + e.message);
         }
     }
-}
-
-// Funktion leer, damit keine alten Daten mehr geladen werden
-async function checkAndImportData(collectionRef) {
-    // Leer gelassen, wie gewünscht
 }
 
 initFirebase();
