@@ -146,6 +146,17 @@
                         <input type="text" id="news-date" placeholder="Datum (z.B. 15.09.2026)" required>
                         <textarea id="news-text" rows="4" placeholder="Ihr Text..." required></textarea>
                         
+                        <!-- NEUES FELD FÜR BILD-URL -->
+                        <div style="margin-bottom: 15px;">
+                            <input type="text" id="news-image-url" placeholder="Bild-URL (optional, z.B. https://...)" style="margin-bottom: 5px;">
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 10px;">
+                                <small style="color: #666; font-size: 0.8rem; flex: 1;">Link zu einem Bild einfügen. Das Bild erscheint rechts beim Überfahren der Nachricht.</small>
+                                <a href="https://imgur.com/upload" target="_blank" title="Zu Imgur gehen" style="font-size: 0.8rem; color: #e94560; font-weight: bold; white-space: nowrap; text-decoration: none; border-bottom: 1px dashed #e94560;">
+                                    Bild bei Imgur hochladen ↗
+                                </a>
+                            </div>
+                        </div>
+
                         <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
                             <button type="submit" id="news-submit-btn" class="btn">Veröffentlichen</button>
                             
@@ -166,7 +177,15 @@
             </div>
             
             <div class="news-image-container">
-                <img src="images/news.jpg" alt="Aktuelles Bild vom Flugplatz" class="zoomable" onerror="this.style.display='none'">
+                <!-- ID hinzugefügt für JS-Zugriff -->
+                <!-- data-default-src speichert das Originalbild -->
+                <img src="images/news.jpg" 
+                     id="news-display-image" 
+                     data-default-src="images/news.jpg" 
+                     alt="Aktuelles Bild vom Flugplatz" 
+                     class="zoomable news-dynamic-img" 
+                     onerror="this.src='images/hero.jpg'">
+                
                 <!-- Admin Login jetzt hier unter dem Bild -->
                 <div style="text-align: right; margin-top: 10px;">
                     <span id="admin-toggle" class="admin-login-link" style="color: #bbb; cursor: pointer; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px;" title="Mitarbeiter Login">🔒 Admin Login</span>
