@@ -1057,6 +1057,10 @@ body.admin-mode .delete-btn { display: inline-block; }
     
     /* Grid & Flex */
     .news-wrapper { grid-template-columns: 1fr; gap: 30px; }
+
+    /* NEU: Bildcontainer auf Mobile nach oben schieben (order -1) */
+    .news-image-container { order: -1; }
+    
     .contact-grid, .impressum-grid { grid-template-columns: 1fr; }
     
     /* Speziell: Events Reverse Grid (Rückgängig auf Mobile) */
