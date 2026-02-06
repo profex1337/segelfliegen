@@ -667,10 +667,27 @@ header {
     margin-bottom: 30px;
     transition: transform 0.3s ease;
     position: relative;
+    /* Damit wir erkennen, dass man es hovern kann, wenn Bild da ist */
+    cursor: default; 
 }
+.news-item[data-has-image="true"] {
+    cursor: pointer;
+}
+.news-item[data-has-image="true"]:hover {
+    border-left-color: var(--accent);
+    background-color: #fff8f9; /* Sehr helles Rot/Pink als Feedback */
+}
+
 .news-item:hover { transform: translateX(10px); }
 .news-date { font-size: 0.85rem; font-weight: 700; color: var(--accent); text-transform: uppercase; display: block; margin-bottom: 5px; }
-.news-image-container img { border-radius: var(--radius); box-shadow: var(--shadow); }
+
+/* News Image */
+.news-image-container img { 
+    border-radius: var(--radius); 
+    box-shadow: var(--shadow);
+    /* NEU: Transition für den Bildwechsel */
+    transition: opacity 0.3s ease;
+}
 
 /* --- 7. FOOTER (NEU GESTALTET) --- */
 footer {

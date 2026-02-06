@@ -83,6 +83,9 @@ async function startNewsLogic() {
     const submitBtn = document.getElementById('news-submit-btn');
     const formHeadline = document.getElementById('form-headline');
 
+    // Das große Bild auf der rechten Seite
+    const displayImage = document.getElementById('news-display-image');
+
     // Login Modal Elemente
     const loginModal = document.getElementById('login-modal');
     const loginClose = document.getElementById('login-close');
@@ -123,8 +126,13 @@ async function startNewsLogic() {
                     
                     // Style für Admin Mode prüfen
                     const isAdmin = document.body.classList.contains('admin-mode');
-                    const adminDisplay = isAdmin ? 'flex' : 'none'; // Flexbox für Alignment!
+                    const adminDisplay = isAdmin ? 'flex' : 'none';
                     
+                    // Markieren, wenn ein Bild da ist (für CSS Hover Pointer)
+                    if (item.imageUrl) {
+                        div.setAttribute('data-has-image', 'true');
+                    }
+
                     div.innerHTML = `
                         <!-- Buttons Container mit Flexbox -->
                         <div class="admin-controls" style="float:right; display:${adminDisplay}; gap: 5px; align-items: center;">
@@ -136,12 +144,34 @@ async function startNewsLogic() {
                         <p style="white-space: pre-wrap;">${item.text || ''}</p>
                     `;
                     
-                    // Event Listener
+                    // --- EVENT LISTENER FÜR MOUSEOVER (Bildwechsel) ---
+                    if (item.imageUrl && displayImage) {
+                        div.addEventListener('mouseenter', () => {
+                            // Speichere das Original, falls noch nicht geschehen (Fallback, falls data-Attribut fehlt)
+                            if (!displayImage.getAttribute('data-default-src')) {
+                                displayImage.setAttribute('data-default-src', displayImage.src);
+                            }
+                            displayImage.src = item.imageUrl;
+                        });
+
+                        div.addEventListener('mouseleave', () => {
+                            const defaultSrc = displayImage.getAttribute('data-default-src') || 'images/news.jpg';
+                            displayImage.src = defaultSrc;
+                        });
+                    }
+
+                    // Event Listener für Admin Buttons
                     const delBtn = div.querySelector('.delete-btn');
-                    delBtn.onclick = () => deleteNewsItem(item.id);
+                    delBtn.onclick = (e) => {
+                        e.stopPropagation(); // Verhindert Hover Effekte beim Klicken
+                        deleteNewsItem(item.id);
+                    }
 
                     const editButton = div.querySelector('.edit-btn');
-                    editButton.onclick = () => loadIntoForm(item);
+                    editButton.onclick = (e) => {
+                        e.stopPropagation();
+                        loadIntoForm(item);
+                    }
                     
                     newsContainer.appendChild(div);
                 });
@@ -155,8 +185,16 @@ async function startNewsLogic() {
                 const titleVal = document.getElementById('news-title').value;
                 const dateVal = document.getElementById('news-date').value;
                 const textVal = document.getElementById('news-text').value;
+                const imageVal = document.getElementById('news-image-url').value; // Neues Feld
 
                 try {
+                    const dataToSave = { 
+                        title: titleVal, 
+                        date: dateVal, 
+                        text: textVal, 
+                        imageUrl: imageVal // Bild speichern
+                    };
+
                     if (editingId) {
                         // UPDATE
                         let collectionName = YOUR_OWN_CONFIG && Object.keys(YOUR_OWN_CONFIG).length > 0 ? 'news' : null;
@@ -167,11 +205,12 @@ async function startNewsLogic() {
                         } else {
                             docRef = doc(db, collectionName, editingId);
                         }
-                        await updateDoc(docRef, { title: titleVal, date: dateVal, text: textVal });
+                        await updateDoc(docRef, dataToSave);
                         alert("Änderungen gespeichert!");
                     } else {
                         // CREATE
-                        await addDoc(newsCollection, { title: titleVal, date: dateVal, text: textVal, timestamp: Date.now() });
+                        dataToSave.timestamp = Date.now();
+                        await addDoc(newsCollection, dataToSave);
                     }
                     resetForm();
 
@@ -190,11 +229,12 @@ async function startNewsLogic() {
         document.getElementById('news-title').value = item.title;
         document.getElementById('news-date').value = item.date;
         document.getElementById('news-text').value = item.text;
+        document.getElementById('news-image-url').value = item.imageUrl || ''; // Bild laden
 
         if(formHeadline) formHeadline.textContent = "📝 Nachricht bearbeiten";
         if(submitBtn) submitBtn.textContent = "Änderungen speichern";
         if(cancelBtn) cancelBtn.style.display = "inline-block";
-        if(logoutBtn) logoutBtn.style.display = "none"; // Logout ausblenden beim Editieren, um Verwirrung zu vermeiden
+        if(logoutBtn) logoutBtn.style.display = "none";
         
         adminPanel.scrollIntoView({behavior: "smooth"});
     }
@@ -206,7 +246,7 @@ async function startNewsLogic() {
         if(formHeadline) formHeadline.textContent = "📝 Neue Nachricht verfassen";
         if(submitBtn) submitBtn.textContent = "Veröffentlichen";
         if(cancelBtn) cancelBtn.style.display = "none";
-        if(logoutBtn) logoutBtn.style.display = "inline-block"; // Logout wieder zeigen
+        if(logoutBtn) logoutBtn.style.display = "inline-block"; 
     }
 
     // Cancel Button Klick (Editieren abbrechen)
