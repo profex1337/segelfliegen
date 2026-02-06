@@ -1,12 +1,12 @@
 /* ---------------------------------------------------------------------------------------
    NEWS-DB.JS - NUR FÜR DIE DATENBANK (FIREBASE)
-   Sicherheits-Update: Echte Authentifizierung via Email/Passwort statt Hash.
+   Sicherheits-Update: Echte Authentifizierung via Email/Passwort.
+   Email ist fest hinterlegt, Login erfolgt nur per Passwort-Eingabe.
 --------------------------------------------------------------------------------------- */
 
 console.log("1. news-db.js wurde geladen."); 
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-// NEU: signInWithEmailAndPassword und signOut hinzugefügt
 import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
@@ -86,36 +86,30 @@ async function startNewsLogic() {
     const loginError = document.getElementById('login-error');
     const loginFormTag = document.getElementById('admin-login-form');
 
-    // 1. Authentifizierung starten (Erstmal Anonym oder Custom Token)
+    // 1. Authentifizierung starten
     try {
         if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token && (!YOUR_OWN_CONFIG || Object.keys(YOUR_OWN_CONFIG).length === 0)) {
             await signInWithCustomToken(auth, __initial_auth_token);
-        } else {
-            // Wir versuchen nicht sofort anonym einzuloggen, das regelt der onAuthStateChanged listener,
-            // falls kein User da ist. Aber wir starten es initial einmal, falls noch gar kein Status bekannt ist.
-             // (Optional, onAuthStateChanged feuert auch so)
         }
     } catch (e) {
         console.error("Auth Init Fehler:", e);
     }
 
-    // 2. Auth Status Überwachen (Das Herzstück der Sicherheit)
+    // 2. Auth Status Überwachen
     onAuthStateChanged(auth, (user) => {
         
-        // Fall A: Gar kein User eingeloggt? -> Als Gast (Anonym) einloggen, damit man lesen kann
+        // Fall A: Gar kein User eingeloggt? -> Als Gast (Anonym) einloggen
         if (!user) {
             signInAnonymously(auth).catch((err) => console.error("Gast-Login fehlgeschlagen:", err));
-            // UI aufräumen (Admin Zeug weg)
             toggleAdminUI(false);
             return; 
         }
 
         // Fall B: User ist da. Ist er Admin?
-        // Ein anonymer User ist KEIN Admin. Ein Email-User IST Admin.
         const isAdmin = !user.isAnonymous;
         toggleAdminUI(isAdmin);
 
-        // 3. Daten laden (passiert immer, egal ob Gast oder Admin)
+        // 3. Daten laden
         const newsCollection = collectionPath(db);
 
         onSnapshot(newsCollection, (snapshot) => {
@@ -134,13 +128,10 @@ async function startNewsLogic() {
                     const div = document.createElement('div');
                     div.className = 'news-item';
                     
-                    // Markieren, wenn ein Bild da ist
                     if (item.imageUrl) {
                         div.setAttribute('data-has-image', 'true');
                     }
 
-                    // Admin Buttons nur rendern, aber CSS Display wird über Klasse gesteuert (doppelt hält besser)
-                    // Wir setzen display:flex oder none basierend auf dem aktuellen Auth Status
                     const adminDisplay = isAdmin ? 'flex' : 'none';
 
                     div.innerHTML = `
@@ -154,7 +145,6 @@ async function startNewsLogic() {
                         <p style="white-space: pre-wrap;">${item.text || ''}</p>
                     `;
                     
-                    // --- Bildwechsel bei Mouseover ---
                     if (item.imageUrl && displayImage) {
                         div.addEventListener('mouseenter', () => {
                             if (!displayImage.getAttribute('data-default-src')) {
@@ -164,12 +154,11 @@ async function startNewsLogic() {
                         });
 
                         div.addEventListener('mouseleave', () => {
-                            const defaultSrc = displayImage.getAttribute('data-default-src') || 'images/news.jpg';
+                            const defaultSrc = displayImage.getAttribute('data-default-src') || 'images/news.png';
                             displayImage.src = defaultSrc;
                         });
                     }
 
-                    // --- Admin Aktionen ---
                     const delBtn = div.querySelector('.delete-btn');
                     delBtn.onclick = (e) => {
                         e.stopPropagation();
@@ -191,7 +180,6 @@ async function startNewsLogic() {
         if (newsForm) {
             newsForm.onsubmit = async (e) => {
                 e.preventDefault();
-                // Sicherheitscheck vor dem Senden
                 if (auth.currentUser?.isAnonymous) {
                     alert("Sie haben keine Berechtigung (Gast-Modus). Bitte einloggen.");
                     return;
@@ -211,7 +199,6 @@ async function startNewsLogic() {
                     };
 
                     if (editingId) {
-                        // UPDATE
                         let collectionName = YOUR_OWN_CONFIG && Object.keys(YOUR_OWN_CONFIG).length > 0 ? 'news' : null;
                         let docRef;
                         if(!collectionName) {
@@ -223,7 +210,6 @@ async function startNewsLogic() {
                         await updateDoc(docRef, dataToSave);
                         alert("Änderungen gespeichert!");
                     } else {
-                        // CREATE
                         dataToSave.timestamp = Date.now();
                         await addDoc(newsCollection, dataToSave);
                     }
@@ -239,7 +225,6 @@ async function startNewsLogic() {
 
     // --- HELPER FUNKTIONEN ---
 
-    // UI umschalten (Admin vs Gast)
     function toggleAdminUI(isAdmin) {
         if (isAdmin) {
             document.body.classList.add('admin-mode');
@@ -249,7 +234,7 @@ async function startNewsLogic() {
             document.body.classList.remove('admin-mode');
             if(adminPanel) adminPanel.classList.remove('active');
             document.querySelectorAll('.admin-controls').forEach(el => el.style.display = 'none');
-            resetForm(); // Formular leeren falls noch offen
+            resetForm(); 
         }
     }
 
@@ -280,15 +265,12 @@ async function startNewsLogic() {
 
     if (cancelBtn) cancelBtn.onclick = resetForm;
 
-    // --- LOGOUT (Jetzt sicher) ---
+    // --- LOGOUT ---
     if (logoutBtn) {
         logoutBtn.onclick = async () => {
             if (confirm("Admin Modus beenden?")) {
                 try {
-                    await signOut(auth); // Loggt dich bei Google aus
-                    // Der onAuthStateChanged Listener oben bemerkt das,
-                    // setzt user = null, und loggt dich dann automatisch
-                    // wieder als Gast (anonym) ein.
+                    await signOut(auth); 
                 } catch(e) {
                     console.error("Logout Fehler:", e);
                 }
@@ -296,7 +278,7 @@ async function startNewsLogic() {
         };
     }
 
-    // --- LOGIN LOGIK (Modal) ---
+    // --- LOGIN LOGIK ---
     
     if (adminToggle) {
         adminToggle.addEventListener('click', () => {
@@ -318,17 +300,14 @@ async function startNewsLogic() {
     // SICHERER LOGIN
     const handleLogin = async () => {
         const password = passwordInput.value.trim();
-        // Hier fest deine Admin-Email eintragen (die du in der Firebase Console angelegt hast)
-        const email = "admin@segelfliegen.de"; 
+        // Hier ist jetzt deine feste Email hinterlegt:
+        const email = "info@segelfliegen-altdorf.de"; 
 
         if (!password) return;
 
         try {
-            // Echter Login gegen Firebase Auth
             await signInWithEmailAndPassword(auth, email, password);
             
-            // Wenn erfolgreich, schließen wir das Modal
-            // (onAuthStateChanged kümmert sich um den Rest)
             loginModal.style.display = 'none';
             passwordInput.value = '';
             loginError.style.display = 'none';
@@ -336,7 +315,7 @@ async function startNewsLogic() {
         } catch (error) {
             console.error("Login fehlgeschlagen:", error);
             loginError.style.display = 'block';
-            loginError.textContent = "Falsches Passwort!"; // oder Email nicht gefunden
+            loginError.textContent = "Falsches Passwort!";
             passwordInput.value = '';
         }
     };
@@ -361,7 +340,6 @@ async function startNewsLogic() {
 async function deleteNewsItem(docId) {
     if (confirm("Wirklich löschen?")) {
         try {
-            // Sicherheitscheck
             if (auth.currentUser?.isAnonymous) {
                 alert("Fehlende Berechtigung.");
                 return;
