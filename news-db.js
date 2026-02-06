@@ -151,11 +151,17 @@ async function startNewsLogic() {
                                 displayImage.setAttribute('data-default-src', displayImage.src);
                             }
                             displayImage.src = item.imageUrl;
+                            
+                            // NEU: Klasse hinzufügen, damit das Bild aufpoppt
+                            displayImage.classList.add('active-preview');
                         });
 
                         div.addEventListener('mouseleave', () => {
                             const defaultSrc = displayImage.getAttribute('data-default-src') || 'images/news.png';
                             displayImage.src = defaultSrc;
+                            
+                            // NEU: Klasse entfernen, damit news.png flach bleibt
+                            displayImage.classList.remove('active-preview');
                         });
                     }
 
