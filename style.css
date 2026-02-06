@@ -696,8 +696,8 @@ header {
     border-radius: 0; 
     box-shadow: none;
     
-    /* NEU: Transition für Bildwechsel & Style-Wechsel */
-    transition: opacity 0.3s ease, border-radius 0.3s ease, box-shadow 0.3s ease;
+    /* NEU: Transition für Bildwechsel, Style-Wechsel UND Transform */
+    transition: opacity 0.3s ease, border-radius 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
 
     /* ÄNDERUNG: Verhindert Hochskalieren kleiner Bilder */
     width: auto;            /* Nutzt die echte Bildbreite */
@@ -707,10 +707,15 @@ header {
 }
 
 /* WICHTIG: Wenn ein News-Beitrag gehovert wird, erhält das Bild diese Klasse per JS.
-   Dann sollen Schatten und Ecken wieder sichtbar sein (für Fotos). */
+   Dann sollen Schatten, Ecken und der Zoom sichtbar sein (für Fotos). */
 .news-image-container img.active-preview {
     border-radius: var(--radius);
-    box-shadow: var(--shadow);
+    
+    /* Stärkerer Schatten für Pop-Out Effekt */
+    box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+    
+    /* Der gewünschte Zoom Effekt */
+    transform: scale(1.03);
 }
 
 /* --- 7. FOOTER (NEU GESTALTET) --- */
