@@ -687,6 +687,12 @@ header {
     box-shadow: var(--shadow);
     /* NEU: Transition für den Bildwechsel */
     transition: opacity 0.3s ease;
+
+    /* ÄNDERUNG: Verhindert Hochskalieren kleiner Bilder */
+    width: auto;            /* Nutzt die echte Bildbreite */
+    max-width: 100%;        /* Aber maximal so breit wie der Container (Responsiv) */
+    margin: 0 auto;         /* Zentriert das Bild, falls es kleiner ist */
+    display: block;
 }
 
 /* --- 7. FOOTER (NEU GESTALTET) --- */
