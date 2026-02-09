@@ -4,40 +4,52 @@
       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
       xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9
             http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
-<!-- created with Free Online Sitemap Generator www.xml-sitemaps.com -->
-
 
 <url>
   <loc>https://www.segelfliegenaltdorf.de/</loc>
-  <lastmod>2026-02-06T13:21:52+00:00</lastmod>
+  <lastmod>2026-02-09T12:00:00+00:00</lastmod>
   <priority>1.00</priority>
 </url>
 <url>
-  <loc>https://www.segelfliegenaltdorf.de/kontakt.html</loc>
-  <lastmod>2026-02-06T13:21:52+00:00</lastmod>
-  <priority>0.80</priority>
-</url>
-<url>
-  <loc>https://www.segelfliegenaltdorf.de/ausbildung.html</loc>
-  <lastmod>2026-02-06T13:21:52+00:00</lastmod>
+  <loc>https://www.segelfliegenaltdorf.de/uber-uns.html</loc>
+  <lastmod>2026-02-09T12:00:00+00:00</lastmod>
   <priority>0.80</priority>
 </url>
 <url>
   <loc>https://www.segelfliegenaltdorf.de/mitfliegen.html</loc>
-  <lastmod>2026-02-06T13:21:52+00:00</lastmod>
+  <lastmod>2026-02-09T12:00:00+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://www.segelfliegenaltdorf.de/flugzeugpark.html</loc>
+  <lastmod>2026-02-09T12:00:00+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://www.segelfliegenaltdorf.de/ausbildung.html</loc>
+  <lastmod>2026-02-09T12:00:00+00:00</lastmod>
   <priority>0.80</priority>
 </url>
 <url>
   <loc>https://www.segelfliegenaltdorf.de/veranstaltungen.html</loc>
-  <lastmod>2026-02-06T13:21:52+00:00</lastmod>
+  <lastmod>2026-02-09T12:00:00+00:00</lastmod>
   <priority>0.80</priority>
 </url>
 <url>
-  <loc>https://www.segelfliegenaltdorf.de/datenschutz.html</loc>
-  <lastmod>2026-02-06T13:21:52+00:00</lastmod>
-  <priority>0.64</priority>
+  <loc>https://www.segelfliegenaltdorf.de/kontakt.html</loc>
+  <lastmod>2026-02-09T12:00:00+00:00</lastmod>
+  <priority>0.80</priority>
 </url>
-
+<url>
+  <loc>https://www.segelfliegenaltdorf.de/impressum.html</loc>
+  <lastmod>2026-02-09T12:00:00+00:00</lastmod>
+  <priority>0.50</priority>
+</url>
+<url>
+  <loc>https://www.segelfliegenaltdorf.de/datenschutz.html</loc>
+  <lastmod>2026-02-09T12:00:00+00:00</lastmod>
+  <priority>0.50</priority>
+</url>
 
 </urlset>
 
