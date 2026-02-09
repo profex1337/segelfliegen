@@ -7,35 +7,35 @@
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <style>
-        /* Lokale Anpassung: Links im Text hervorheben */
+        
         .content-block a { color: var(--accent); font-weight: 600; text-decoration: underline; }
         .content-block h3 { margin-top: 30px; color: var(--primary); }
         .content-block h4 { margin-top: 20px; font-size: 1.1rem; }
 
-        /* Video Header spezifische Styles */
+        
         .video-header {
             position: relative;
             overflow: hidden;
-            background-color: var(--primary); /* Fallback */
+            background-color: var(--primary); 
         }
     </style>
 </head>
 <body>
 
-    <!-- ZENTRALER HEADER (wird über script.js geladen) -->
+    
     <header id="main-header"></header>
 
-    <!-- Page Header mit Video Background -->
+    
     <div class="page-header video-header">
-        <!-- Video -->
+        
         <video autoplay muted loop playsinline class="hero-video" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 0;">
             <source src="videos/datenschutz_hero.mp4" type="video/mp4">
         </video>
         
-        <!-- Overlay für Lesbarkeit (Dunkelblau transparent) -->
+        
         <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 52, 96, 0.6); z-index: 1;"></div>
 
-        <!-- Text Inhalt -->
+        
         <div class="container" style="position: relative; z-index: 2;">
             <h1>Datenschutz</h1>
             <p>Informationen zur Verarbeitung Ihrer Daten</p>
@@ -77,7 +77,7 @@
             <p>Segelflieger im Post-SV Nürnberg e.V.<br>
             Kastanienweg 6<br>
             92348 Berg / Stöckelsberg</p>
-            <p>E-Mail: info@segelfliegen-altdorf.de</p>
+            <p>E-Mail: info@segelfliegenaltdorf.de</p>
 
             <hr style="margin: 30px 0; border: 0; border-top: 1px solid #eee;">
 
@@ -121,13 +121,19 @@
         </div>
     </main>
 
-    <!-- ZENTRALER FOOTER (wird über script.js geladen) -->
+    
     <footer id="main-footer"></footer>
     
-    <!-- Button "Nach oben" -->
+    
     <button id="btn-back-to-top" title="Nach oben">↑</button>
 
     <script src="script.js"></script>
 
 </body>
 </html>
+
+
+
+
+
+

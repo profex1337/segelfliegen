@@ -1,17 +1,8 @@
-/* ---------------------------------------------------------------------------------------
-   NEWS-DB.JS - NUR FÜR DIE DATENBANK (FIREBASE)
-   Sicherheits-Update: Echte Authentifizierung via Email/Passwort.
-   Email ist fest hinterlegt, Login erfolgt nur per Passwort-Eingabe.
---------------------------------------------------------------------------------------- */
-
-console.log("1. news-db.js wurde geladen."); 
-
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
 import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-// DEINE KONFIGURATION
-const YOUR_OWN_CONFIG = {
+const firebaseConfig = {
   apiKey: "AIzaSyB1X5H3LOGKOSrq59_am4YnkISyOyEUAg4",
   authDomain: "segelfliegen.firebaseapp.com",
   projectId: "segelfliegen",
@@ -21,38 +12,35 @@ const YOUR_OWN_CONFIG = {
   measurementId: "G-CKXEVQPL0J"
 };
 
-// Globale Variablen für dieses Modul
 let app, auth, db;
 let collectionPath = null; 
-let editingId = null; // Speichert die ID der Nachricht, die gerade bearbeitet wird
+let editingId = null;
 
-// --- Initialisierung ---
 async function initFirebase() {
     const newsContainer = document.getElementById('dynamic-news-list');
     
     if (!newsContainer) return;
 
     try {
-        if (YOUR_OWN_CONFIG && Object.keys(YOUR_OWN_CONFIG).length > 0) {
-            app = initializeApp(YOUR_OWN_CONFIG);
+        if (firebaseConfig && Object.keys(firebaseConfig).length > 0) {
+            app = initializeApp(firebaseConfig);
             auth = getAuth(app);
             db = getFirestore(app);
             collectionPath = (dbRef) => collection(dbRef, 'news');
         } else if (typeof __firebase_config !== 'undefined') {
-            const firebaseConfig = JSON.parse(__firebase_config);
+            const fbConfig = JSON.parse(__firebase_config);
             const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-            app = initializeApp(firebaseConfig);
+            app = initializeApp(fbConfig);
             auth = getAuth(app);
             db = getFirestore(app);
             collectionPath = (dbRef) => collection(dbRef, 'artifacts', appId, 'public', 'data', 'news');
         } else {
-            throw new Error("Keine Konfiguration gefunden");
+            throw new Error("Fehler");
         }
 
         await startNewsLogic();
 
     } catch (e) {
-        console.warn("Datenbank Fehler (Offline?):", e);
         if(newsContainer) {
             newsContainer.innerHTML = `
                 <div class="news-item">
@@ -70,46 +58,40 @@ async function startNewsLogic() {
     const adminPanel = document.getElementById('admin-panel');
     const newsForm = document.getElementById('news-form');
     
-    // Buttons
+    
     const logoutBtn = document.getElementById('admin-logout-btn');
     const cancelBtn = document.getElementById('news-cancel-btn');
     const submitBtn = document.getElementById('news-submit-btn');
     const formHeadline = document.getElementById('form-headline');
 
-    // Das große Bild auf der rechten Seite
+    
     const displayImage = document.getElementById('news-display-image');
 
-    // Login Modal Elemente
+    
     const loginModal = document.getElementById('login-modal');
     const loginClose = document.getElementById('login-close');
     const passwordInput = document.getElementById('admin-password-input');
     const loginError = document.getElementById('login-error');
     const loginFormTag = document.getElementById('admin-login-form');
 
-    // 1. Authentifizierung starten
     try {
-        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token && (!YOUR_OWN_CONFIG || Object.keys(YOUR_OWN_CONFIG).length === 0)) {
+        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token && (!firebaseConfig || Object.keys(firebaseConfig).length === 0)) {
             await signInWithCustomToken(auth, __initial_auth_token);
         }
     } catch (e) {
-        console.error("Auth Init Fehler:", e);
     }
 
-    // 2. Auth Status Überwachen
     onAuthStateChanged(auth, (user) => {
         
-        // Fall A: Gar kein User eingeloggt? -> Als Gast (Anonym) einloggen
         if (!user) {
-            signInAnonymously(auth).catch((err) => console.error("Gast-Login fehlgeschlagen:", err));
+            signInAnonymously(auth).catch((err) => {});
             toggleAdminUI(false);
             return; 
         }
 
-        // Fall B: User ist da. Ist er Admin?
         const isAdmin = !user.isAnonymous;
         toggleAdminUI(isAdmin);
 
-        // 3. Daten laden
         const newsCollection = collectionPath(db);
 
         onSnapshot(newsCollection, (snapshot) => {
@@ -117,7 +99,7 @@ async function startNewsLogic() {
             snapshot.forEach((doc) => {
                 newsItems.push({ id: doc.id, ...doc.data() });
             });
-            // Sortieren nach Datum (neu oben)
+            
             newsItems.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
 
             newsContainer.innerHTML = '';
@@ -152,7 +134,7 @@ async function startNewsLogic() {
                             }
                             displayImage.src = item.imageUrl;
                             
-                            // NEU: Klasse hinzufügen, damit das Bild aufpoppt
+                            
                             displayImage.classList.add('active-preview');
                         });
 
@@ -160,7 +142,7 @@ async function startNewsLogic() {
                             const defaultSrc = displayImage.getAttribute('data-default-src') || 'images/news.png';
                             displayImage.src = defaultSrc;
                             
-                            // NEU: Klasse entfernen, damit news.png flach bleibt
+                            
                             displayImage.classList.remove('active-preview');
                         });
                     }
@@ -182,7 +164,7 @@ async function startNewsLogic() {
             }
         });
 
-        // Formular Absenden
+        
         if (newsForm) {
             newsForm.onsubmit = async (e) => {
                 e.preventDefault();
@@ -204,165 +186,154 @@ async function startNewsLogic() {
                         imageUrl: imageVal 
                     };
 
-                    if (editingId) {
-                        let collectionName = YOUR_OWN_CONFIG && Object.keys(YOUR_OWN_CONFIG).length > 0 ? 'news' : null;
-                        let docRef;
-                        if(!collectionName) {
-                            const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-                            docRef = doc(db, 'artifacts', appId, 'public', 'data', 'news', editingId);
-                        } else {
-                            docRef = doc(db, collectionName, editingId);
+                                        if (editingId) {
+                                            let collectionName = firebaseConfig && Object.keys(firebaseConfig).length > 0 ? 'news' : null;
+                                            let docRef;
+                                            if(!collectionName) {
+                                                const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+                                                docRef = doc(db, 'artifacts', appId, 'public', 'data', 'news', editingId);
+                                            } else {
+                                                docRef = doc(db, collectionName, editingId);
+                                            }
+                                            await updateDoc(docRef, dataToSave);
+                                            alert("Änderungen gespeichert!");
+                                        } else {
+                                            dataToSave.timestamp = Date.now();
+                                            await addDoc(newsCollection, dataToSave);
+                                        }
+                                        resetForm();
+                    
+                                    } catch (err) {
+                                        alert("Fehler: " + err.message);
+                                    }
+                                };
+                            }
+                        });
+                    
+                        function toggleAdminUI(isAdmin) {
+                            if (isAdmin) {
+                                document.body.classList.add('admin-mode');
+                                if(adminPanel) adminPanel.classList.add('active');
+                                document.querySelectorAll('.admin-controls').forEach(el => el.style.display = 'flex');
+                            } else {
+                                document.body.classList.remove('admin-mode');
+                                if(adminPanel) adminPanel.classList.remove('active');
+                                document.querySelectorAll('.admin-controls').forEach(el => el.style.display = 'none');
+                                resetForm(); 
+                            }
                         }
-                        await updateDoc(docRef, dataToSave);
-                        alert("Änderungen gespeichert!");
-                    } else {
-                        dataToSave.timestamp = Date.now();
-                        await addDoc(newsCollection, dataToSave);
+                    
+                        function loadIntoForm(item) {
+                            editingId = item.id;
+                            document.getElementById('news-title').value = item.title;
+                            document.getElementById('news-date').value = item.date;
+                            document.getElementById('news-text').value = item.text;
+                            document.getElementById('news-image-url').value = item.imageUrl || ''; 
+                    
+                            if(formHeadline) formHeadline.textContent = "Nachricht bearbeiten";
+                            if(submitBtn) submitBtn.textContent = "Änderungen speichern";
+                            if(cancelBtn) cancelBtn.style.display = "inline-block";
+                            if(logoutBtn) logoutBtn.style.display = "none";
+                            
+                            adminPanel.scrollIntoView({behavior: "smooth"});
+                        }
+                    
+                        function resetForm() {
+                            editingId = null;
+                            if(newsForm) newsForm.reset();
+                            
+                            if(formHeadline) formHeadline.textContent = "Neue Nachricht verfassen";
+                            if(submitBtn) submitBtn.textContent = "Veröffentlichen";
+                            if(cancelBtn) cancelBtn.style.display = "none";
+                            if(logoutBtn) logoutBtn.style.display = "inline-block"; 
+                        }
+                    
+                        if (cancelBtn) cancelBtn.onclick = resetForm;
+                    
+                        if (logoutBtn) {
+                            logoutBtn.onclick = async () => {
+                                if (confirm("Admin Modus beenden?")) {
+                                    try {
+                                        await signOut(auth); 
+                                    } catch(e) {
+                                    }
+                                }
+                            };
+                        }
+                        
+                        if (adminToggle) {
+                            adminToggle.addEventListener('click', () => {
+                                if (loginModal) {
+                                    loginModal.style.display = 'flex';
+                                    if (passwordInput) passwordInput.focus();
+                                }
+                            });
+                        }
+                    
+                        if (loginClose) {
+                            loginClose.onclick = () => {
+                                loginModal.style.display = 'none';
+                                loginError.style.display = 'none';
+                                passwordInput.value = '';
+                            };
+                        }
+                    
+                        const handleLogin = async () => {
+                            const password = passwordInput.value.trim();
+                            const email = "info@segelfliegenaltdorf.de"; 
+                    
+                            if (!password) return;
+                    
+                            try {
+                                await signInWithEmailAndPassword(auth, email, password);
+                                
+                                loginModal.style.display = 'none';
+                                passwordInput.value = '';
+                                loginError.style.display = 'none';
+                                
+                            } catch (error) {
+                                loginError.style.display = 'block';
+                                loginError.textContent = "Falsches Passwort!";
+                                passwordInput.value = '';
+                            }
+                        };
+                    
+                        if (loginFormTag) {
+                            loginFormTag.addEventListener('submit', (e) => {
+                                e.preventDefault();
+                                handleLogin();
+                            });
+                        }
+                    
+                        window.onclick = (event) => {
+                            if (event.target == loginModal) {
+                                loginModal.style.display = "none";
+                                loginError.style.display = 'none';
+                                passwordInput.value = '';
+                            }
+                        };
                     }
-                    resetForm();
+                    
+                    async function deleteNewsItem(docId) {
+                        if (confirm("Wirklich löschen?")) {
+                            try {
+                                if (auth.currentUser?.isAnonymous) {
+                                    alert("Fehlende Berechtigung.");
+                                    return;
+                                }
+                    
+                                let collectionName = firebaseConfig && Object.keys(firebaseConfig).length > 0 ? 'news' : null;
+                                if(!collectionName) {
+                                    const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+                                    await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'news', docId));
+                                } else {
+                                    await deleteDoc(doc(db, collectionName, docId));
+                                }
+                            } catch (e) {
+                                alert("Löschen fehlgeschlagen");
+                            }
+                        }
+                    }
+                    
+                    initFirebase();
 
-                } catch (err) {
-                    console.error("Fehler beim Speichern:", err);
-                    alert("Fehler: " + err.message + "\n(Sind Sie als Admin eingeloggt?)");
-                }
-            };
-        }
-    });
-
-    // --- HELPER FUNKTIONEN ---
-
-    function toggleAdminUI(isAdmin) {
-        if (isAdmin) {
-            document.body.classList.add('admin-mode');
-            if(adminPanel) adminPanel.classList.add('active');
-            document.querySelectorAll('.admin-controls').forEach(el => el.style.display = 'flex');
-        } else {
-            document.body.classList.remove('admin-mode');
-            if(adminPanel) adminPanel.classList.remove('active');
-            document.querySelectorAll('.admin-controls').forEach(el => el.style.display = 'none');
-            resetForm(); 
-        }
-    }
-
-    function loadIntoForm(item) {
-        editingId = item.id;
-        document.getElementById('news-title').value = item.title;
-        document.getElementById('news-date').value = item.date;
-        document.getElementById('news-text').value = item.text;
-        document.getElementById('news-image-url').value = item.imageUrl || ''; 
-
-        if(formHeadline) formHeadline.textContent = "📝 Nachricht bearbeiten";
-        if(submitBtn) submitBtn.textContent = "Änderungen speichern";
-        if(cancelBtn) cancelBtn.style.display = "inline-block";
-        if(logoutBtn) logoutBtn.style.display = "none";
-        
-        adminPanel.scrollIntoView({behavior: "smooth"});
-    }
-
-    function resetForm() {
-        editingId = null;
-        if(newsForm) newsForm.reset();
-        
-        if(formHeadline) formHeadline.textContent = "📝 Neue Nachricht verfassen";
-        if(submitBtn) submitBtn.textContent = "Veröffentlichen";
-        if(cancelBtn) cancelBtn.style.display = "none";
-        if(logoutBtn) logoutBtn.style.display = "inline-block"; 
-    }
-
-    if (cancelBtn) cancelBtn.onclick = resetForm;
-
-    // --- LOGOUT ---
-    if (logoutBtn) {
-        logoutBtn.onclick = async () => {
-            if (confirm("Admin Modus beenden?")) {
-                try {
-                    await signOut(auth); 
-                } catch(e) {
-                    console.error("Logout Fehler:", e);
-                }
-            }
-        };
-    }
-
-    // --- LOGIN LOGIK ---
-    
-    if (adminToggle) {
-        adminToggle.addEventListener('click', () => {
-            if (loginModal) {
-                loginModal.style.display = 'flex';
-                if (passwordInput) passwordInput.focus();
-            }
-        });
-    }
-
-    if (loginClose) {
-        loginClose.onclick = () => {
-            loginModal.style.display = 'none';
-            loginError.style.display = 'none';
-            passwordInput.value = '';
-        };
-    }
-
-    // SICHERER LOGIN
-    const handleLogin = async () => {
-        const password = passwordInput.value.trim();
-        // Hier ist jetzt deine feste Email hinterlegt:
-        const email = "info@segelfliegen-altdorf.de"; 
-
-        if (!password) return;
-
-        try {
-            await signInWithEmailAndPassword(auth, email, password);
-            
-            loginModal.style.display = 'none';
-            passwordInput.value = '';
-            loginError.style.display = 'none';
-            
-        } catch (error) {
-            console.error("Login fehlgeschlagen:", error);
-            loginError.style.display = 'block';
-            loginError.textContent = "Falsches Passwort!";
-            passwordInput.value = '';
-        }
-    };
-
-    if (loginFormTag) {
-        loginFormTag.addEventListener('submit', (e) => {
-            e.preventDefault();
-            handleLogin();
-        });
-    }
-
-    window.onclick = (event) => {
-        if (event.target == loginModal) {
-            loginModal.style.display = "none";
-            loginError.style.display = 'none';
-            passwordInput.value = '';
-        }
-    };
-}
-
-// Löschen Funktion
-async function deleteNewsItem(docId) {
-    if (confirm("Wirklich löschen?")) {
-        try {
-            if (auth.currentUser?.isAnonymous) {
-                alert("Fehlende Berechtigung.");
-                return;
-            }
-
-            let collectionName = YOUR_OWN_CONFIG && Object.keys(YOUR_OWN_CONFIG).length > 0 ? 'news' : null;
-            if(!collectionName) {
-                const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-                await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'news', docId));
-            } else {
-                await deleteDoc(doc(db, collectionName, docId));
-            }
-        } catch (e) {
-            console.error(e);
-            alert("Löschen fehlgeschlagen: " + e.message);
-        }
-    }
-}
-
-initFirebase();

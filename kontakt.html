@@ -7,17 +7,17 @@
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <style>
-        /* Spezifische Styles für Kontaktseite */
+        
         html { scroll-padding-top: 120px; scroll-behavior: smooth; }
         
-        /* Video Header spezifische Styles */
+        
         .video-header {
             position: relative;
             overflow: hidden;
-            background-color: var(--primary); /* Fallback */
+            background-color: var(--primary); 
         }
 
-        /* --- FORMULAR STYLING OPTIMIERT (Identisch zu mitfliegen.html) --- */
+        
         .form-responsive {
             display: grid;
             grid-template-columns: 1fr;
@@ -78,7 +78,7 @@
             border: 1px solid #eee;
         }
         .checkbox-wrapper input[type="checkbox"] {
-            width: 22px; /* Identisch zu mitfliegen.html */
+            width: 22px; 
             height: 22px;
             margin-top: 2px;
             flex-shrink: 0; 
@@ -94,10 +94,10 @@
             text-align: left;
         }
 
-        /* Karte responsiv (16:9 wie Video-Container) */
+        
         .map-container {
             position: relative; 
-            padding-bottom: 56.25%; /* 16:9 Format wie bei Videos */
+            padding-bottom: 56.25%; 
             height: 0; 
             overflow: hidden; 
             border-radius: var(--radius); 
@@ -120,17 +120,17 @@
 <body>
     <header id="main-header"></header>
 
-    <!-- Page Header mit Video Background -->
+    
     <div class="page-header video-header">
-        <!-- Video -->
+        
         <video autoplay muted loop playsinline class="hero-video" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 0;">
             <source src="videos/kontakt_hero.mp4" type="video/mp4">
         </video>
         
-        <!-- Overlay für Lesbarkeit (Dunkelblau transparent) -->
+        
         <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 52, 96, 0.6); z-index: 1;"></div>
 
-        <!-- Text Inhalt -->
+        
         <div class="container" style="position: relative; z-index: 2;">
             <h1>Kontakt</h1>
             <p>Wir freuen uns auf Ihre Nachricht!</p>
@@ -139,7 +139,7 @@
 
     <main class="container section">
         
-        <!-- BLOCK 1: Anschrift & Karte (Zweispaltig, Layout wie Text/Video) -->
+        
         <div class="content-block" style="border-left: 5px solid var(--accent); margin-bottom: 40px;">
             <div class="news-wrapper">
                 <div>
@@ -153,7 +153,7 @@
                         </p>
                         <p style="margin-top: 20px;">
                             📞 <a href="tel:+499189310" style="color: var(--primary); font-weight: bold; text-decoration: none;">09189 - 310</a><br>
-                            📧 <a href="mailto:info@segelfliegen-altdorf.de" style="color: var(--primary); font-weight: bold; text-decoration: none;">info@segelfliegen-altdorf.de</a>
+                            📧 <a href="mailto:info@segelfliegenaltdorf.de" style="color: var(--primary); font-weight: bold; text-decoration: none;">info@segelfliegenaltdorf.de</a>
                         </p>
                     </div>
                 </div>
@@ -165,12 +165,12 @@
             </div>
         </div>
 
-        <!-- BLOCK 2: Formular (Zentriert & 700px breit wie auf mitfliegen.html) -->
+        
         <div class="content-block" style="border-top: 5px solid var(--primary);">
             <h2 style="text-align: center; margin-bottom: 10px;">Schreiben Sie uns</h2>
             <p style="text-align: center; color: var(--text-light); margin-bottom: 40px;">Haben Sie Fragen oder möchten Sie einen Gutschein bestellen?</p>
             
-            <!-- Wieder auf 700px begrenzt, exakt wie bei Mitfliegen -->
+            
             <form action="https://formspree.io/f/meekadza" method="POST" style="max-width: 700px; margin: 0 auto;">
                 
                 <div class="form-responsive">
@@ -180,7 +180,7 @@
                     </div>
                     <div class="form-group">
                         <label for="email">E-Mail Adresse *</label>
-                        <input type="email" id="email" name="email" required placeholder="beispiel@email.de">
+                        <input type="email" id="email" name="email" required placeholder="">
                     </div>
                 </div>
                 
@@ -222,3 +222,9 @@
     <script src="script.js"></script>
 </body>
 </html>
+
+
+
+
+
+
