@@ -280,7 +280,7 @@ async function startNewsLogic() {
                     
                         const handleLogin = async () => {
                             const password = passwordInput.value.trim();
-                            const email = "info@segelfliegenaltdorf.de"; 
+                            const email = "info@segelfliegen-altdorf.de"; 
                     
                             if (!password) return;
                     
