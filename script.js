@@ -74,7 +74,7 @@ const footerHTML = `
     <div class="footer-bottom">
         <a href="impressum.html" style="margin:0 10px; color: #b0b0b0;">Impressum</a> | 
         <a href="datenschutz.html" style="margin:0 10px; color: #b0b0b0;">Datenschutz</a> | 
-        <a href="intern.html" id="nav-intern" style="margin:0 10px; color: #b0b0b0;">Intern</a>
+        <a href="https://vereinsflieger.de/" id="nav-intern" target="_blank" style="margin:0 10px; color: #b0b0b0;">Intern</a>
         <br><br>
         &copy; 2026 Segelflugplatz Altdorf-Hagenhausen
     </div>
