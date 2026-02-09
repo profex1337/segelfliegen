@@ -1,8 +1,3 @@
-/* ---------------------------------------------------------------------------------------
-   SCRIPT.JS - ZENTRALE STEUERUNG FÜR HEADER, FOOTER, UI & FAVICON
---------------------------------------------------------------------------------------- */
-
-// 1. HEADER & FOOTER HTML TEMPLATES
 const headerHTML = `
 <div class="container header-inner">
     <div class="logo">
@@ -54,7 +49,7 @@ const footerHTML = `
         <div class="footer-col-center">
             <div class="footer-contact">
                 <a href="tel:+499189310" style="display: block; margin-bottom: 5px;">📞 +49 9189 310</a>
-                <a href="mailto:info@segelfliegen-altdorf.de" style="display: block;">📧 info@segelfliegen-altdorf.de</a>
+                <a href="mailto:info@segelfliegenaltdorf.de" style="display: block;">📧 info@segelfliegenaltdorf.de</a>
             </div>
             
             <div class="footer-socials">
@@ -85,7 +80,6 @@ const footerHTML = `
 </div>
 `;
 
-// 2. HAUPT-INITIALISIERUNG
 document.addEventListener('DOMContentLoaded', () => {
     initFavicon();
 
@@ -127,7 +121,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initBackToTop();
     initSlideshows();
     initCookieConsent();
-    initReviews(); // Google Reviews Sidebar
+    initReviews();
 });
 
 // 3. UI HELFER FUNKTIONEN & REVIEWS
@@ -142,7 +136,6 @@ function initReviews() {
 
     if (!trigger || !sidebar) return; 
 
-    // ECHTE REZENSIONEN (Sortiert nach Datum: Neueste zuerst)
     const realReviews = [
         { 
             name: "Michael Dittrich", 
@@ -172,21 +165,18 @@ function initReviews() {
             name: "Smolto van der Bruggenkötter", 
             rating: 5, 
             date: "vor 6 Jahren", 
-            text: "Sehr zu empfehlen! Coole Menschen sehr lockere Atmosphäre, sehr freundlich und hilfsbereit.<br>Ein Erlebnis für jung und alt. Hier könnt ihr spontan mitfliegen und einen unvergesslichen Tag erleben!<br>Ich komme wieder! Danke für den sehr schönen Tag" 
+            text: "Sehr zu empfehlen! Coole Menschen sehr lockere Atmosphäre, sehr freundlich und hilfsbereit.<br>Ein Erlebnis für jung und alt. Hier könnt ihr spontan mitfliegen und einen unvergesslichen tag erleben!<br>Ich komme wieder! Danke für den sehr schönen tag" 
         }
     ];
 
-    // 2. HTML generieren
     if (listContainer) {
         listContainer.innerHTML = realReviews.map(review => {
-            // Initialen für Avatar
             const initials = review.name.split(' ').map(n => n[0]).join('');
-            // Sterne generieren
             const starsHTML = '★'.repeat(review.rating) + '☆'.repeat(5 - review.rating);
             
             return `
             <div class="review-card">
-                <div class="review-avatar" style="background-color: ${getRandomColor()}">${initials}</div>
+                <div class="review-avatar" style="background-color: ${getAvatarColor()}">${initials}</div>
                 <div class="review-content">
                     <h4>${review.name}</h4>
                     <span class="review-meta">${review.date}</span>
@@ -197,11 +187,10 @@ function initReviews() {
         }).join('');
     }
 
-    // 3. Event Listener für Öffnen/Schließen
     const openSidebar = () => {
         sidebar.classList.add('active');
         overlay.classList.add('active');
-        document.body.style.overflow = 'hidden'; // Scrollen verhindern
+        document.body.style.overflow = 'hidden';
     };
 
     const closeSidebar = () => {
@@ -215,8 +204,7 @@ function initReviews() {
     if(overlay) overlay.addEventListener('click', closeSidebar);
 }
 
-// Zufallsfarbe für Avatare
-function getRandomColor() {
+function getAvatarColor() {
     const colors = ['#e94560', '#0f3460', '#16213e', '#533483', '#009688', '#ff5722'];
     return colors[Math.floor(Math.random() * colors.length)];
 }

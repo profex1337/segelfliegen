@@ -4,32 +4,32 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
-    <!-- SEO OPTIMIERUNG -->
+    
     <title>Mitfliegen & Gutscheine | Segelflugplatz Altdorf</title>
     <meta name="description" content="Verschenken Sie ein unvergessliches Erlebnis: Segelflug, Kunstflug oder Motorflug-Gutscheine. Jetzt Termin anfragen beim Post-SV Nürnberg!">
     <meta name="keywords" content="Rundflug Nürnberg, Segelflug Gutschein, Kunstflug mitfliegen, Geschenkidee Nürnberg, Flugplatzfest, Motorsegler Gastflug">
     <meta name="robots" content="index, follow">
 
-    <!-- Open Graph -->
+    
     <meta property="og:type" content="website">
     <meta property="og:title" content="Mitfliegen beim Segelflieger Post-SV Nürnberg">
     <meta property="og:description" content="Erleben Sie die Welt von oben. Gastflüge und Gutscheine.">
-    <meta property="og:image" content="https://segelfliegen-altdorf.de/images/mitfliegen_hero.jpg">
+    <meta property="og:image" content="https://segelfliegenaltdorf.de/images/mitfliegen_hero.jpg">
 
-    <!-- Local SEO -->
+    
     <meta name="geo.region" content="DE-BY">
     <meta name="geo.placename" content="Berg bei Neumarkt in der Oberpfalz">
     <meta name="geo.position" content="49.3899;11.4267">
     <meta name="ICBM" content="49.3899, 11.4267">
 
-    <!-- Strukturierte Daten -->
+    
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
       "@type": "SportsClub",
       "name": "Segelflieger im Post-SV Nürnberg e.V.",
-      "image": "https://segelfliegen-altdorf.de/images/logo.png",
-      "url": "https://segelfliegen-altdorf.de/mitfliegen.html",
+      "image": "https://segelfliegenaltdorf.de/images/logo.png",
+      "url": "https://segelfliegenaltdorf.de/mitfliegen.html",
       "telephone": "+499189310",
       "address": {
         "@type": "PostalAddress",
@@ -49,20 +49,20 @@
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <style>
-        /* Spezifische Styles für diese Seite */
+        
         html { scroll-padding-top: 120px; scroll-behavior: smooth; }
         
-        /* Video Header spezifische Styles */
+        
         .video-header {
             position: relative;
             overflow: hidden;
-            background-color: var(--primary); /* Fallback */
+            background-color: var(--primary); 
         }
 
-        /* Videos responsiv machen */
+        
         .video-container { 
             position: relative; 
-            padding-bottom: 56.25%; /* 16:9 Format */
+            padding-bottom: 56.25%; 
             height: 0; 
             overflow: hidden; 
             border-radius: var(--radius); 
@@ -77,23 +77,23 @@
             border: 0; 
         }
 
-        /* --- FORMULAR STYLING OPTIMIERT --- */
         
-        /* Grid Layout */
+        
+        
         .form-responsive {
             display: grid;
-            grid-template-columns: 1fr; /* Standard: 1 Spalte (Mobil) */
+            grid-template-columns: 1fr; 
             gap: 20px;
         }
 
-        /* Ab Tablet/Desktop: 2 Spalten */
+        
         @media (min-width: 768px) {
             .form-responsive {
                 grid-template-columns: 1fr 1fr;
             }
         }
 
-        /* Labels */
+        
         .form-group label {
             display: block;
             margin-bottom: 8px;
@@ -102,38 +102,38 @@
             color: var(--text-main);
         }
 
-        /* Eingabefelder (Modern & Touch-freundlich) */
+        
         input[type="text"],
         input[type="email"],
         input[type="tel"],
         textarea,
         select {
             width: 100%;
-            padding: 12px 15px; /* Etwas mehr Platz innen */
+            padding: 12px 15px; 
             border: 1px solid #ddd;
             border-radius: 8px;
             background-color: #fff;
             font-family: inherit;
-            font-size: 16px; /* WICHTIG: 16px verhindert Auto-Zoom auf iOS */
-            appearance: none; /* Entfernt alte OS-Styles */
+            font-size: 16px; 
+            appearance: none; 
             -webkit-appearance: none;
             transition: border-color 0.3s, box-shadow 0.3s;
         }
 
-        /* Fokus Effekt */
+        
         input:focus, textarea:focus, select:focus {
             border-color: var(--primary);
             outline: none;
             box-shadow: 0 0 0 3px rgba(15, 52, 96, 0.1);
         }
 
-        /* Textarea Resizing kontrollieren */
+        
         textarea {
             resize: vertical;
             min-height: 120px;
         }
 
-        /* Checkbox Container Styling */
+        
         .checkbox-wrapper {
             display: flex;
             align-items: flex-start;
@@ -149,9 +149,9 @@
             width: 22px;
             height: 22px;
             margin-top: 2px;
-            flex-shrink: 0; /* Verhindert das Quetschen der Checkbox */
+            flex-shrink: 0; 
             cursor: pointer;
-            -webkit-appearance: checkbox; /* Checkboxen sollen nativ aussehen */
+            -webkit-appearance: checkbox; 
             appearance: checkbox;
         }
 
@@ -164,7 +164,7 @@
             color: var(--text-light);
         }
 
-        /* Mobile Anpassungen */
+        
         @media (max-width: 600px) {
             .category-nav {
                 gap: 10px;
@@ -175,13 +175,13 @@
                 flex-grow: 1;
                 text-align: center;
             }
-            /* Formular Padding auf Mobile reduzieren für mehr Platz */
+            
             .content-block#Anfrage {
                 padding: 20px;
             }
         }
 
-        /* --- FIX FÜR KUNSTFLUG REIHENFOLGE --- */
+        
         @media (max-width: 991px) {
             .swap-mobile > div:last-child {
                 order: -1;
@@ -192,17 +192,17 @@
 <body>
     <header id="main-header"></header>
 
-    <!-- Page Header mit Video Background -->
+    
     <div class="page-header video-header">
-        <!-- Video -->
+        
         <video autoplay muted loop playsinline class="hero-video" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 0;">
             <source src="videos/mitfliegen_hero.mp4" type="video/mp4">
         </video>
         
-        <!-- Overlay für Lesbarkeit (Dunkelblau transparent) -->
+        
         <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 52, 96, 0.6); z-index: 1;"></div>
 
-        <!-- Text Inhalt -->
+        
         <div class="container" style="position: relative; z-index: 2;">
             <h1>Nutzen Sie die Gelegenheit!</h1>
             <p>Gutscheine und Gastflüge</p>
@@ -210,14 +210,14 @@
     </div>
 
     <main class="container section">
-        <!-- Kategorie Buttons -->
+        
         <div class="category-nav">
             <a href="#infos" class="btn-cat">Infos</a>
             <a href="#preise" class="btn-cat">Preise</a>
             <a href="#anfrage-formular" class="btn-cat">Kontakt</a>
         </div>
 
-        <!-- WIEDERHERGESTELLTE SEKTION: Intro Text -->
+        
         <div class="content-block" id="infos" style="margin-bottom: 50px;">
             <div style="display: flex; flex-wrap: wrap; gap: 40px; align-items: center;">
                 <div style="flex: 1 1 400px;">
@@ -237,9 +237,9 @@
             </div>
         </div>
 
-        <!-- Video Grid -->
+        
         <div class="card-grid" style="margin-bottom: 60px;">
-            <!-- Segelflug -->
+            
             <div class="card">
                 <div class="video-container">
                     <iframe src="https://www.youtube-nocookie.com/embed/DzY6mGzRw9I?rel=0" title="Segelflug Video" allowfullscreen></iframe>
@@ -250,7 +250,7 @@
                 </div>
             </div>
 
-            <!-- Kunstflug -->
+            
             <div class="card">
                 <div class="video-container">
                     <iframe src="https://www.youtube-nocookie.com/embed/s67HR0Hc2Ac?rel=0" title="Kunstflug Video" allowfullscreen></iframe>
@@ -261,7 +261,7 @@
                 </div>
             </div>
 
-            <!-- Motorsegler -->
+            
             <div class="card">
                 <div class="video-container">
                     <iframe src="https://www.youtube-nocookie.com/embed/8khhMEq7YEY?rel=0" title="Motorsegler Video" allowfullscreen></iframe>
@@ -273,8 +273,8 @@
             </div>
         </div>
 
-        <!-- Preisliste & Info -->
-        <!-- ID HINZUGEFÜGT: id="preise" für den Anker-Link -->
+        
+        
         <div class="content-block" id="preise">
             <h2>Gastfluggebühren</h2>
             
@@ -282,37 +282,37 @@
                 <li>
                     <strong>Segelflug (Windenstart)</strong> 
                     <span>bis 20 Minuten Flugzeit</span> 
-                    <span style="float:right; font-weight:bold; color:var(--primary);">48,00 €</span>
+                    <span style="float:right; font-weight:bold; color:var(--primary);">35,00 €</span>
                 </li>
                 <li>
                     <strong>Gruppen ab 10 Personen</strong> 
                     <span>bis 20 Minuten, Windenstart</span> 
-                    <span style="float:right; font-weight:bold; color:var(--primary);">30,00 €</span>
+                    <span style="float:right; font-weight:bold; color:var(--primary);">23,00 €</span>
                 </li>
                 <li>
                     <strong>Segelflug (F-Schlepp)</strong> 
                     <span>bis 20 Minuten</span> 
-                    <span style="float:right; font-weight:bold; color:var(--primary);">80,00 €</span>
+                    <span style="float:right; font-weight:bold; color:var(--primary);">58,00 €</span>
                 </li>
                 <li>
                     <strong>Verlängerung Segelflug</strong> 
                     <span>Jede weitere Minute über 20 Min. Flugzeit</span> 
-                    <span style="float:right; font-weight:bold; color:var(--primary);">0,75 €</span>
+                    <span style="float:right; font-weight:bold; color:var(--primary);">0,60 €</span>
                 </li>
                 <li>
                     <strong>Motorsegler</strong> 
                     <span>bis 15 Minuten</span> 
-                    <span style="float:right; font-weight:bold; color:var(--primary);">55,00 €</span>
+                    <span style="float:right; font-weight:bold; color:var(--primary);">45,00 €</span>
                 </li>
                 <li>
                     <strong>Verlängerung Motorsegler</strong> 
                     <span>jede weitere Minute</span> 
-                    <span style="float:right; font-weight:bold; color:var(--primary);">3,75 €</span>
+                    <span style="float:right; font-weight:bold; color:var(--primary);">2,30 €</span>
                 </li>
                 <li>
                     <strong>Segelkunstflug</strong> 
                     <span>mit F-Schlepp pauschal</span> 
-                    <span style="float:right; font-weight:bold; color:var(--primary);">160,00 €</span>
+                    <span style="float:right; font-weight:bold; color:var(--primary);">120,00 €</span>
                 </li>
             </ul>
 
@@ -327,7 +327,7 @@
             </div>
         </div>
 
-        <!-- ANFRAGE FORMULAR -->
+        
         <div class="content-block" id="anfrage-formular" style="border-top: 5px solid var(--accent); margin-top: 40px;">
             <h2 style="text-align: center; margin-bottom: 10px;">Flug- oder Gutschein-Anfrage</h2>
             <p style="text-align: center; margin-bottom: 40px; color: var(--text-light);">Senden Sie uns unverbindlich Ihren Wunschtermin.</p>
@@ -341,7 +341,7 @@
                     </div>
                     <div class="form-group">
                         <label for="email">E-Mail Adresse *</label>
-                        <input type="email" id="email" name="email" required placeholder="beispiel@email.de">
+                        <input type="email" id="email" name="email" required placeholder="">
                     </div>
                 </div>
 
@@ -368,7 +368,7 @@
                     <textarea id="nachricht" name="message" rows="5" placeholder="Haben Sie einen Wunschtermin oder spezielle Fragen?"></textarea>
                 </div>
 
-                <!-- Optimierte Checkbox -->
+                
                 <div class="checkbox-wrapper">
                     <input type="checkbox" id="datenschutz" name="datenschutz" required>
                     <label for="datenschutz">Ich bin damit einverstanden, dass diese Daten zum Zweck der Kontaktaufnahme gespeichert werden.*</label>
@@ -386,3 +386,9 @@
     <script src="script.js"></script>
 </body>
 </html>
+
+
+
+
+
+

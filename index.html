@@ -4,36 +4,31 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
-    <!-- SEO: Titel & Beschreibung -->
     <title>Segelflugplatz Altdorf-Hagenhausen | Faszination Fliegen bei Nürnberg</title>
     <meta name="description" content="Erleben Sie Segelfliegen und Motorflug im Großraum Nürnberg. Ausbildung, Gastflüge, Gutscheine und Events am Flugplatz Altdorf-Hagenhausen.">
     
-    <!-- SEO: Keywords & Robots -->
     <meta name="keywords" content="Segelfliegen, Flugplatz Altdorf, Nürnberg, Rundflug, Gastflug, Flugausbildung, Segelflugschein, Motorsegler, Post-SV Nürnberg, Fliegen lernen, Gutschein Flug">
     <meta name="robots" content="index, follow">
     <meta name="author" content="Segelflieger im Post-SV Nürnberg e.V.">
     
-    <!-- Open Graph (Für schöne Vorschau auf Facebook/WhatsApp) -->
     <meta property="og:type" content="website">
-    <meta property="og:url" content="https://segelfliegen-altdorf.de/">
+    <meta property="og:url" content="https://segelfliegenaltdorf.de/">
     <meta property="og:title" content="Segelflugplatz Altdorf-Hagenhausen | Komm fliegen!">
     <meta property="og:description" content="Gastflüge, Ausbildung und Events. Besuchen Sie uns am Wochenende!">
-    <meta property="og:image" content="https://segelfliegen-altdorf.de/images/hero.jpg">
+    <meta property="og:image" content="https://segelfliegenaltdorf.de/images/hero.jpg">
     
-    <!-- Local SEO (Geo-Tags für lokale Suche) -->
     <meta name="geo.region" content="DE-BY">
     <meta name="geo.placename" content="Berg bei Neumarkt in der Oberpfalz">
     <meta name="geo.position" content="49.3899;11.4267">
     <meta name="ICBM" content="49.3899, 11.4267">
 
-    <!-- Strukturierte Daten (Schema.org) für Google Business -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
       "@type": "SportsClub",
       "name": "Segelflieger im Post-SV Nürnberg e.V.",
-      "image": "https://segelfliegen-altdorf.de/images/logo.png",
-      "url": "https://segelfliegen-altdorf.de",
+      "image": "https://segelfliegenaltdorf.de/images/logo.png",
+      "url": "https://segelfliegenaltdorf.de",
       "telephone": "+499189310",
       "address": {
         "@type": "PostalAddress",
@@ -83,10 +78,8 @@
 </head>
 <body>
 
-    <!-- ZENTRALER HEADER (Wird durch script.js gefüllt) -->
     <header id="main-header"></header>
 
-    <!-- Hero Bereich -->
     <section class="hero">
         <video class="hero-video" autoplay muted loop playsinline poster="images/hero.jpg">
             <source src="videos/hero.mp4" type="video/mp4">
@@ -103,16 +96,12 @@
             </div>
             <br>
             
-            <!-- Haupt Call-to-Action -->
             <a href="kontakt.html" class="btn" style="margin-bottom: 25px;">Kontaktieren Sie uns!</a>
             
-            <!-- Zeilenumbruch für die Positionierung -->
             <br>
 
-            <!-- NEU: Google Maps Reviews Trigger -->
             <div class="review-trigger" id="review-trigger-btn" title="Bewertungen ansehen">
                 <div class="review-stars">
-                    <!-- 5 Sterne SVG -->
                     ★★★★★
                 </div>
                 <div class="review-text">
@@ -120,7 +109,6 @@
                     <div class="review-cta">Bewerten Sie uns!</div>
                 </div>
                 <div class="review-logo">
-                    <!-- Google G Logo (simuliert) -->
                     <svg viewBox="0 0 24 24" width="18" height="18"><path fill="#fff" d="M21.35 11.1h-9.17v2.73h6.51c-.33 3.81-3.5 5.44-6.5 5.44C8.36 19.27 5 16.25 5 12c0-4.1 3.2-7.27 7.2-7.27 3.09 0 4.9 1.97 4.9 1.97L19 4.72S16.64 2 12 2C6.48 2 2 6.48 2 12s4.48 10 10 10c6.19 0 10-4.34 10-10.9 0-.34-.03-.76-.08-1.1v.1z"/></svg>
                 </div>
             </div>
@@ -128,7 +116,6 @@
         </div>
     </section>
 
-    <!-- Neuigkeiten -->
     <section class="section container">
         <div class="section-title">
             <h2>Neuigkeiten</h2>
@@ -138,7 +125,6 @@
         <div class="news-wrapper">
             <div class="news-list">
                 
-                <!-- ADMIN PANEL (Versteckt, erscheint nach Login) -->
                 <div id="admin-panel" class="admin-panel">
                     <h3 id="form-headline">📝 Neue Nachricht verfassen</h3>
                     <form id="news-form" class="news-form">
@@ -146,7 +132,6 @@
                         <input type="text" id="news-date" placeholder="Datum (z.B. 15.09.2026)" required>
                         <textarea id="news-text" rows="4" placeholder="Ihr Text..." required></textarea>
                         
-                        <!-- NEUES FELD FÜR BILD-URL -->
                         <div style="margin-bottom: 15px;">
                             <input type="text" id="news-image-url" placeholder="Bild-URL (optional, z.B. https://...)" style="margin-bottom: 5px;">
                             <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 10px;">
@@ -160,21 +145,17 @@
                         <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
                             <button type="submit" id="news-submit-btn" class="btn">Veröffentlichen</button>
                             
-                            <!-- Logout Button (Schließt Admin Modus) -->
                             <button type="button" id="admin-logout-btn" class="btn btn-secondary">Admin Beenden</button>
 
-                            <!-- Cancel Edit Button (Versteckt, nur beim Bearbeiten sichtbar) -->
                             <button type="button" id="news-cancel-btn" class="btn btn-secondary" style="display: none;">Bearbeiten abbrechen</button>
                         </div>
                     </form>
                 </div>
 
-                <!-- Hier werden die News von JS eingefügt -->
                 <div id="dynamic-news-list">
                     <p style="text-align:center; color:#999;">Lade Neuigkeiten...</p>
                 </div>
 
-                <!-- Admin Login jetzt hier unter den News (links) -->
                 <div style="margin-top: 30px; opacity: 0.7;">
                     <span id="admin-toggle" class="admin-login-link" style="color: #bbb; cursor: pointer; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px;" title="Mitarbeiter Login">🔒 Admin Login</span>
                 </div>
@@ -182,9 +163,6 @@
             </div>
             
             <div class="news-image-container">
-                <!-- ID hinzugefügt für JS-Zugriff -->
-                <!-- data-default-src speichert das Originalbild -->
-                <!-- GEÄNDERT: news.jpg zu news.png -->
                 <img src="images/news.png" 
                      id="news-display-image" 
                      data-default-src="images/news.png" 
@@ -195,7 +173,6 @@
         </div>
     </section>
 
-    <!-- LOGIN MODAL (Standardmäßig versteckt) -->
     <div id="login-modal" class="modal" style="display: none;">
         <div class="modal-content admin-login-card">
             <span class="modal-close" id="login-close">&times;</span>
@@ -211,7 +188,6 @@
         </div>
     </div>
 
-    <!-- REVIEWS SIDEBAR (Versteckt, gleitet rein) -->
     <aside id="reviews-sidebar" class="reviews-sidebar">
         <div class="reviews-header">
             <h3>Google Rezensionen</h3>
@@ -228,13 +204,10 @@
         </div>
 
         <div class="reviews-list" id="reviews-list-container">
-            <!-- Hier werden JS Reviews eingefügt -->
         </div>
     </aside>
-    <!-- Overlay für Sidebar -->
     <div id="reviews-overlay" class="reviews-overlay"></div>
 
-    <!-- Angebote -->
     <section class="section bg-grey">
         <div class="container">
             <div class="section-title">
@@ -277,10 +250,8 @@
         </div>
     </section>
 
-    <!-- ZENTRALER FOOTER (Wird durch script.js gefüllt) -->
     <footer id="main-footer"></footer>
     
-    <!-- Button "Nach oben" -->
     <button id="btn-back-to-top" title="Nach oben">↑</button>
 
     <script src="script.js"></script>
@@ -289,3 +260,4 @@
 </body>
 
 </html>
+
