@@ -86,10 +86,20 @@ async function startNewsLogic() {
         toggleAdminUI(isAdmin);
         handleInternPageVisibility(isAdmin);
 
-        // Update Nav Link
+        // Manage 'Intern' link behavior
         const navIntern = document.getElementById('nav-intern');
         if (navIntern) {
-            navIntern.style.display = isAdmin ? 'inline-block' : 'none';
+            navIntern.onclick = (e) => {
+                if (!isAdmin) {
+                    e.preventDefault();
+                    const modal = document.getElementById('login-modal');
+                    const pInput = document.getElementById('admin-password-input');
+                    if (modal) {
+                        modal.style.display = 'flex';
+                        if (pInput) pInput.focus();
+                    }
+                }
+            };
         }
 
         if (!user) {
