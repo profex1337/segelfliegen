@@ -109,11 +109,9 @@ const footerHTML = `
 <div id="reviews-overlay" class="reviews-overlay"></div>
 `;
 
-document.addEventListener('DOMContentLoaded', () => {
-    initFavicon();
-
+function injectLayout() {
     const headerElement = document.getElementById('main-header');
-    if (headerElement) {
+    if (headerElement && !headerElement.innerHTML.trim()) {
         headerElement.innerHTML = headerHTML;
         
         const currentPage = window.location.pathname.split("/").pop() || 'index.html';
@@ -144,9 +142,18 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const footerElement = document.getElementById('main-footer');
-    if (footerElement) {
+    if (footerElement && !footerElement.innerHTML.trim()) {
         footerElement.innerHTML = footerHTML;
     }
+}
+
+// Perform injection immediately since script is at the end of body
+injectLayout();
+
+document.addEventListener('DOMContentLoaded', () => {
+    initFavicon();
+    // Re-check injection in case DOM was slow
+    injectLayout();
 
     initLightbox();
     initBackToTop();

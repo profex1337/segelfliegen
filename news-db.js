@@ -271,7 +271,11 @@ async function startNewsLogic() {
                             if (loginTrigger) {
                                 loginTrigger.onclick = () => {
                                     const modal = document.getElementById('login-modal');
-                                    if (modal) modal.style.display = 'flex';
+                                    const pInput = document.getElementById('admin-password-input');
+                                    if (modal) {
+                                        modal.style.display = 'flex';
+                                        if (pInput) pInput.focus();
+                                    }
                                 };
                             }
                         }
@@ -291,23 +295,32 @@ async function startNewsLogic() {
                         
                         if (adminToggle) {
                             adminToggle.addEventListener('click', () => {
-                                if (loginModal) {
-                                    loginModal.style.display = 'flex';
-                                    if (passwordInput) passwordInput.focus();
+                                const modal = document.getElementById('login-modal');
+                                const passInput = document.getElementById('admin-password-input');
+                                if (modal) {
+                                    modal.style.display = 'flex';
+                                    if (passInput) passInput.focus();
                                 }
                             });
                         }
                     
-                        if (loginClose) {
-                            loginClose.onclick = () => {
-                                loginModal.style.display = 'none';
-                                loginError.style.display = 'none';
-                                passwordInput.value = '';
+                        const lClose = document.getElementById('login-close');
+                        if (lClose) {
+                            lClose.onclick = () => {
+                                const modal = document.getElementById('login-modal');
+                                const lError = document.getElementById('login-error');
+                                const pInput = document.getElementById('admin-password-input');
+                                if(modal) modal.style.display = 'none';
+                                if(lError) lError.style.display = 'none';
+                                if(pInput) pInput.value = '';
                             };
                         }
                     
                         const handleLogin = async () => {
-                            const password = passwordInput.value.trim();
+                            const pInput = document.getElementById('admin-password-input');
+                            const lError = document.getElementById('login-error');
+                            const modal = document.getElementById('login-modal');
+                            const password = pInput ? pInput.value.trim() : '';
                             const email = "info@segelfliegen-altdorf.de"; 
                     
                             if (!password) return;
@@ -315,29 +328,35 @@ async function startNewsLogic() {
                             try {
                                 await signInWithEmailAndPassword(auth, email, password);
                                 
-                                loginModal.style.display = 'none';
-                                passwordInput.value = '';
-                                loginError.style.display = 'none';
+                                if(modal) modal.style.display = 'none';
+                                if(pInput) pInput.value = '';
+                                if(lError) lError.style.display = 'none';
                                 
                             } catch (error) {
-                                loginError.style.display = 'block';
-                                loginError.textContent = "Falsches Passwort!";
-                                passwordInput.value = '';
+                                if(lError) {
+                                    lError.style.display = 'block';
+                                    lError.textContent = "Falsches Passwort!";
+                                }
+                                if(pInput) pInput.value = '';
                             }
                         };
                     
-                        if (loginFormTag) {
-                            loginFormTag.addEventListener('submit', (e) => {
+                        const lFormTag = document.getElementById('admin-login-form');
+                        if (lFormTag) {
+                            lFormTag.addEventListener('submit', (e) => {
                                 e.preventDefault();
                                 handleLogin();
                             });
                         }
                     
                         window.onclick = (event) => {
-                            if (event.target == loginModal) {
-                                loginModal.style.display = "none";
-                                loginError.style.display = 'none';
-                                passwordInput.value = '';
+                            const modal = document.getElementById('login-modal');
+                            const lError = document.getElementById('login-error');
+                            const pInput = document.getElementById('admin-password-input');
+                            if (event.target == modal) {
+                                if(modal) modal.style.display = "none";
+                                if(lError) lError.style.display = 'none';
+                                if(pInput) pInput.value = '';
                             }
                         };
                     }
@@ -363,5 +382,9 @@ async function startNewsLogic() {
                         }
                     }
                     
-                    initFirebase();
+                    if (document.readyState === 'loading') {
+                        document.addEventListener('DOMContentLoaded', initFirebase);
+                    } else {
+                        initFirebase();
+                    }
 
