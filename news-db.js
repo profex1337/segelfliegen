@@ -82,15 +82,20 @@ async function startNewsLogic() {
     }
 
     onAuthStateChanged(auth, (user) => {
-        
-        if (!user) {
-            signInAnonymously(auth).catch((err) => {});
-            toggleAdminUI(false);
-            return; 
+        const isAdmin = user && !user.isAnonymous;
+        toggleAdminUI(isAdmin);
+        handleInternPageVisibility(isAdmin);
+
+        // Update Nav Link
+        const navIntern = document.getElementById('nav-intern');
+        if (navIntern) {
+            navIntern.style.display = isAdmin ? 'inline-block' : 'none';
         }
 
-        const isAdmin = !user.isAnonymous;
-        toggleAdminUI(isAdmin);
+        if (!user) {
+            signInAnonymously(auth).catch((err) => {});
+            return; 
+        }
 
         const newsCollection = collectionPath(db);
 
@@ -246,6 +251,29 @@ async function startNewsLogic() {
                             if(submitBtn) submitBtn.textContent = "Veröffentlichen";
                             if(cancelBtn) cancelBtn.style.display = "none";
                             if(logoutBtn) logoutBtn.style.display = "inline-block"; 
+                        }
+
+                        function handleInternPageVisibility(isAdmin) {
+                            const internContent = document.getElementById('intern-content');
+                            const loginRequired = document.getElementById('login-required');
+                            const loginTrigger = document.getElementById('intern-login-trigger');
+
+                            if (window.location.pathname.includes('intern.html')) {
+                                if (isAdmin) {
+                                    if(internContent) internContent.style.display = 'block';
+                                    if(loginRequired) loginRequired.style.display = 'none';
+                                } else {
+                                    if(internContent) internContent.style.display = 'none';
+                                    if(loginRequired) loginRequired.style.display = 'block';
+                                }
+                            }
+
+                            if (loginTrigger) {
+                                loginTrigger.onclick = () => {
+                                    const modal = document.getElementById('login-modal');
+                                    if (modal) modal.style.display = 'flex';
+                                };
+                            }
                         }
                     
                         if (cancelBtn) cancelBtn.onclick = resetForm;

@@ -20,6 +20,7 @@ const headerHTML = `
         <a href="ausbildung.html">Ausbildung</a>
         <a href="veranstaltungen.html">Events</a>
         <a href="kontakt.html">Kontakt</a>
+        <a href="intern.html" id="nav-intern" style="display:none;">Intern</a>
         
         <div class="header-socials">
             <a href="https://www.facebook.com/Segelflieger.PostSV/?locale=de_DE" target="_blank" title="Facebook" class="header-social-link" aria-label="Besuchen Sie uns auf Facebook">
@@ -78,6 +79,34 @@ const footerHTML = `
         &copy; 2026 Segelflugplatz Altdorf-Hagenhausen
     </div>
 </div>
+
+<div id="login-modal" class="modal" style="display: none;">
+    <div class="modal-content admin-login-card">
+        <span class="modal-close" id="login-close">&times;</span>
+        <h3>Mitarbeiter & Mitglieder Login</h3>
+        <p>Bitte geben Sie Ihr Passwort ein:</p>
+        <form id="admin-login-form">
+            <input type="password" id="admin-password-input" placeholder="Passwort" autocomplete="current-password">
+            <p id="login-error" style="color: red; font-size: 0.8rem; display: none;">Falsches Passwort!</p>
+            <button type="submit" id="admin-login-btn" class="btn" style="width: 100%; margin-top: 10px;">Anmelden</button>
+        </form>
+    </div>
+</div>
+
+<aside id="reviews-sidebar" class="reviews-sidebar">
+    <div class="reviews-header">
+        <h3>Google Rezensionen</h3>
+        <span id="close-reviews" class="close-reviews">&times;</span>
+    </div>
+            <div class="reviews-summary">
+                <div class="big-rating">4.9</div>
+                <div class="stars-gold">★★★★★</div>
+                <p>Basierend auf Google Maps</p>
+                                        <a href="https://www.google.com/search?sa=X&sca_esv=c07a14740fe5b76d&sxsrf=ANbL-n5IlhoCxI05y7dSPQG5NfcFSorh_w:1770645225631&q=Segelflugplatz+Altdorf-Hagenhausen+Post-SV+N%C3%BCrnberg+Rezensionen&rflfq=1&num=20&stick=H4sIAAAAAAAAAONgkxIxNDA0MzAyMjYxNDI3MzQwtzAxN9nAyPiK0SE4NT01Jy2nNL0gJ7GkSsExpyQlvyhN1yMxPTUvI7G0ODVPISC_uEQ3OEzB7_Ceoryk1KJ0haDUqtS84sz8vNS8RawUGwEAGvtpRqEAAAA&rldimm=10160223412761078474&tbm=lcl&hl=de-DE&ved=2ahUKEwintMm9x8ySAxUmcPEDHSYNKHoQ9fQKegQIJxAG&biw=3440&bih=1271&dpr=1#lkt=LocalPoiReviews" target="_blank" class="btn-review-google">
+                                            Auf Google bewerten
+                                        </a>            </div>    <div class="reviews-list" id="reviews-list-container"></div>
+</aside>
+<div id="reviews-overlay" class="reviews-overlay"></div>
 `;
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -124,34 +153,24 @@ document.addEventListener('DOMContentLoaded', () => {
     initSlideshows();
     initCookieConsent();
     initReviews();
-    init3DTilt();
+    initDatepickers();
 });
 
-function init3DTilt() {
-    const imageContainers = document.querySelectorAll('.card-img-top');
-    
-    imageContainers.forEach(container => {
-        const img = container.querySelector('img');
-        if (!img) return;
-
-        container.addEventListener('mousemove', e => {
-            const rect = container.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
-            
-            const centerX = rect.width / 2;
-            const centerY = rect.height / 2;
-            
-            const rotateX = (centerY - y) / 8;
-            const rotateY = (x - centerX) / 8;
-            
-            img.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.1)`;
+function initDatepickers() {
+    if (typeof flatpickr !== 'undefined') {
+        flatpickr("#wunschtermin", {
+            locale: "de",
+            dateFormat: "d.m.Y",
+            minDate: "today",
+            disableMobile: "true",
+            "enable": [
+                function(date) {
+                    // 0 = Sonntag, 6 = Samstag
+                    return (date.getDay() === 0 || date.getDay() === 6);
+                }
+            ]
         });
-        
-        container.addEventListener('mouseleave', () => {
-            img.style.transform = 'rotateX(0deg) rotateY(0deg) scale(1)';
-        });
-    });
+    }
 }
 
 // 3. UI HELFER FUNKTIONEN & REVIEWS
