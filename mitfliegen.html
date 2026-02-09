@@ -48,6 +48,8 @@
 
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
+    <!-- Flatpickr for Date Selection -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <style>
         
         html { scroll-padding-top: 120px; scroll-behavior: smooth; }
@@ -363,6 +365,13 @@
                     </div>
                 </div>
 
+                <div class="form-responsive" style="margin-top: 20px;">
+                    <div class="form-group">
+                        <label for="wunschtermin">Wunschtermin</label>
+                        <input type="text" id="wunschtermin" name="date" placeholder="Datum auswählen...">
+                    </div>
+                </div>
+
                 <div class="form-group" style="margin-top: 20px;">
                     <label for="nachricht">Zusätzliche Wünsche / Nachricht</label>
                     <textarea id="nachricht" name="message" rows="5" placeholder="Haben Sie einen Wunschtermin oder spezielle Fragen?"></textarea>
@@ -383,6 +392,8 @@
 
     <footer id="main-footer"></footer>
     <button id="btn-back-to-top" title="Nach oben">↑</button>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/de.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
