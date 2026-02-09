@@ -102,9 +102,9 @@ const footerHTML = `
                 <div class="big-rating">4.9</div>
                 <div class="stars-gold">★★★★★</div>
                 <p>Basierend auf Google Maps</p>
-                                        <a href="https://www.google.com/search?sa=X&sca_esv=c07a14740fe5b76d&sxsrf=ANbL-n5IlhoCxI05y7dSPQG5NfcFSorh_w:1770645225631&q=Segelflugplatz+Altdorf-Hagenhausen+Post-SV+N%C3%BCrnberg+Rezensionen&rflfq=1&num=20&stick=H4sIAAAAAAAAAONgkxIxNDA0MzAyMjYxNDI3MzQwtzAxN9nAyPiK0SE4NT01Jy2nNL0gJ7GkSsExpyQlvyhN1yMxPTUvI7G0ODVPISC_uEQ3OEzB7_Ceoryk1KJ0haDUqtS84sz8vNS8RawUGwEAGvtpRqEAAAA&rldimm=10160223412761078474&tbm=lcl&hl=de-DE&ved=2ahUKEwintMm9x8ySAxUmcPEDHSYNKHoQ9fQKegQIJxAG&biw=3440&bih=1271&dpr=1#lkt=LocalPoiReviews" target="_blank" class="btn-review-google">
-                                            Auf Google bewerten
-                                        </a>            </div>    <div class="reviews-list" id="reviews-list-container"></div>
+                                                    <a href="https://www.google.de/maps/place/Segelflugplatz+Altdorf-Hagenhausen+Post-SV+N%C3%BCrnberg/@49.3902569,11.4256224,247m/data=!3m1!1e3!4m6!3m5!1s0x410c9f6d5ba244cb:0x8d005d5cdc3b2aca!8m2!3d49.3899301!4d11.4267085!16s%2Fg%2F11b6g8prkb!5m1!1e1?entry=ttu&g_ep=EgoyMDI2MDIwNC4wIKXMDSoASAFQAw%3D%3D" target="_blank" class="btn-review-google">
+                                                        Auf Google bewerten
+                                                    </a>            </div>    <div class="reviews-list" id="reviews-list-container"></div>
 </aside>
 <div id="reviews-overlay" class="reviews-overlay"></div>
 `;
