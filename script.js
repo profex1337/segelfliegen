@@ -20,7 +20,6 @@ const headerHTML = `
         <a href="ausbildung.html">Ausbildung</a>
         <a href="veranstaltungen.html">Events</a>
         <a href="kontakt.html">Kontakt</a>
-        <a href="intern.html" id="nav-intern" style="display:none;">Intern</a>
         
         <div class="header-socials">
             <a href="https://www.facebook.com/Segelflieger.PostSV/?locale=de_DE" target="_blank" title="Facebook" class="header-social-link" aria-label="Besuchen Sie uns auf Facebook">
@@ -74,7 +73,8 @@ const footerHTML = `
 
     <div class="footer-bottom">
         <a href="impressum.html" style="margin:0 10px; color: #b0b0b0;">Impressum</a> | 
-        <a href="datenschutz.html" style="margin:0 10px; color: #b0b0b0;">Datenschutz</a>
+        <a href="datenschutz.html" style="margin:0 10px; color: #b0b0b0;">Datenschutz</a> | 
+        <a href="intern.html" id="nav-intern" style="margin:0 10px; color: #b0b0b0;">Intern</a>
         <br><br>
         &copy; 2026 Segelflugplatz Altdorf-Hagenhausen
     </div>

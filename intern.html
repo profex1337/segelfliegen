@@ -83,19 +83,6 @@
     <button id="btn-back-to-top" title="Nach oben">↑</button>
 
     <script src="script.js"></script>
-    <!-- Use the existing news-db logic for auth -->
-    <script type="module">
-        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        
-        // Wait for Firebase to be initialized by news-db.js
-        // Or we could re-initialize here if needed, but news-db.js is already doing it.
-        // To be safe, we check every 500ms if 'auth' is available or just use onAuthStateChanged.
-        
-        document.addEventListener('DOMContentLoaded', () => {
-            // The login trigger should open the login modal (which is in script.js injected header or page)
-            // But the modal is actually in index.html. 
-            // We should move the login modal to script.js headerHTML or make it global.
-        });
-    </script>
+    <script type="module" src="news-db.js"></script>
 </body>
 </html>
