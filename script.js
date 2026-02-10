@@ -386,15 +386,3 @@ function initSlideshows() {
     });
 
 }
-
-/* --- VISIT COUNTER --- */
-(function() {
-    try {
-        let views = localStorage.getItem('page_views');
-        if (!views) views = 0;
-        views = parseInt(views) + 1;
-        localStorage.setItem('page_views', views);
-    } catch(e) {
-        console.log("Counter error", e);
-    }
-})();
