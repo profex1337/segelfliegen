@@ -62,20 +62,6 @@
                 
                 <p>Hier finden Sie interne Dokumente, Protokolle und Termine.</p>
 
-                <!-- STATS -->
-                <div style="background:#f0f2f5; padding:20px; border-radius:8px; margin-bottom:30px; text-align:center;">
-                    <h3 style="margin-top:0;">Webseiten-Statistik</h3>
-                    <p style="font-size:2rem; font-weight:bold; color:var(--primary); margin:10px 0;" id="visit-counter">0</p>
-                    <p style="font-size:0.9rem; color:#666;">Seitenaufrufe gesamt (lokal)</p>
-                    <script>
-                        document.addEventListener('DOMContentLoaded', () => {
-                            const count = localStorage.getItem('page_views') || 0;
-                            const el = document.getElementById('visit-counter');
-                            if(el) el.innerText = count;
-                        });
-                    </script>
-                </div>
-
                 <!-- NEWS MANAGEMENT -->
                 <div class="dashboard-card" style="margin-bottom:30px; border-top-color: #e94560;">
                     <h3>📝 News Management</h3>
