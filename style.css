@@ -755,11 +755,13 @@ header {
     .news-image-container {
         position: relative;
         top: 0;
-        height: 300px;
+        height: auto;
+        aspect-ratio: 4 / 3;
         order: -1;
+        margin-bottom: 20px;
     }
     .news-item {
-        padding: 20px 0;
+        padding: 25px 15px;
     }
     .news-item:hover {
         transform: none;
