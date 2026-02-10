@@ -131,18 +131,23 @@ async function startNewsLogic() {
                             if (!displayImage.getAttribute('data-default-src')) {
                                 displayImage.setAttribute('data-default-src', displayImage.src);
                             }
-                            displayImage.src = item.imageUrl;
                             
-                            
-                            displayImage.classList.add('active-preview');
+                            // Smooth Fade-Effect
+                            displayImage.classList.add('fade-out');
+                            setTimeout(() => {
+                                displayImage.src = item.imageUrl;
+                                displayImage.classList.remove('fade-out');
+                            }, 300);
                         });
 
                         div.addEventListener('mouseleave', () => {
                             const defaultSrc = displayImage.getAttribute('data-default-src') || 'images/news.png';
-                            displayImage.src = defaultSrc;
                             
-                            
-                            displayImage.classList.remove('active-preview');
+                            displayImage.classList.add('fade-out');
+                            setTimeout(() => {
+                                displayImage.src = defaultSrc;
+                                displayImage.classList.remove('fade-out');
+                            }, 300);
                         });
                     }
 
