@@ -125,39 +125,8 @@
         <div class="news-wrapper">
             <div class="news-list">
                 
-                <div id="admin-panel" class="admin-panel">
-                    <h3 id="form-headline">📝 Neue Nachricht verfassen</h3>
-                    <form id="news-form" class="news-form">
-                        <input type="text" id="news-title" placeholder="Titel der Nachricht" required>
-                        <input type="text" id="news-date" placeholder="Datum (z.B. 15.09.2026)" required>
-                        <textarea id="news-text" rows="4" placeholder="Ihr Text..." required></textarea>
-                        
-                        <div style="margin-bottom: 15px;">
-                            <input type="text" id="news-image-url" placeholder="Bild-URL (optional, z.B. https://...)" style="margin-bottom: 5px;">
-                            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 10px;">
-                                <small style="color: #666; font-size: 0.8rem; flex: 1;">Link zu einem Bild einfügen. Das Bild erscheint rechts beim Überfahren der Nachricht.</small>
-                                <a href="https://imgur.com/upload" target="_blank" title="Zu Imgur gehen" style="font-size: 0.8rem; color: #e94560; font-weight: bold; white-space: nowrap; text-decoration: none; border-bottom: 1px dashed #e94560;">
-                                    Bild bei Imgur hochladen ↗
-                                </a>
-                            </div>
-                        </div>
-
-                        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-                            <button type="submit" id="news-submit-btn" class="btn">Veröffentlichen</button>
-                            
-                            <button type="button" id="admin-logout-btn" class="btn btn-secondary">Admin Beenden</button>
-
-                            <button type="button" id="news-cancel-btn" class="btn btn-secondary" style="display: none;">Bearbeiten abbrechen</button>
-                        </div>
-                    </form>
-                </div>
-
                 <div id="dynamic-news-list">
                     <p style="text-align:center; color:#999;">Lade Neuigkeiten...</p>
-                </div>
-
-                <div style="margin-top: 30px; opacity: 0.7;">
-                    <span id="admin-toggle" class="admin-login-link" style="color: #bbb; cursor: pointer; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px;" title="Mitarbeiter Login">🔒 Admin Login</span>
                 </div>
 
             </div>

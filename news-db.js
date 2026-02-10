@@ -223,8 +223,16 @@ async function startNewsLogic() {
                         }
                     
                         function loadIntoForm(item) {
+                            const titleInput = document.getElementById('news-title');
+                            if (!titleInput) {
+                                if (confirm("Bearbeiten ist nur im internen Bereich möglich. Jetzt wechseln?")) {
+                                    window.location.href = "intern.html";
+                                }
+                                return;
+                            }
+
                             editingId = item.id;
-                            document.getElementById('news-title').value = item.title;
+                            titleInput.value = item.title;
                             document.getElementById('news-date').value = item.date;
                             document.getElementById('news-text').value = item.text;
                             document.getElementById('news-image-url').value = item.imageUrl || ''; 
@@ -234,7 +242,7 @@ async function startNewsLogic() {
                             if(cancelBtn) cancelBtn.style.display = "inline-block";
                             if(logoutBtn) logoutBtn.style.display = "none";
                             
-                            adminPanel.scrollIntoView({behavior: "smooth"});
+                            if(adminPanel) adminPanel.scrollIntoView({behavior: "smooth"});
                         }
                     
                         function resetForm() {
