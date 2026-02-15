@@ -45,7 +45,7 @@ html { scroll-padding-top: 120px; scroll-behavior: smooth; }
     position: relative;
 }
 
-main { flex: 1; } 
+main { flex: 1; position: relative; z-index: 15; } 
 
 header {
     background-color: rgba(255, 255, 255, 0.9); 
@@ -775,6 +775,7 @@ footer {
     margin-top: auto;
     position: relative;
     z-index: 10;
+    overflow: visible; /* Allow background image to extend out */
 }
 
 
@@ -784,6 +785,7 @@ footer {
     gap: 20px;
     align-items: center;
     position: relative;
+    z-index: 5; /* Ensure content is above image */
 }
 
 .footer-col-left {
@@ -830,15 +832,21 @@ footer {
     height: 100%;
 }
 
+.footer-bg-flieger {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: auto;
+    height: 80vh;
+    max-height: 1200px;
+    z-index: 1; /* Above footer background, behind text */
+    pointer-events: none;
+    opacity: 1.0;
+}
+
 .footer-spn-logo {
-    width: auto; 
-    max-width: 300px; 
-    height: auto;
-    
-    margin-top: -30%; 
-    z-index: 20;
-    
-    filter: drop-shadow(0 10px 10px rgba(0,0,0,0.3));
+    /* REMOVED or Unused now */
+    display: none;
 }
 
 .footer-bottom { 
@@ -847,6 +855,8 @@ footer {
     padding-top: 20px; 
     font-size: 0.9rem;
     margin-top: 40px;
+    position: relative;
+    z-index: 5;
 }
 
 .footer-socials {
@@ -1242,9 +1252,12 @@ body.admin-mode .delete-btn { display: inline-block; }
     
     
     .footer-spn-logo {
-        margin-top: 0;
-        transform: none;
-        max-width: 200px;
+        display: none;
+    }
+    
+    .footer-bg-flieger {
+        height: 60vh;
+        opacity: 0.6;
     }
 
     
@@ -1394,4 +1407,3 @@ body.admin-mode .delete-btn { display: inline-block; }
     color: var(--accent);
     transform: translateY(-2px);
 }
-
