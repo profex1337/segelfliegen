@@ -67,7 +67,7 @@ const footerHTML = `
 
         <!-- RECHTS: Logo SPN (Overlapping) -->
         <div class="footer-col-right">
-            <img src="images/Logo_spn.png" alt="Post SV Nürnberg Logo" class="footer-spn-logo">
+            <!-- Logo replaced by background image -->
         </div>
     </div>
 
@@ -79,6 +79,8 @@ const footerHTML = `
         &copy; 2026 Segelflugplatz Altdorf-Hagenhausen
     </div>
 </div>
+
+<img src="images/spn_flieger.png" alt="Segelflieger" class="footer-bg-flieger">
 
 <div id="login-modal" class="modal" style="display: none;">
     <div class="modal-content admin-login-card">
