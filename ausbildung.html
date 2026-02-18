@@ -46,19 +46,11 @@
     }
     </script>
 
+    <meta property="og:url" content="https://segelfliegenaltdorf.de/ausbildung.html">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <style>
-        html { scroll-padding-top: 120px; scroll-behavior: smooth; }
         .section-image { border-radius: var(--radius); box-shadow: var(--shadow); object-fit: cover; width: 100%; height: 100%; min-height: 300px; }
-        
-        
-        .video-header {
-            position: relative;
-            overflow: hidden;
-            
-            background-color: var(--primary);
-        }
     </style>
 </head>
 <body>
@@ -67,15 +59,11 @@
     
     <div class="page-header video-header">
         
-        <video autoplay muted loop playsinline class="hero-video" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 0;">
+        <video autoplay muted loop playsinline class="page-hero-video">
             <source src="videos/ausbildung_hero.mp4" type="video/mp4">
         </video>
-        
-        
-        <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 52, 96, 0.6); z-index: 1;"></div>
-
-        
-        <div class="container" style="position: relative; z-index: 2;">
+        <div class="page-hero-overlay"></div>
+        <div class="container page-hero-content">
             <h1>Fliegen lernen</h1>
             <p>Der Traum vom eigenen Pilotenschein</p>
         </div>
