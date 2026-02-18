@@ -642,6 +642,158 @@ header {
 
 
 
+/* === VIDEO-HERO (Unterseiten) === */
+.video-header {
+    position: relative;
+    overflow: hidden;
+    background-color: var(--primary);
+}
+.page-hero-video {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    object-fit: cover; z-index: 0;
+}
+.page-hero-overlay {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(15, 52, 96, 0.6);
+    z-index: 1;
+}
+.page-hero-content {
+    position: relative;
+    z-index: 2;
+}
+
+/* === FORMULARE (Kontakt, Mitfliegen) === */
+.form-responsive {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 20px;
+}
+@media (min-width: 768px) {
+    .form-responsive { grid-template-columns: 1fr 1fr; }
+}
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: var(--text-main);
+}
+input[type="text"],
+input[type="email"],
+input[type="tel"],
+textarea,
+select {
+    width: 100%;
+    padding: 12px 15px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background-color: #fff;
+    font-family: inherit;
+    font-size: 16px;
+    appearance: none;
+    -webkit-appearance: none;
+    transition: border-color 0.3s, box-shadow 0.3s;
+}
+input:focus, textarea:focus, select:focus {
+    border-color: var(--primary);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(15, 52, 96, 0.1);
+}
+textarea { resize: vertical; }
+.checkbox-wrapper {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    background: #f9f9f9;
+    padding: 15px;
+    border-radius: 8px;
+    margin-top: 20px;
+    border: 1px solid #eee;
+}
+.checkbox-wrapper input[type="checkbox"] {
+    width: 22px;
+    height: 22px;
+    margin-top: 2px;
+    flex-shrink: 0;
+    cursor: pointer;
+    -webkit-appearance: checkbox;
+    appearance: checkbox;
+}
+.checkbox-wrapper label {
+    font-weight: normal;
+    font-size: 0.9rem;
+    margin: 0;
+    line-height: 1.5;
+    cursor: pointer;
+    color: var(--text-light);
+}
+
+/* === KARTEN-CONTAINER (Google Maps) === */
+.map-container {
+    position: relative;
+    padding-bottom: 56.25%;
+    height: 0;
+    overflow: hidden;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    background: #eef2f5;
+}
+.map-container iframe,
+.map-container .consent-overlay {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    border: 0;
+}
+
+/* === DATENSCHUTZ CONSENT-OVERLAY === */
+.consent-overlay {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: linear-gradient(135deg, #16213e, #0f3460);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: #fff;
+    padding: 20px;
+    z-index: 5;
+    border-radius: inherit;
+}
+.consent-message {
+    max-width: 280px;
+}
+.consent-message .consent-icon {
+    font-size: 2rem;
+    display: block;
+    margin-bottom: 10px;
+}
+.consent-message p {
+    font-size: 0.85rem;
+    margin: 0 0 15px 0;
+    opacity: 0.9;
+    line-height: 1.5;
+}
+.btn-consent {
+    display: inline-block;
+    background-color: var(--accent);
+    color: #fff;
+    padding: 10px 22px;
+    border-radius: 50px;
+    font-weight: 700;
+    font-size: 0.85rem;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(233, 69, 96, 0.4);
+    transition: background-color 0.3s, transform 0.2s;
+}
+.btn-consent:hover {
+    background-color: var(--accent-hover);
+    transform: translateY(-2px);
+}
+
 /* --- MODERN NEWS FEED --- */
 .news-wrapper { 
     display: grid; 
@@ -651,10 +803,12 @@ header {
 }
 
 @media (min-width: 992px) {
-    .news-wrapper { 
-        grid-template-columns: 1.2fr 0.8fr; 
+    .news-wrapper {
+        grid-template-columns: 1.2fr 0.8fr;
         position: relative;
     }
+    .news-wrapper.reverse > *:first-child { order: 2; }
+    .news-wrapper.reverse > *:last-child  { order: 1; }
 }
 
 .news-list {
@@ -1103,6 +1257,9 @@ footer {
     border-radius: 0 3px 3px 0;
     user-select: none;
     background-color: rgba(0,0,0,0.3);
+    border: none;
+    appearance: none;
+    font-family: inherit;
 }
 .next { right: 0; border-radius: 3px 0 0 3px; }
 .prev:hover, .next:hover { background-color: var(--accent); }
@@ -1200,8 +1357,8 @@ body.admin-mode .delete-btn { display: inline-block; }
     .contact-grid, .impressum-grid { grid-template-columns: 1fr; }
     
     
-    .news-wrapper.reverse { direction: ltr; }
-    .news-wrapper.reverse > div { direction: ltr; }
+    .news-wrapper.reverse > *:first-child { order: unset; }
+    .news-wrapper.reverse > *:last-child  { order: unset; }
 
     
     .header-socials {

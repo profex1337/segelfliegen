@@ -6,120 +6,20 @@
     <title>Kontakt | Segelflugplatz Altdorf</title>
     <meta name="description" content="Haben Sie Fragen? Kontaktieren Sie den Segelflieger im Post-SV Nürnberg e.V. Anfahrt, Telefon und Kontaktformular für Gutscheine und Ausbildung.">
     <meta name="keywords" content="Kontakt Segelflugplatz Altdorf, Anfahrt Segelfliegen Nürnberg, Segelflugplatz Hagenhausen, Kontakt Post-SV Nürnberg Flieger">
+    <meta name="robots" content="index, follow">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://segelfliegenaltdorf.de/kontakt.html">
+    <meta property="og:title" content="Kontakt | Segelflugplatz Altdorf-Hagenhausen">
+    <meta property="og:description" content="Schreiben Sie uns oder rufen Sie an. Wir freuen uns auf Ihre Nachricht!">
+    <meta property="og:image" content="https://segelfliegenaltdorf.de/images/kontakt_hero.jpg">
+    <meta name="geo.region" content="DE-BY">
+    <meta name="geo.placename" content="Berg bei Neumarkt in der Oberpfalz">
+    <meta name="geo.position" content="49.3899;11.4267">
+    <meta name="ICBM" content="49.3899, 11.4267">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <!-- Flatpickr for Date Selection -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-    <style>
-        
-        html { scroll-padding-top: 120px; scroll-behavior: smooth; }
-        
-        
-        .video-header {
-            position: relative;
-            overflow: hidden;
-            background-color: var(--primary); 
-        }
-
-        
-        .form-responsive {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 20px;
-            width: 100%;
-        }
-        @media (min-width: 768px) {
-            .form-responsive {
-                grid-template-columns: 1fr 1fr;
-            }
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-            font-size: 0.95rem;
-            color: var(--text-main);
-            text-align: left;
-        }
-
-        input[type="text"],
-        input[type="email"],
-        input[type="tel"],
-        textarea,
-        select {
-            width: 100%;
-            padding: 12px 15px; 
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            background-color: #fff;
-            font-family: inherit;
-            font-size: 16px; 
-            appearance: none; 
-            -webkit-appearance: none;
-            transition: border-color 0.3s, box-shadow 0.3s;
-        }
-
-        input:focus, textarea:focus, select:focus {
-            border-color: var(--primary);
-            outline: none;
-            box-shadow: 0 0 0 3px rgba(15, 52, 96, 0.1);
-        }
-
-        textarea {
-            resize: vertical;
-            min-height: 150px;
-        }
-
-        .checkbox-wrapper {
-            display: flex;
-            align-items: flex-start;
-            gap: 12px;
-            background: #f9f9f9;
-            padding: 15px;
-            border-radius: 8px;
-            margin-top: 20px;
-            border: 1px solid #eee;
-        }
-        .checkbox-wrapper input[type="checkbox"] {
-            width: 22px; 
-            height: 22px;
-            margin-top: 2px;
-            flex-shrink: 0; 
-            cursor: pointer;
-        }
-        .checkbox-wrapper label {
-            font-weight: normal;
-            font-size: 0.9rem;
-            margin: 0;
-            line-height: 1.5;
-            cursor: pointer;
-            color: var(--text-light);
-            text-align: left;
-        }
-
-        
-        .map-container {
-            position: relative; 
-            padding-bottom: 56.25%; 
-            height: 0; 
-            overflow: hidden; 
-            border-radius: var(--radius); 
-            box-shadow: var(--shadow); 
-            background: #eef2f5;
-        }
-        .map-container iframe {
-            position: absolute; 
-            top: 0; left: 0; 
-            width: 100%; height: 100%; 
-            border: 0; 
-        }
-
-        @media (max-width: 768px) {
-            .container { padding-left: 15px !important; padding-right: 15px !important; }
-            .content-block { padding: 25px 20px !important; }
-        }
-    </style>
 </head>
 <body>
     <header id="main-header"></header>
@@ -127,15 +27,11 @@
     
     <div class="page-header video-header">
         
-        <video autoplay muted loop playsinline class="hero-video" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 0;">
+        <video autoplay muted loop playsinline class="page-hero-video">
             <source src="videos/kontakt_hero.mp4" type="video/mp4">
         </video>
-        
-        
-        <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 52, 96, 0.6); z-index: 1;"></div>
-
-        
-        <div class="container" style="position: relative; z-index: 2;">
+        <div class="page-hero-overlay"></div>
+        <div class="container page-hero-content">
             <h1>Kontakt</h1>
             <p>Wir freuen uns auf Ihre Nachricht!</p>
         </div>
@@ -163,7 +59,15 @@
                 </div>
                 <div>
                     <div class="map-container">
-                        <iframe src="https://www.google.com/maps/embed/v1/place?key=AIzaSyAO0mVkwXL-qpHD-oI5syKSjgBHkTjl_B4&q=Segelflugplatz%20Altdorf-Hagenhausen%20Post-SV%20N%C3%BCrnberg%2C%20Hagenhausenerstr.%2011%2C%20Altdorf%20bei%20N%C3%BCrnberg%2C%20Deutschland&center=49.3899301,11.4267085&maptype=satellite&zoom=15&language=de" allowfullscreen="" loading="lazy"></iframe>
+                        <div class="consent-overlay"
+                             data-src="https://www.google.com/maps/embed/v1/place?key=AIzaSyAO0mVkwXL-qpHD-oI5syKSjgBHkTjl_B4&q=Segelflugplatz%20Altdorf-Hagenhausen%20Post-SV%20N%C3%BCrnberg%2C%20Hagenhausenerstr.%2011%2C%20Altdorf%20bei%20N%C3%BCrnberg%2C%20Deutschland&center=49.3899301,11.4267085&maptype=satellite&zoom=15&language=de"
+                             data-title="Segelflugplatz Altdorf auf Google Maps">
+                            <div class="consent-message">
+                                <span class="consent-icon">🍪</span>
+                                <p>Dieser Inhalt stammt von Google Maps.<br>Bitte akzeptieren Sie Cookies zum Anzeigen.</p>
+                                <button class="btn-consent consent-accept-btn">Akzeptieren & anzeigen</button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

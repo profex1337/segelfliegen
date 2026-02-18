@@ -163,6 +163,17 @@ document.addEventListener('DOMContentLoaded', () => {
     initCookieConsent();
     initReviews();
     initDatepickers();
+    initForms();
+
+    // Einzelner Consent-Button (pro Einbettung)
+    document.addEventListener('click', (e) => {
+        if (e.target.classList.contains('consent-accept-btn')) {
+            localStorage.setItem('dsgvo-consent', 'accepted');
+            const banner = document.getElementById('cookie-banner');
+            if (banner) banner.style.display = 'none';
+            embedConsentContent();
+        }
+    });
 });
 
 function initDatepickers() {
@@ -268,8 +279,28 @@ function getAvatarColor() {
 }
 
 
+function embedConsentContent() {
+    document.querySelectorAll('.consent-overlay').forEach(overlay => {
+        const src = overlay.getAttribute('data-src');
+        if (!src) return;
+        const title = overlay.getAttribute('data-title') || '';
+        const iframe = document.createElement('iframe');
+        iframe.src = src;
+        iframe.title = title;
+        iframe.allowFullscreen = true;
+        iframe.loading = 'lazy';
+        iframe.referrerPolicy = 'no-referrer-when-downgrade';
+        overlay.replaceWith(iframe);
+    });
+}
+
 function initCookieConsent() {
-    if (localStorage.getItem('dsgvo-consent')) return;
+    const consent = localStorage.getItem('dsgvo-consent');
+    if (consent === 'accepted') {
+        embedConsentContent();
+        return;
+    }
+    if (consent === 'declined') return;
 
     const bannerHTML = `
     <div id="cookie-banner" class="cookie-banner">
@@ -293,12 +324,56 @@ function initCookieConsent() {
     document.getElementById('cookie-accept').onclick = () => {
         localStorage.setItem('dsgvo-consent', 'accepted');
         banner.style.display = 'none';
+        embedConsentContent();
     };
 
     document.getElementById('cookie-decline').onclick = () => {
         localStorage.setItem('dsgvo-consent', 'declined');
         banner.style.display = 'none';
     };
+}
+
+function initForms() {
+    document.querySelectorAll('form[action*="formspree"]').forEach(form => {
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = form.querySelector('[type="submit"]');
+            const originalText = btn.textContent;
+            btn.textContent = 'Wird gesendet…';
+            btn.disabled = true;
+
+            // Bestehende Fehlermeldung entfernen
+            const existingError = form.querySelector('.form-error');
+            if (existingError) existingError.remove();
+
+            try {
+                const response = await fetch(form.action, {
+                    method: 'POST',
+                    body: new FormData(form),
+                    headers: { 'Accept': 'application/json' }
+                });
+
+                if (response.ok) {
+                    form.innerHTML = `
+                        <div style="text-align:center; padding: 40px 20px;">
+                            <div style="font-size: 3rem; margin-bottom: 15px;">✅</div>
+                            <h3 style="color: var(--primary);">Nachricht gesendet!</h3>
+                            <p style="color: var(--text-light);">Vielen Dank! Wir melden uns so schnell wie möglich bei Ihnen.</p>
+                        </div>`;
+                } else {
+                    throw new Error('Serverfehler');
+                }
+            } catch (err) {
+                btn.textContent = originalText;
+                btn.disabled = false;
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'form-error';
+                errorDiv.style.cssText = 'color:#d63030; background:#fff5f5; border:1px solid #fed7d7; padding:12px 15px; border-radius:8px; margin-top:15px; text-align:center; font-size:0.9rem;';
+                errorDiv.textContent = 'Es gab einen Fehler beim Senden. Bitte versuchen Sie es später erneut oder schreiben Sie uns per E-Mail.';
+                form.appendChild(errorDiv);
+            }
+        });
+    });
 }
 
 function initFavicon() {
