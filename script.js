@@ -95,7 +95,9 @@ const footerHTML = `
     </div>
 </div>
 
-<aside id="reviews-sidebar" class="reviews-sidebar">
+`;
+
+const reviewsHTML = `<aside id="reviews-sidebar" class="reviews-sidebar">
     <div class="reviews-header">
         <h3>Google Rezensionen</h3>
         <span id="close-reviews" class="close-reviews">&times;</span>
@@ -108,8 +110,7 @@ const footerHTML = `
                                                         Auf Google bewerten
                                                     </a>            </div>    <div class="reviews-list" id="reviews-list-container"></div>
 </aside>
-<div id="reviews-overlay" class="reviews-overlay"></div>
-`;
+<div id="reviews-overlay" class="reviews-overlay"></div>`;
 
 function injectLayout() {
     const headerElement = document.getElementById('main-header');
@@ -146,6 +147,9 @@ function injectLayout() {
     const footerElement = document.getElementById('main-footer');
     if (footerElement && !footerElement.innerHTML.trim()) {
         footerElement.innerHTML = footerHTML;
+        if (!document.getElementById('reviews-sidebar')) {
+            document.body.insertAdjacentHTML('beforeend', reviewsHTML);
+        }
     }
 }
 
