@@ -74,11 +74,26 @@
                             <input type="text" id="news-date" placeholder="Datum (z.B. 15.09.2026)" required style="width:100%; margin-bottom:10px; padding:10px;">
                             <textarea id="news-text" rows="4" placeholder="Ihr Text..." required style="width:100%; margin-bottom:10px; padding:10px;"></textarea>
                             
+                            <!-- Bild Upload -->
                             <div style="margin-bottom: 15px;">
-                                <input type="text" id="news-image-url" placeholder="Bild-URL (optional)" style="width:100%; margin-bottom:5px; padding:10px;">
-                                <small style="display:block; color: #666;">
-                                    <a href="https://imgur.com/upload" target="_blank" style="color: #e94560;">Bild bei Imgur hochladen ↗</a>
-                                </small>
+                                <div id="github-token-section" style="margin-bottom:12px; padding:10px; background:#f5f5f5; border-radius:6px; border:1px solid #e0e0e0;">
+                                    <label style="display:block; font-size:0.82rem; color:#555; margin-bottom:5px; font-weight:600;">GitHub Token (einmalig pro Sitzung)</label>
+                                    <div style="display:flex; gap:8px; align-items:center;">
+                                        <input type="password" id="github-pat-input" placeholder="ghp_..." style="flex:1; padding:8px; font-size:0.85rem; border:1px solid #ddd; border-radius:4px;">
+                                        <button type="button" id="github-pat-save-btn" class="btn btn-secondary" style="padding:8px 14px; font-size:0.85rem; white-space:nowrap;">Speichern</button>
+                                    </div>
+                                    <small id="github-pat-status" style="color:#888; display:block; margin-top:4px;"></small>
+                                </div>
+                                <label style="display:block; margin-bottom:6px; font-weight:600; font-size:0.9rem;">Bild auswählen (optional)</label>
+                                <input type="file" id="news-image-file" accept="image/*" style="width:100%; margin-bottom:8px; padding:8px; border:1px solid #ddd; border-radius:4px; background:#fff;">
+                                <input type="hidden" id="news-image-url">
+                                <div id="image-preview-container" style="display:none; margin-top:8px;">
+                                    <img id="image-preview" src="" alt="Vorschau" style="max-width:100%; max-height:180px; border-radius:6px; border:1px solid #ddd; display:block; margin-bottom:6px;">
+                                    <small id="image-upload-status" style="color:#666;"></small>
+                                </div>
+                                <div id="current-image-info" style="display:none; margin-top:6px;">
+                                    <small style="color:#666;">Aktuelles Bild: <a id="current-image-link" href="#" target="_blank" style="color:#e94560;">Ansehen ↗</a> — neues Bild auswählen zum Ersetzen</small>
+                                </div>
                             </div>
 
                             <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
