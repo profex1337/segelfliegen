@@ -291,7 +291,7 @@ async function deleteFlugzeug(docId, imageUrl) {
     if (!confirm('Dieses Flugzeug wirklich löschen?')) return;
     try {
         await deleteDoc(getDocRef('flugzeuge', docId));
-        const token = localStorage.getItem('gh_pat');
+        const token = sessionStorage.getItem('gh_pat');
         if (token && imageUrl) await deleteFromGitHub(imageUrl, token);
     } catch (e) {
         alert('Löschen fehlgeschlagen: ' + e.message);
@@ -339,7 +339,7 @@ function setupFlugzeugAdmin() {
         let imageVal = imageUrlHidden ? imageUrlHidden.value : '';
 
         if (fileEl && fileEl.files.length > 0) {
-            const token = localStorage.getItem('gh_pat') || '';
+            const token = sessionStorage.getItem('gh_pat') || '';
             if (!token) {
                 alert('Bitte zuerst einen GitHub Token im Neuigkeiten-Tab eingeben, um Bilder hochzuladen.');
                 return;
