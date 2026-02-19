@@ -16,6 +16,71 @@ let app, auth, db;
 let collectionPath = null; 
 let editingId = null;
 
+// === Bild-Upload: Komprimierung & GitHub ===
+
+async function compressImage(file, maxWidth = 1200, quality = 0.80) {
+    return new Promise((resolve) => {
+        const img = new Image();
+        const objectUrl = URL.createObjectURL(file);
+        img.onload = () => {
+            URL.revokeObjectURL(objectUrl);
+            let { width, height } = img;
+            if (width > maxWidth) {
+                height = Math.round(height * maxWidth / width);
+                width = maxWidth;
+            }
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+            canvas.toBlob(resolve, 'image/webp', quality);
+        };
+        img.src = objectUrl;
+    });
+}
+
+async function uploadToGitHub(blob, filename, token) {
+    const owner = 'profex1337';
+    const repo = 'segelfliegen';
+    const branch = 'main';
+    const path = `images/${filename}`;
+
+    const base64 = await new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result.split(',')[1]);
+        reader.readAsDataURL(blob);
+    });
+
+    // Prüfen ob Datei bereits existiert (SHA für Update benötigt)
+    let sha = null;
+    try {
+        const check = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}`, {
+            headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/vnd.github+json' }
+        });
+        if (check.ok) sha = (await check.json()).sha;
+    } catch {}
+
+    const body = { message: `News-Bild: ${filename}`, content: base64, branch };
+    if (sha) body.sha = sha;
+
+    const resp = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}`, {
+        method: 'PUT',
+        headers: {
+            'Authorization': `Bearer ${token}`,
+            'Accept': 'application/vnd.github+json',
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(body)
+    });
+
+    if (!resp.ok) {
+        const err = await resp.json();
+        throw new Error(err.message || 'GitHub Upload fehlgeschlagen');
+    }
+
+    return `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${path}`;
+}
+
 async function initFirebase() {
     const newsContainer = document.getElementById('dynamic-news-list');
     
@@ -73,6 +138,43 @@ async function startNewsLogic() {
     const passwordInput = document.getElementById('admin-password-input');
     const loginError = document.getElementById('login-error');
     const loginFormTag = document.getElementById('admin-login-form');
+
+    // GitHub PAT Setup (wird in sessionStorage gespeichert)
+    const patInput = document.getElementById('github-pat-input');
+    const patSaveBtn = document.getElementById('github-pat-save-btn');
+    const patStatus = document.getElementById('github-pat-status');
+    if (patInput && sessionStorage.getItem('gh_pat')) {
+        patInput.placeholder = '(Token gespeichert)';
+        if (patStatus) patStatus.textContent = 'Token aktiv – wird beim Schließen des Tabs gelöscht.';
+    }
+    if (patSaveBtn) {
+        patSaveBtn.onclick = () => {
+            const val = patInput ? patInput.value.trim() : '';
+            if (val) {
+                sessionStorage.setItem('gh_pat', val);
+                if (patInput) { patInput.value = ''; patInput.placeholder = '(Token gespeichert)'; }
+                if (patStatus) patStatus.textContent = 'Token aktiv – wird beim Schließen des Tabs gelöscht.';
+            }
+        };
+    }
+
+    // Bild-Vorschau beim Datei-Auswählen
+    const fileInputEl = document.getElementById('news-image-file');
+    if (fileInputEl) {
+        fileInputEl.addEventListener('change', () => {
+            const container = document.getElementById('image-preview-container');
+            const preview = document.getElementById('image-preview');
+            const statusEl = document.getElementById('image-upload-status');
+            if (fileInputEl.files.length > 0) {
+                const f = fileInputEl.files[0];
+                if (preview) preview.src = URL.createObjectURL(f);
+                if (container) container.style.display = 'block';
+                if (statusEl) statusEl.textContent = `Bereit: ${f.name} (${(f.size / 1024).toFixed(0)} KB) – wird beim Speichern komprimiert & hochgeladen`;
+            } else {
+                if (container) container.style.display = 'none';
+            }
+        });
+    }
 
     try {
         if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token && (!firebaseConfig || Object.keys(firebaseConfig).length === 0)) {
@@ -180,14 +282,43 @@ async function startNewsLogic() {
                 const titleVal = document.getElementById('news-title').value;
                 const dateVal = document.getElementById('news-date').value;
                 const textVal = document.getElementById('news-text').value;
-                const imageVal = document.getElementById('news-image-url').value;
+
+                // Bild: Datei hochladen oder vorhandene URL beibehalten
+                const fileEl = document.getElementById('news-image-file');
+                const imageUrlHidden = document.getElementById('news-image-url');
+                let imageVal = imageUrlHidden ? imageUrlHidden.value : '';
+
+                if (fileEl && fileEl.files.length > 0) {
+                    const token = sessionStorage.getItem('gh_pat') || '';
+                    if (!token) {
+                        alert('Bitte zuerst einen GitHub Token eingeben, um Bilder hochzuladen.');
+                        return;
+                    }
+                    const statusEl = document.getElementById('image-upload-status');
+                    if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Bild wird hochgeladen…'; }
+                    if (statusEl) statusEl.textContent = 'Komprimiere und lade hoch…';
+                    try {
+                        const compressed = await compressImage(fileEl.files[0]);
+                        const safeName = `news_${Date.now()}.webp`;
+                        imageVal = await uploadToGitHub(compressed, safeName, token);
+                        if (imageUrlHidden) imageUrlHidden.value = imageVal;
+                        if (statusEl) statusEl.textContent = `Hochgeladen: ${safeName}`;
+                    } catch (uploadErr) {
+                        alert('Bild-Upload fehlgeschlagen: ' + uploadErr.message);
+                        if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = editingId ? 'Änderungen speichern' : 'Veröffentlichen'; }
+                        if (statusEl) statusEl.textContent = '';
+                        return;
+                    } finally {
+                        if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = editingId ? 'Änderungen speichern' : 'Veröffentlichen'; }
+                    }
+                }
 
                 try {
-                    const dataToSave = { 
-                        title: titleVal, 
-                        date: dateVal, 
-                        text: textVal, 
-                        imageUrl: imageVal 
+                    const dataToSave = {
+                        title: titleVal,
+                        date: dateVal,
+                        text: textVal,
+                        imageUrl: imageVal
                     };
 
                                         if (editingId) {
@@ -240,8 +371,22 @@ async function startNewsLogic() {
                             titleInput.value = item.title;
                             document.getElementById('news-date').value = item.date;
                             document.getElementById('news-text').value = item.text;
-                            document.getElementById('news-image-url').value = item.imageUrl || ''; 
-                    
+                            document.getElementById('news-image-url').value = item.imageUrl || '';
+
+                            // Datei-Input zurücksetzen, aktuelles Bild anzeigen
+                            const fileEl2 = document.getElementById('news-image-file');
+                            const previewCont = document.getElementById('image-preview-container');
+                            const currentInfo = document.getElementById('current-image-info');
+                            const currentLink = document.getElementById('current-image-link');
+                            if (fileEl2) fileEl2.value = '';
+                            if (previewCont) previewCont.style.display = 'none';
+                            if (item.imageUrl && currentInfo && currentLink) {
+                                currentLink.href = item.imageUrl;
+                                currentInfo.style.display = 'block';
+                            } else if (currentInfo) {
+                                currentInfo.style.display = 'none';
+                            }
+
                             if(formHeadline) formHeadline.textContent = "Nachricht bearbeiten";
                             if(submitBtn) submitBtn.textContent = "Änderungen speichern";
                             if(cancelBtn) cancelBtn.style.display = "inline-block";
@@ -253,7 +398,15 @@ async function startNewsLogic() {
                         function resetForm() {
                             editingId = null;
                             if(newsForm) newsForm.reset();
-                            
+
+                            // Bild-Felder zurücksetzen
+                            const imageUrlHidden2 = document.getElementById('news-image-url');
+                            const previewCont2 = document.getElementById('image-preview-container');
+                            const currentInfo2 = document.getElementById('current-image-info');
+                            if (imageUrlHidden2) imageUrlHidden2.value = '';
+                            if (previewCont2) previewCont2.style.display = 'none';
+                            if (currentInfo2) currentInfo2.style.display = 'none';
+
                             if(formHeadline) formHeadline.textContent = "Neue Nachricht verfassen";
                             if(submitBtn) submitBtn.textContent = "Veröffentlichen";
                             if(cancelBtn) cancelBtn.style.display = "none";
