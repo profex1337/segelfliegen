@@ -273,7 +273,7 @@ async function startNewsLogic() {
                     const delBtn = div.querySelector('.delete-btn');
                     delBtn.onclick = (e) => {
                         e.stopPropagation();
-                        deleteNewsItem(item.id);
+                        deleteNewsItem(item.id, item.imageUrl);
                     }
 
                     const editButton = div.querySelector('.edit-btn');
@@ -538,20 +538,54 @@ async function startNewsLogic() {
                         };
                     }
                     
-                    async function deleteNewsItem(docId) {
+                    async function deleteFromGitHub(imageUrl, token) {
+                        // Nur GitHub-Raw-URLs löschen (news_*.webp im images/-Ordner)
+                        const match = imageUrl && imageUrl.match(/raw\.githubusercontent\.com\/profex1337\/segelfliegen\/main\/(images\/news_[^?]+)/);
+                        if (!match) return;
+                        const path = match[1];
+                        const owner = 'profex1337';
+                        const repo = 'segelfliegen';
+                        const branch = 'main';
+
+                        try {
+                            const checkResp = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}`, {
+                                headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/vnd.github+json' }
+                            });
+                            if (!checkResp.ok) return; // Datei existiert nicht mehr
+                            const { sha } = await checkResp.json();
+
+                            await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}`, {
+                                method: 'DELETE',
+                                headers: {
+                                    'Authorization': `Bearer ${token}`,
+                                    'Accept': 'application/vnd.github+json',
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify({ message: `News-Bild entfernt: ${path}`, sha, branch })
+                            });
+                        } catch {}
+                    }
+
+                    async function deleteNewsItem(docId, imageUrl) {
                         if (confirm("Wirklich löschen?")) {
                             try {
                                 if (auth.currentUser?.isAnonymous) {
                                     alert("Fehlende Berechtigung.");
                                     return;
                                 }
-                    
+
                                 let collectionName = firebaseConfig && Object.keys(firebaseConfig).length > 0 ? 'news' : null;
                                 if(!collectionName) {
                                     const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
                                     await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'news', docId));
                                 } else {
                                     await deleteDoc(doc(db, collectionName, docId));
+                                }
+
+                                // Bild aus GitHub löschen wenn vorhanden
+                                const token = localStorage.getItem('gh_pat');
+                                if (token && imageUrl) {
+                                    await deleteFromGitHub(imageUrl, token);
                                 }
                             } catch (e) {
                                 alert("Löschen fehlgeschlagen");
