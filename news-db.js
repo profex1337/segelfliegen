@@ -139,22 +139,39 @@ async function startNewsLogic() {
     const loginError = document.getElementById('login-error');
     const loginFormTag = document.getElementById('admin-login-form');
 
-    // GitHub PAT Setup (wird in sessionStorage gespeichert)
+    // GitHub PAT Setup (wird in localStorage dauerhaft gespeichert)
     const patInput = document.getElementById('github-pat-input');
     const patSaveBtn = document.getElementById('github-pat-save-btn');
+    const patRemoveBtn = document.getElementById('github-pat-remove-btn');
     const patStatus = document.getElementById('github-pat-status');
-    if (patInput && sessionStorage.getItem('gh_pat')) {
-        patInput.placeholder = '(Token gespeichert)';
-        if (patStatus) patStatus.textContent = 'Token aktiv – wird beim Schließen des Tabs gelöscht.';
-    }
+
+    const updatePatUI = () => {
+        const stored = localStorage.getItem('gh_pat');
+        if (stored) {
+            if (patInput) { patInput.value = ''; patInput.placeholder = '(Token gespeichert)'; }
+            if (patStatus) patStatus.textContent = 'Token gespeichert – bleibt bis zur manuellen Entfernung erhalten.';
+            if (patRemoveBtn) patRemoveBtn.style.display = 'inline-block';
+        } else {
+            if (patInput) patInput.placeholder = 'ghp_...';
+            if (patStatus) patStatus.textContent = '';
+            if (patRemoveBtn) patRemoveBtn.style.display = 'none';
+        }
+    };
+    updatePatUI();
+
     if (patSaveBtn) {
         patSaveBtn.onclick = () => {
             const val = patInput ? patInput.value.trim() : '';
             if (val) {
-                sessionStorage.setItem('gh_pat', val);
-                if (patInput) { patInput.value = ''; patInput.placeholder = '(Token gespeichert)'; }
-                if (patStatus) patStatus.textContent = 'Token aktiv – wird beim Schließen des Tabs gelöscht.';
+                localStorage.setItem('gh_pat', val);
+                updatePatUI();
             }
+        };
+    }
+    if (patRemoveBtn) {
+        patRemoveBtn.onclick = () => {
+            localStorage.removeItem('gh_pat');
+            updatePatUI();
         };
     }
 
@@ -289,7 +306,7 @@ async function startNewsLogic() {
                 let imageVal = imageUrlHidden ? imageUrlHidden.value : '';
 
                 if (fileEl && fileEl.files.length > 0) {
-                    const token = sessionStorage.getItem('gh_pat') || '';
+                    const token = localStorage.getItem('gh_pat') || '';
                     if (!token) {
                         alert('Bitte zuerst einen GitHub Token eingeben, um Bilder hochzuladen.');
                         return;
