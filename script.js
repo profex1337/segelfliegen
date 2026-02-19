@@ -82,6 +82,11 @@ const footerHTML = `
 
 <img src="images/spn_flieger.png" alt="Segelflieger" class="footer-bg-flieger">
 
+`;
+
+// Login-Modal separat im body (nicht im Footer), damit es nicht im Footer-Stacking-Context
+// gefangen ist und immer über main (z-index:15) erscheint.
+const loginModalHTML = `
 <div id="login-modal" class="modal" style="display: none;">
     <div class="modal-content admin-login-card">
         <span class="modal-close" id="login-close">&times;</span>
@@ -94,7 +99,6 @@ const footerHTML = `
         </form>
     </div>
 </div>
-
 `;
 
 const reviewsHTML = `<aside id="reviews-sidebar" class="reviews-sidebar">
@@ -149,6 +153,9 @@ function injectLayout() {
         footerElement.innerHTML = footerHTML;
         if (!document.getElementById('reviews-sidebar')) {
             document.body.insertAdjacentHTML('beforeend', reviewsHTML);
+        }
+        if (!document.getElementById('login-modal')) {
+            document.body.insertAdjacentHTML('beforeend', loginModalHTML);
         }
     }
 }
