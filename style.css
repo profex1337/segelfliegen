@@ -1564,3 +1564,41 @@ body.admin-mode .delete-btn { display: inline-block; }
     color: var(--accent);
     transform: translateY(-2px);
 }
+
+/* === CMS Tab-Navigation (intern.html) === */
+.cms-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    border-bottom: 2px solid #e0e0e0;
+    margin-bottom: 28px;
+}
+
+.cms-tab-btn {
+    padding: 10px 22px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: var(--text-light);
+    border-bottom: 3px solid transparent;
+    margin-bottom: -2px;
+    border-radius: 4px 4px 0 0;
+    transition: color 0.2s, border-color 0.2s, background 0.2s;
+}
+
+.cms-tab-btn:hover {
+    color: var(--primary);
+    background: var(--bg-light);
+}
+
+.cms-tab-btn.active {
+    color: var(--primary);
+    border-bottom-color: var(--primary);
+}
+
+@media (max-width: 600px) {
+    .cms-tab-btn { padding: 8px 12px; font-size: 0.82rem; }
+}

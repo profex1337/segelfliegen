@@ -96,9 +96,8 @@
             <p>Leistungsfähige Ein- und Doppelsitzer für Schulungs-, Strecken- und Gastflüge.</p>
         </div>
 
-        <div class="card-grid">
-            
-            
+        <div class="card-grid" id="flugzeuge-grid-Segelflugzeuge">
+            <!-- Statischer Fallback – wird durch Firestore-Daten ersetzt sobald vorhanden -->
             <div class="card" style="border: 2px solid var(--accent); transform: scale(1.02);">
                 <div class="badge-highlight">★ Highlight</div>
                 <div class="card-img-top"><img src="images/dg1001.jpg" alt="DG-1001e neo D-KSFP" loading="lazy" class="zoomable" onerror="this.src='images/hero.jpg'"></div>
@@ -207,7 +206,8 @@
             <p>Geeignet für den Flugzeugschlepp oder Rundflüge.</p>
         </div>
 
-        <div class="card-grid">
+        <div class="card-grid" id="flugzeuge-grid-Motorsegler">
+            <!-- Statischer Fallback -->
             <div class="card">
                 <div class="card-img-top"><img src="images/dynamic.jpg" alt="Dynamic WT9 D-MDYD" loading="lazy" class="zoomable" onerror="this.src='images/hero.jpg'"></div>
                 <div class="card-body">
@@ -239,7 +239,8 @@
             <p>Ein besonderes Flugerlebnis mit unseren historischen Schätzen.</p>
         </div>
 
-        <div class="card-grid">
+        <div class="card-grid" id="flugzeuge-grid-Oldtimer">
+            <!-- Statischer Fallback -->
             <div class="card">
                 <div class="card-img-top"><img src="images/ka6.jpg" alt="Ka 6 D-1088" loading="lazy" class="zoomable" onerror="this.src='images/hero.jpg'"></div>
                 <div class="card-body">
@@ -261,7 +262,8 @@
             <p>Unser Kraftpaket am Boden.</p>
         </div>
 
-        <div class="card-grid">
+        <div class="card-grid" id="flugzeuge-grid-Winde">
+            <!-- Statischer Fallback -->
             <div class="card">
                 <div class="card-img-top"><img src="images/winde.jpg" alt="Doppeltrommelwinde" loading="lazy" class="zoomable" onerror="this.src='images/hero.jpg'"></div>
                 <div class="card-body">
@@ -279,6 +281,7 @@
     <footer id="main-footer"></footer>
     <button id="btn-back-to-top" title="Nach oben">↑</button>
     <script src="script.js"></script>
+    <script type="module" src="cms-db.js"></script>
 </body>
 </html>
 

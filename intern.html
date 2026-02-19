@@ -59,72 +59,204 @@
                     <h2>Mitgliederbereich</h2>
                     <button id="admin-logout-btn" class="btn btn-secondary">Abmelden</button>
                 </div>
-                
-                <p>Hier finden Sie interne Dokumente, Protokolle und Termine.</p>
 
-                <!-- NEWS MANAGEMENT -->
-                <div class="dashboard-card" style="margin-bottom:30px; border-top-color: #e94560;">
-                    <h3>📝 News Management</h3>
-                    <p style="margin-bottom:20px;">Hier können neue Nachrichten für die Startseite erstellt werden.</p>
-                    
-                    <div id="admin-panel" class="admin-panel" style="display:block !important; padding:0; box-shadow:none;">
-                        <h4 id="form-headline" style="margin-top:0;">Neue Nachricht verfassen</h4>
-                        <form id="news-form" class="news-form">
-                            <input type="text" id="news-title" placeholder="Titel der Nachricht" required style="width:100%; margin-bottom:10px; padding:10px;">
-                            <input type="text" id="news-date" placeholder="Datum (z.B. 15.09.2026)" required style="width:100%; margin-bottom:10px; padding:10px;">
-                            <textarea id="news-text" rows="4" placeholder="Ihr Text..." required style="width:100%; margin-bottom:10px; padding:10px;"></textarea>
-                            
-                            <!-- Bild Upload -->
-                            <div style="margin-bottom: 15px;">
-                                <div id="github-token-section" style="margin-bottom:12px; padding:10px; background:#f5f5f5; border-radius:6px; border:1px solid #e0e0e0;">
-                                    <label style="display:block; font-size:0.82rem; color:#555; margin-bottom:5px; font-weight:600;">GitHub Token (einmalig pro Sitzung)</label>
-                                    <div style="display:flex; gap:8px; align-items:center;">
-                                        <input type="password" id="github-pat-input" placeholder="ghp_..." style="flex:1; padding:8px; font-size:0.85rem; border:1px solid #ddd; border-radius:4px;">
-                                        <button type="button" id="github-pat-save-btn" class="btn btn-secondary" style="padding:8px 14px; font-size:0.85rem; white-space:nowrap;">Speichern</button>
+                <!-- Tab-Navigation -->
+                <div class="cms-tabs">
+                    <button class="cms-tab-btn active" data-tab="tab-news">📝 Neuigkeiten</button>
+                    <button class="cms-tab-btn" data-tab="tab-flugzeugpark">✈️ Flugzeugpark</button>
+                    <button class="cms-tab-btn" data-tab="tab-preise">💶 Preise</button>
+                </div>
+
+                <!-- ===== TAB: NEUIGKEITEN ===== -->
+                <div id="tab-news" class="cms-tab-content" style="display:block;">
+                    <div class="dashboard-card" style="margin-bottom:30px; border-top-color: #e94560;">
+                        <h3>📝 News Management</h3>
+                        <p style="margin-bottom:20px;">Hier können neue Nachrichten für die Startseite erstellt werden.</p>
+
+                        <div id="admin-panel" class="admin-panel" style="display:block !important; padding:0; box-shadow:none;">
+                            <h4 id="form-headline" style="margin-top:0;">Neue Nachricht verfassen</h4>
+                            <form id="news-form" class="news-form">
+                                <input type="text" id="news-title" placeholder="Titel der Nachricht" required style="width:100%; margin-bottom:10px; padding:10px;">
+                                <input type="text" id="news-date" placeholder="Datum (z.B. 15.09.2026)" required style="width:100%; margin-bottom:10px; padding:10px;">
+                                <textarea id="news-text" rows="4" placeholder="Ihr Text..." required style="width:100%; margin-bottom:10px; padding:10px;"></textarea>
+
+                                <!-- Bild Upload inkl. GitHub Token -->
+                                <div style="margin-bottom: 15px;">
+                                    <div id="github-token-section" style="margin-bottom:12px; padding:10px; background:#f5f5f5; border-radius:6px; border:1px solid #e0e0e0;">
+                                        <label style="display:block; font-size:0.82rem; color:#555; margin-bottom:5px; font-weight:600;">GitHub Token — gilt für alle Tabs (einmalig eingeben)</label>
+                                        <div style="display:flex; gap:8px; align-items:center;">
+                                            <input type="password" id="github-pat-input" placeholder="ghp_..." style="flex:1; padding:8px; font-size:0.85rem; border:1px solid #ddd; border-radius:4px;">
+                                            <button type="button" id="github-pat-save-btn" class="btn btn-secondary" style="padding:8px 14px; font-size:0.85rem; white-space:nowrap;">Speichern</button>
+                                            <button type="button" id="github-pat-remove-btn" class="btn btn-secondary" style="padding:8px 14px; font-size:0.85rem; white-space:nowrap; display:none; background:#c0392b; color:#fff; border-color:#c0392b;">Entfernen</button>
+                                        </div>
+                                        <small id="github-pat-status" style="color:#888; display:block; margin-top:4px;"></small>
                                     </div>
-                                    <small id="github-pat-status" style="color:#888; display:block; margin-top:4px;"></small>
+                                    <label style="display:block; margin-bottom:6px; font-weight:600; font-size:0.9rem;">Bild auswählen (optional)</label>
+                                    <input type="file" id="news-image-file" accept="image/*" style="width:100%; margin-bottom:8px; padding:8px; border:1px solid #ddd; border-radius:4px; background:#fff;">
+                                    <input type="hidden" id="news-image-url">
+                                    <div id="image-preview-container" style="display:none; margin-top:8px;">
+                                        <img id="image-preview" src="" alt="Vorschau" style="max-width:100%; max-height:180px; border-radius:6px; border:1px solid #ddd; display:block; margin-bottom:6px;">
+                                        <small id="image-upload-status" style="color:#666;"></small>
+                                    </div>
+                                    <div id="current-image-info" style="display:none; margin-top:6px;">
+                                        <small style="color:#666;">Aktuelles Bild: <a id="current-image-link" href="#" target="_blank" style="color:#e94560;">Ansehen ↗</a> — neues Bild auswählen zum Ersetzen</small>
+                                    </div>
                                 </div>
-                                <label style="display:block; margin-bottom:6px; font-weight:600; font-size:0.9rem;">Bild auswählen (optional)</label>
-                                <input type="file" id="news-image-file" accept="image/*" style="width:100%; margin-bottom:8px; padding:8px; border:1px solid #ddd; border-radius:4px; background:#fff;">
-                                <input type="hidden" id="news-image-url">
-                                <div id="image-preview-container" style="display:none; margin-top:8px;">
-                                    <img id="image-preview" src="" alt="Vorschau" style="max-width:100%; max-height:180px; border-radius:6px; border:1px solid #ddd; display:block; margin-bottom:6px;">
-                                    <small id="image-upload-status" style="color:#666;"></small>
+
+                                <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                                    <button type="submit" id="news-submit-btn" class="btn">Veröffentlichen</button>
+                                    <button type="button" id="news-cancel-btn" class="btn btn-secondary" style="display: none;">Abbrechen</button>
                                 </div>
-                                <div id="current-image-info" style="display:none; margin-top:6px;">
-                                    <small style="color:#666;">Aktuelles Bild: <a id="current-image-link" href="#" target="_blank" style="color:#e94560;">Ansehen ↗</a> — neues Bild auswählen zum Ersetzen</small>
+                            </form>
+                        </div>
+                    </div>
+
+                    <div class="dashboard-card" style="margin-bottom:30px;">
+                        <h3>Vorhandene Nachrichten bearbeiten</h3>
+                        <style>
+                            .news-list-internal .news-item {
+                                background: #f9f9f9;
+                                padding: 15px;
+                                margin-bottom: 10px;
+                                border-radius: 8px;
+                                border-bottom: none;
+                            }
+                            .news-list-internal .news-item:hover {
+                                transform: none;
+                                background: #f0f0f0;
+                            }
+                        </style>
+                        <div id="dynamic-news-list" class="news-list-internal">
+                            <p style="color:#999;">Lade Nachrichten...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ===== TAB: FLUGZEUGPARK ===== -->
+                <div id="tab-flugzeugpark" class="cms-tab-content" style="display:none;">
+                    <div id="fz-form-section" class="dashboard-card" style="margin-bottom:30px; border-top-color: var(--primary);">
+                        <h3>✈️ Flugzeug hinzufügen / bearbeiten</h3>
+                        <p style="margin-bottom:20px; color:var(--text-light);">Spezifikationen: eine Zeile pro Eintrag im Format <code style="background:#f0f0f0; padding:2px 5px; border-radius:3px;">Schlüssel: Wert</code> — z.B. <code style="background:#f0f0f0; padding:2px 5px; border-radius:3px;">Spannweite: 20 m</code></p>
+
+                        <form id="flugzeug-form">
+                            <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px;">
+                                <div>
+                                    <label style="display:block; margin-bottom:4px; font-weight:600; font-size:0.9rem;">Name *</label>
+                                    <input type="text" id="fz-name" placeholder="z.B. DG-1001e neo" required style="width:100%; padding:10px; border:1px solid #ddd; border-radius:4px;">
+                                </div>
+                                <div>
+                                    <label style="display:block; margin-bottom:4px; font-weight:600; font-size:0.9rem;">Kennzeichen</label>
+                                    <input type="text" id="fz-registration" placeholder="z.B. D-KSFP" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:4px;">
                                 </div>
                             </div>
 
-                            <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-                                <button type="submit" id="news-submit-btn" class="btn">Veröffentlichen</button>
-                                <button type="button" id="news-cancel-btn" class="btn btn-secondary" style="display: none;">Abbrechen</button>
+                            <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px;">
+                                <div>
+                                    <label style="display:block; margin-bottom:4px; font-weight:600; font-size:0.9rem;">Kategorie *</label>
+                                    <select id="fz-category" required style="width:100%; padding:10px; border:1px solid #ddd; border-radius:4px; background:#fff;">
+                                        <option value="Segelflugzeuge">Segelflugzeuge</option>
+                                        <option value="Motorsegler">Motorsegler / UL</option>
+                                        <option value="Oldtimer">Oldtimer</option>
+                                        <option value="Winde">Startwinde</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label style="display:block; margin-bottom:4px; font-weight:600; font-size:0.9rem;">Reihenfolge</label>
+                                    <input type="number" id="fz-sortorder" value="0" min="0" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:4px;">
+                                </div>
+                            </div>
+
+                            <div style="margin-bottom:12px;">
+                                <label style="display:block; margin-bottom:4px; font-weight:600; font-size:0.9rem;">Untertitel (optional)</label>
+                                <input type="text" id="fz-subtitle" placeholder="z.B. Unser Hochleistungs-Flaggschiff mit FES-Antrieb." style="width:100%; padding:10px; border:1px solid #ddd; border-radius:4px;">
+                            </div>
+
+                            <div style="margin-bottom:12px;">
+                                <label style="display:block; margin-bottom:4px; font-weight:600; font-size:0.9rem;">Spezifikationen (eine pro Zeile)</label>
+                                <textarea id="fz-specs" rows="5" placeholder="Typ: Hochleistungs-Doppelsitzer&#10;Spannweite: 20 m&#10;Gleitzahl: 46,5" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:4px; font-family:monospace; font-size:0.9rem;"></textarea>
+                            </div>
+
+                            <div style="margin-bottom:16px;">
+                                <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-weight:600; font-size:0.9rem;">
+                                    <input type="checkbox" id="fz-highlight" style="width:16px; height:16px;">
+                                    Als Highlight markieren (rote Umrandung + ★ Badge)
+                                </label>
+                            </div>
+
+                            <!-- Bild Upload -->
+                            <div style="margin-bottom:15px;">
+                                <label style="display:block; margin-bottom:6px; font-weight:600; font-size:0.9rem;">Bild auswählen (optional)</label>
+                                <input type="file" id="fz-image-file" accept="image/*" style="width:100%; margin-bottom:8px; padding:8px; border:1px solid #ddd; border-radius:4px; background:#fff;">
+                                <input type="hidden" id="fz-image-url">
+                                <div id="fz-image-preview-container" style="display:none; margin-top:8px;">
+                                    <img id="fz-image-preview" src="" alt="Vorschau" style="max-width:100%; max-height:180px; border-radius:6px; border:1px solid #ddd; display:block; margin-bottom:6px;">
+                                    <small id="fz-image-upload-status" style="color:#666;"></small>
+                                </div>
+                                <div id="fz-current-image-info" style="display:none; margin-top:6px;">
+                                    <small style="color:#666;">Aktuelles Bild: <a id="fz-current-image-link" href="#" target="_blank" style="color:#e94560;">Ansehen ↗</a> — neues Bild auswählen zum Ersetzen</small>
+                                </div>
+                            </div>
+
+                            <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+                                <button type="submit" id="fz-submit-btn" class="btn">Flugzeug speichern</button>
+                                <button type="button" id="fz-cancel-btn" class="btn btn-secondary" style="display:none;">Abbrechen</button>
                             </div>
                         </form>
                     </div>
-                </div>
 
-                <div class="dashboard-card" style="margin-bottom:30px;">
-                    <h3>Vorhandene Nachrichten bearbeiten</h3>
-                    <style>
-                        .news-list-internal .news-item {
-                            background: #f9f9f9;
-                            padding: 15px;
-                            margin-bottom: 10px;
-                            border-radius: 8px;
-                            border-bottom: none;
-                        }
-                        .news-list-internal .news-item:hover {
-                            transform: none;
-                            background: #f0f0f0;
-                        }
-                    </style>
-                    <div id="dynamic-news-list" class="news-list-internal">
-                        <p style="color:#999;">Lade Nachrichten...</p>
+                    <div class="dashboard-card">
+                        <h3>Vorhandene Flugzeuge</h3>
+                        <div id="flugzeuge-admin-list">
+                            <p style="color:#999;">Lade Flugzeuge...</p>
+                        </div>
                     </div>
                 </div>
 
-                <div class="dashboard-grid">
+                <!-- ===== TAB: PREISE ===== -->
+                <div id="tab-preise" class="cms-tab-content" style="display:none;">
+                    <div id="preis-form-section" class="dashboard-card" style="margin-bottom:30px; border-top-color: var(--primary);">
+                        <h3>💶 Preis hinzufügen / bearbeiten</h3>
+                        <p style="margin-bottom:20px; color:var(--text-light);">Preise werden auf der <strong>Mitfliegen</strong>-Seite angezeigt. Reihenfolge bestimmt die Anzeigeposition (niedrigere Zahl = weiter oben).</p>
+
+                        <form id="preis-form">
+                            <div style="margin-bottom:12px;">
+                                <label style="display:block; margin-bottom:4px; font-weight:600; font-size:0.9rem;">Bezeichnung *</label>
+                                <input type="text" id="preis-name" placeholder="z.B. Segelflug (Windenstart)" required style="width:100%; padding:10px; border:1px solid #ddd; border-radius:4px;">
+                            </div>
+
+                            <div style="margin-bottom:12px;">
+                                <label style="display:block; margin-bottom:4px; font-weight:600; font-size:0.9rem;">Beschreibung</label>
+                                <input type="text" id="preis-description" placeholder="z.B. bis 20 Minuten Flugzeit" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:4px;">
+                            </div>
+
+                            <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:16px;">
+                                <div>
+                                    <label style="display:block; margin-bottom:4px; font-weight:600; font-size:0.9rem;">Preis *</label>
+                                    <input type="text" id="preis-price" placeholder="z.B. 48,00 €" required style="width:100%; padding:10px; border:1px solid #ddd; border-radius:4px;">
+                                </div>
+                                <div>
+                                    <label style="display:block; margin-bottom:4px; font-weight:600; font-size:0.9rem;">Reihenfolge</label>
+                                    <input type="number" id="preis-sortorder" value="0" min="0" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:4px;">
+                                </div>
+                            </div>
+
+                            <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+                                <button type="submit" id="preis-submit-btn" class="btn">Preis speichern</button>
+                                <button type="button" id="preis-cancel-btn" class="btn btn-secondary" style="display:none;">Abbrechen</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="dashboard-card">
+                        <h3>Vorhandene Preise</h3>
+                        <div id="preise-admin-list">
+                            <p style="color:#999;">Lade Preise...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dashboard-Kacheln (immer sichtbar) -->
+                <div class="dashboard-grid" style="margin-top:40px;">
                     <div class="dashboard-card">
                         <h3>Flugbuch</h3>
                         <p>Einsicht in die aktuellen Flugbucheinträge.</p>
@@ -150,5 +282,6 @@
 
     <script src="script.js"></script>
     <script type="module" src="news-db.js"></script>
+    <script type="module" src="cms-db.js"></script>
 </body>
 </html>
