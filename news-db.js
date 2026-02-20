@@ -788,6 +788,25 @@ async function seedDefaultPrices() {
 
 // === Flugzeugpark ===
 
+const FLUGZEUGPARK_IMPORT_DATA = [
+    // Segelflugzeuge
+    { name: 'DG-1001e neo',           registration: 'D-KSFP', type: 'Hochleistungs-Doppelsitzer',  category: 'Segelflugzeuge', highlight: true,  specs: 'Besonderheit: Front Electric Sustainer (FES)\nSpannweite: 20 m\nGleitzahl: 46,5', imageUrl: 'https://raw.githubusercontent.com/profex1337/segelfliegen/main/images/dg1001.jpg' },
+    { name: 'Grob G103 C Twin III',   registration: 'D-4419', type: 'Schulungs-Segelflugzeug',     category: 'Segelflugzeuge', highlight: false, specs: 'Sitzplätze: 2\nSpannweite: 18 m\nGleitzahl: 38',                                    imageUrl: 'https://raw.githubusercontent.com/profex1337/segelfliegen/main/images/grob-twin-4419.jpg' },
+    { name: 'Grob Twin III Orca',     registration: 'D-5900', type: 'Schulungs-Segelflugzeug',     category: 'Segelflugzeuge', highlight: false, specs: 'Sitzplätze: 2\nSpannweite: 18 m\nGleitzahl: 38',                                    imageUrl: 'https://raw.githubusercontent.com/profex1337/segelfliegen/main/images/grob-twin-5900.jpg' },
+    { name: 'ASK 21',                 registration: 'D-0366', type: 'Schulungs-Segelflugzeug',     category: 'Segelflugzeuge', highlight: false, specs: 'Sitzplätze: 2\nSpannweite: 17 m\nGleitzahl: 33,5',                                   imageUrl: 'https://raw.githubusercontent.com/profex1337/segelfliegen/main/images/ask21.jpg' },
+    { name: 'LS4-a',                  registration: 'D-5254', type: 'Segelflugzeug',               category: 'Segelflugzeuge', highlight: false, specs: 'Sitzplätze: 1\nSpannweite: 15 m\nGleitzahl: 40,5',                                   imageUrl: 'https://raw.githubusercontent.com/profex1337/segelfliegen/main/images/ls4-a.jpg' },
+    { name: 'LS4-b',                  registration: 'D-6649', type: 'Segelflugzeug',               category: 'Segelflugzeuge', highlight: false, specs: 'Sitzplätze: 1\nSpannweite: 15 m\nGleitzahl: 40,5',                                   imageUrl: 'https://raw.githubusercontent.com/profex1337/segelfliegen/main/images/ls4-b.jpg' },
+    { name: 'DG-600',                 registration: 'D-2664', type: 'Segelflugzeug',               category: 'Segelflugzeuge', highlight: false, specs: 'Sitzplätze: 1\nSpannweite: 15 - 17 m\nGleitzahl: 49',                               imageUrl: 'https://raw.githubusercontent.com/profex1337/segelfliegen/main/images/dg600.jpg' },
+    { name: 'DG-300 Club ELAN ACRO',  registration: 'D-5647', type: 'Segelflugzeug',               category: 'Segelflugzeuge', highlight: false, specs: 'Sitzplätze: 1\nSpannweite: 15 m\nGleitzahl: 41',                                    imageUrl: 'https://raw.githubusercontent.com/profex1337/segelfliegen/main/images/dg300.jpg' },
+    // Motorsegler
+    { name: 'Dynamic WT9',            registration: 'D-MDYD', type: 'Ultraleichtflugzeug',         category: 'Motorsegler',    highlight: false, specs: 'Sitzplätze: 2\nMotorleistung: 115 PS',                                              imageUrl: 'https://raw.githubusercontent.com/profex1337/segelfliegen/main/images/dynamic.jpg' },
+    { name: 'Grob G109 BT',           registration: 'D-KGFT', type: 'Motorsegler',                 category: 'Motorsegler',    highlight: false, specs: 'Sitzplätze: 2\nMotorleistung: 130 PS',                                              imageUrl: 'https://raw.githubusercontent.com/profex1337/segelfliegen/main/images/grob-g109.jpg' },
+    // Oldtimer
+    { name: 'Ka 6',                   registration: 'D-1088', type: 'Oldtimer Segelflugzeug',      category: 'Oldtimer',       highlight: false, specs: 'Sitzplätze: 1\nBaujahr: 1966\nGleitzahl: 30',                                       imageUrl: 'https://raw.githubusercontent.com/profex1337/segelfliegen/main/images/ka6.jpg' },
+    // Winde
+    { name: 'Doppeltrommelwinde BAY-1001', registration: '', type: 'Dieselwinde Eigenbau',         category: 'Winde',          highlight: false, specs: 'Hersteller: Magirus Deutz (Ex-Post LKW)\nLeistung: 320 PS',                         imageUrl: 'https://raw.githubusercontent.com/profex1337/segelfliegen/main/images/winde.jpg' },
+];
+
 let editingAircraftId = null;
 
 async function startAircraftLogic() {
@@ -941,38 +960,83 @@ async function startAircraftLogic() {
 
     function renderAircraftAdmin(container, items, isAdmin) {
         if (!isAdmin) { container.innerHTML = '<p style="color:#999;">Nur als Admin sichtbar.</p>'; return; }
-        if (items.length === 0) { container.innerHTML = '<p style="color:#999;">Noch keine Flugzeuge vorhanden.</p>'; return; }
-        container.innerHTML = '';
-        items.forEach(item => {
-            const row = document.createElement('div');
-            row.className = 'aircraft-admin-row';
-            row.style.cssText = 'background:#f9f9f9; padding:15px; margin-bottom:10px; border-radius:8px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;';
-            const info = document.createElement('div');
-            info.innerHTML = `<strong>${item.name || '—'}</strong> <span style="color:#888; font-size:0.85rem;">${item.registration || ''} · ${item.category || ''}</span>`;
-            const btns = document.createElement('div');
-            btns.style.cssText = 'display:flex; gap:8px;';
-            const editBtn = document.createElement('button');
-            editBtn.className = 'btn btn-secondary';
-            editBtn.style.cssText = 'padding:5px 12px; font-size:0.85rem;';
-            editBtn.textContent = 'Ändern';
-            editBtn.onclick = () => loadAircraftIntoForm(item);
-            const delBtn = document.createElement('button');
-            delBtn.className = 'btn btn-secondary';
-            delBtn.style.cssText = 'padding:5px 12px; font-size:0.85rem; background:#c0392b; color:#fff; border-color:#c0392b;';
-            delBtn.textContent = 'Löschen';
-            delBtn.onclick = async () => {
-                if (!confirm(`"${item.name || 'Flugzeug'}" wirklich löschen?`)) return;
+        if (items.length === 0) {
+            container.innerHTML = `
+                <p style="color:#999; margin-bottom:16px;">Noch keine Flugzeuge vorhanden.</p>
+                <button type="button" id="aircraft-import-btn" class="btn">
+                    ↓ Alle ${FLUGZEUGPARK_IMPORT_DATA.length} Flugzeuge aus dem Code importieren
+                </button>
+                <p style="color:#888; font-size:0.85rem; margin-top:10px;">
+                    Importiert alle bisher fest im Code hinterlegten Flugzeuge (inkl. Bilder) in die Datenbank.
+                    Danach können sie hier bearbeitet werden.
+                </p>`;
+            document.getElementById('aircraft-import-btn').onclick = async () => {
+                if (!confirm(`${FLUGZEUGPARK_IMPORT_DATA.length} Flugzeuge in die Datenbank importieren?`)) return;
+                const btn = document.getElementById('aircraft-import-btn');
+                btn.disabled = true;
+                btn.textContent = 'Importiere…';
                 try {
-                    await deleteDoc(doc(db, 'aircraft', item.id));
-                    const token = localStorage.getItem('gh_pat');
-                    if (token && item.imageUrl) await deleteFromGitHub(item.imageUrl, token);
-                } catch (e) { alert('Löschen fehlgeschlagen: ' + e.message); }
+                    const base = Date.now();
+                    for (let i = 0; i < FLUGZEUGPARK_IMPORT_DATA.length; i++) {
+                        await addDoc(aircraftRef, { ...FLUGZEUGPARK_IMPORT_DATA[i], order: base + i });
+                    }
+                } catch (e) {
+                    alert('Import fehlgeschlagen: ' + e.message);
+                    btn.disabled = false;
+                    btn.textContent = `↓ Alle ${FLUGZEUGPARK_IMPORT_DATA.length} Flugzeuge aus dem Code importieren`;
+                }
             };
-            btns.appendChild(editBtn);
-            btns.appendChild(delBtn);
-            row.appendChild(info);
-            row.appendChild(btns);
-            container.appendChild(row);
+            return;
+        }
+        container.innerHTML = '';
+
+        // Nach Kategorien gruppieren (gleiche Reihenfolge wie öffentliche Seite)
+        const categoryOrder = ['Segelflugzeuge', 'Motorsegler', 'Oldtimer', 'Winde'];
+        const byCategory = {};
+        items.forEach(item => {
+            const cat = item.category || 'Sonstige';
+            if (!byCategory[cat]) byCategory[cat] = [];
+            byCategory[cat].push(item);
+        });
+        const cats = categoryOrder.filter(c => byCategory[c]).concat(Object.keys(byCategory).filter(c => !categoryOrder.includes(c)));
+
+        cats.forEach((cat, catIndex) => {
+            const header = document.createElement('h4');
+            header.textContent = cat;
+            header.style.cssText = `margin: ${catIndex === 0 ? '0' : '24px'} 0 10px; color: var(--primary); font-size: 0.95rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid var(--primary); padding-bottom: 6px;`;
+            container.appendChild(header);
+
+            byCategory[cat].forEach(item => {
+                const row = document.createElement('div');
+                row.className = 'aircraft-admin-row';
+                row.style.cssText = 'background:#f9f9f9; padding:15px; margin-bottom:8px; border-radius:8px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;';
+                const info = document.createElement('div');
+                info.innerHTML = `<strong>${item.name || '—'}</strong>${item.registration ? ` <span style="color:#888; font-size:0.85rem;">(${item.registration})</span>` : ''}${item.type ? `<br><span style="color:#666; font-size:0.82rem;">${item.type}</span>` : ''}${item.highlight ? ' <span style="color:var(--accent); font-size:0.8rem;">★ Highlight</span>' : ''}`;
+                const btns = document.createElement('div');
+                btns.style.cssText = 'display:flex; gap:8px;';
+                const editBtn = document.createElement('button');
+                editBtn.className = 'btn btn-secondary';
+                editBtn.style.cssText = 'padding:5px 12px; font-size:0.85rem;';
+                editBtn.textContent = 'Ändern';
+                editBtn.onclick = () => loadAircraftIntoForm(item);
+                const delBtn = document.createElement('button');
+                delBtn.className = 'btn btn-secondary';
+                delBtn.style.cssText = 'padding:5px 12px; font-size:0.85rem; background:#c0392b; color:#fff; border-color:#c0392b;';
+                delBtn.textContent = 'Löschen';
+                delBtn.onclick = async () => {
+                    if (!confirm(`"${item.name || 'Flugzeug'}" wirklich löschen?`)) return;
+                    try {
+                        await deleteDoc(doc(db, 'aircraft', item.id));
+                        const token = localStorage.getItem('gh_pat');
+                        if (token && item.imageUrl) await deleteFromGitHub(item.imageUrl, token);
+                    } catch (e) { alert('Löschen fehlgeschlagen: ' + e.message); }
+                };
+                btns.appendChild(editBtn);
+                btns.appendChild(delBtn);
+                row.appendChild(info);
+                row.appendChild(btns);
+                container.appendChild(row);
+            });
         });
     }
 }
@@ -993,10 +1057,19 @@ function renderAircraftPublic(container, items) {
     container.innerHTML = '';
     const cats = categoryOrder.filter(c => byCategory[c]).concat(Object.keys(byCategory).filter(c => !categoryOrder.includes(c)));
 
+    const categoryDescriptions = {
+        'Segelflugzeuge': 'Leistungsfähige Ein- und Doppelsitzer für Schulungs-, Strecken- und Gastflüge.',
+        'Motorsegler':    'Geeignet für den Flugzeugschlepp oder Rundflüge.',
+        'Oldtimer':       'Ein besonderes Flugerlebnis mit unseren historischen Schätzen.',
+        'Winde':          'Unser Kraftpaket am Boden.',
+    };
+
     cats.forEach(cat => {
         const section = document.createElement('div');
-        section.style.cssText = 'margin-bottom: 40px;';
-        section.innerHTML = `<h3 style="color:var(--primary); font-family:Montserrat,sans-serif; margin-bottom:16px;">${cat}</h3>`;
+        section.id = cat;
+        section.style.cssText = 'margin-bottom: 60px;';
+        const desc = categoryDescriptions[cat] ? `<p style="color:var(--text-light); margin-bottom:20px;">${categoryDescriptions[cat]}</p>` : '';
+        section.innerHTML = `<h2 style="color:var(--primary); font-family:Montserrat,sans-serif; margin-bottom:8px;">${cat}</h2>${desc}`;
         const grid = document.createElement('div');
         grid.className = 'card-grid';
         byCategory[cat].forEach(item => {
