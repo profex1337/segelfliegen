@@ -43,8 +43,23 @@
         }
         .intern-tab-btn:hover { color: var(--primary); background: var(--bg-light); }
         .intern-tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); background: var(--bg-light); }
-        .intern-tab-panel { display: none; }
-        .intern-tab-panel.active { display: block; }
+        /* Alle Panels übereinander gestapelt — Höhe bleibt konstant */
+        .intern-tab-panels {
+            display: grid;
+        }
+        .intern-tab-panel {
+            grid-row: 1;
+            grid-column: 1;
+            visibility: hidden;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+            pointer-events: none;
+        }
+        .intern-tab-panel.active {
+            visibility: visible;
+            opacity: 1;
+            pointer-events: auto;
+        }
 
         .dashboard-card {
             background: #fff;
@@ -121,6 +136,7 @@
                     <button class="intern-tab-btn" data-tab="tab-flugzeugpark">✈️ Flugzeugpark</button>
                 </div>
 
+                <div class="intern-tab-panels">
                 <!-- TAB 1: NEWS -->
                 <div id="tab-news" class="intern-tab-panel active">
                     <div class="dashboard-card" style="border-top-color: var(--accent);">
@@ -257,6 +273,7 @@
                         </div>
                     </div>
                 </div>
+                </div><!-- .intern-tab-panels -->
 
             </div><!-- .content-block -->
         </div><!-- #intern-content -->
