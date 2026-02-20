@@ -226,54 +226,72 @@ async function startNewsLogic() {
             
             newsItems.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
 
+            const isCardMode = newsContainer.classList.contains('news-card-grid');
+
             newsContainer.innerHTML = '';
             if (newsItems.length === 0) {
                 newsContainer.innerHTML = '<p style="text-align:center;">Keine Nachrichten gefunden.</p>';
             } else {
                 newsItems.forEach(item => {
                     const div = document.createElement('div');
-                    div.className = 'news-item';
-                    
-                    if (item.imageUrl) {
-                        div.setAttribute('data-has-image', 'true');
-                    }
-
                     const adminDisplay = isAdmin ? 'flex' : 'none';
 
-                    div.innerHTML = `
-                        <!-- Buttons Container -->
-                        <div class="admin-controls" style="float:right; display:${adminDisplay}; gap: 5px; align-items: center;">
-                            <button class="edit-btn" style="background:#e94560; color:white; border:none; padding:5px 10px; cursor:pointer; border-radius:4px; height: 30px;">Ändern</button>
-                            <button class="delete-btn" style="background:red; color:white; border:none; padding:5px 10px; cursor:pointer; border-radius:4px; height: 30px;">Löschen</button>
-                        </div>
-                        <span class="news-date">${item.date || ''}</span>
-                        <h3>${item.title || 'Kein Titel'}</h3>
-                        <p style="white-space: pre-wrap;">${item.text || ''}</p>
-                    `;
-                    
-                    if (item.imageUrl && displayImage) {
-                        div.addEventListener('mouseenter', () => {
-                            if (!displayImage.getAttribute('data-default-src')) {
-                                displayImage.setAttribute('data-default-src', displayImage.src);
-                            }
-                            
-                            // Smooth Fade-Effect
-                            displayImage.classList.add('fade-out');
-                            setTimeout(() => {
-                                displayImage.src = item.imageUrl;
-                                displayImage.classList.remove('fade-out');
-                            }, 300);
-                        });
+                    if (isCardMode) {
+                        // Card-Layout für index.html
+                        div.className = 'news-card';
+                        div.innerHTML = `
+                            ${item.imageUrl ? `<div class="news-card-img">
+                                <img src="${item.imageUrl}" alt="${item.title || ''}" class="zoomable" onerror="this.closest('.news-card-img').remove()">
+                            </div>` : ''}
+                            <div class="news-card-body">
+                                <div class="admin-controls" style="float:right; display:${adminDisplay}; gap: 5px; align-items: center; margin-bottom: 8px;">
+                                    <button class="edit-btn" style="background:#e94560; color:white; border:none; padding:5px 10px; cursor:pointer; border-radius:4px; height: 30px;">Ändern</button>
+                                    <button class="delete-btn" style="background:red; color:white; border:none; padding:5px 10px; cursor:pointer; border-radius:4px; height: 30px;">Löschen</button>
+                                </div>
+                                <span class="news-date">${item.date || ''}</span>
+                                <h3>${item.title || 'Kein Titel'}</h3>
+                                <p style="white-space: pre-wrap;">${item.text || ''}</p>
+                            </div>
+                        `;
+                    } else {
+                        // Listen-Layout für intern.html
+                        div.className = 'news-item';
+                        if (item.imageUrl) {
+                            div.setAttribute('data-has-image', 'true');
+                        }
+                        div.innerHTML = `
+                            <!-- Buttons Container -->
+                            <div class="admin-controls" style="float:right; display:${adminDisplay}; gap: 5px; align-items: center;">
+                                <button class="edit-btn" style="background:#e94560; color:white; border:none; padding:5px 10px; cursor:pointer; border-radius:4px; height: 30px;">Ändern</button>
+                                <button class="delete-btn" style="background:red; color:white; border:none; padding:5px 10px; cursor:pointer; border-radius:4px; height: 30px;">Löschen</button>
+                            </div>
+                            <span class="news-date">${item.date || ''}</span>
+                            <h3>${item.title || 'Kein Titel'}</h3>
+                            <p style="white-space: pre-wrap;">${item.text || ''}</p>
+                        `;
 
-                        div.addEventListener('mouseleave', () => {
-                            const defaultSrc = displayImage.getAttribute('data-default-src') || 'images/news.png';
-                            
-                            displayImage.classList.add('fade-out');
-                            setTimeout(() => {
-                                displayImage.src = defaultSrc;
-                                displayImage.classList.remove('fade-out');
-                            }, 300);
-                        });
+                        if (item.imageUrl && displayImage) {
+                            div.addEventListener('mouseenter', () => {
+                                if (!displayImage.getAttribute('data-default-src')) {
+                                    displayImage.setAttribute('data-default-src', displayImage.src);
+                                }
+                                // Smooth Fade-Effect
+                                displayImage.classList.add('fade-out');
+                                setTimeout(() => {
+                                    displayImage.src = item.imageUrl;
+                                    displayImage.classList.remove('fade-out');
+                                }, 300);
+                            });
+
+                            div.addEventListener('mouseleave', () => {
+                                const defaultSrc = displayImage.getAttribute('data-default-src') || 'images/news.png';
+                                displayImage.classList.add('fade-out');
+                                setTimeout(() => {
+                                    displayImage.src = defaultSrc;
+                                    displayImage.classList.remove('fade-out');
+                                }, 300);
+                            });
+                        }
                     }
 
                     const delBtn = div.querySelector('.delete-btn');
@@ -287,7 +305,7 @@ async function startNewsLogic() {
                         e.stopPropagation();
                         loadIntoForm(item);
                     }
-                    
+
                     newsContainer.appendChild(div);
                 });
             }
