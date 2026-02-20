@@ -938,6 +938,29 @@ textarea { resize: vertical; }
     }
 }
 
+/* --- AIRCRAFT CARD GRID (3-spaltig) --- */
+.aircraft-card-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 30px;
+}
+
+@media (max-width: 992px) {
+    .aircraft-card-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 600px) {
+    .aircraft-card-grid { grid-template-columns: 1fr; }
+}
+
+/* Drag & Drop Admin */
+.aircraft-admin-row[draggable="true"] { cursor: grab; }
+.aircraft-admin-row[draggable="true"]:active { cursor: grabbing; }
+.aircraft-admin-row.drag-over {
+    outline: 2px dashed var(--accent);
+    background: rgba(233, 69, 96, 0.07) !important;
+}
+
 /* --- NEWS CARD GRID --- */
 .news-card-grid {
     display: grid;
