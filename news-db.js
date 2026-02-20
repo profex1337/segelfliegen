@@ -799,8 +799,8 @@ const FLUGZEUGPARK_IMPORT_DATA = [
     { name: 'DG-600',                 registration: 'D-2664', type: 'Segelflugzeug',               category: 'Segelflugzeuge', highlight: false, specs: 'Sitzplätze: 1\nSpannweite: 15 - 17 m\nGleitzahl: 49',                               imageUrl: 'https://raw.githubusercontent.com/profex1337/segelfliegen/main/images/dg600.jpg' },
     { name: 'DG-300 Club ELAN ACRO',  registration: 'D-5647', type: 'Segelflugzeug',               category: 'Segelflugzeuge', highlight: false, specs: 'Sitzplätze: 1\nSpannweite: 15 m\nGleitzahl: 41',                                    imageUrl: 'https://raw.githubusercontent.com/profex1337/segelfliegen/main/images/dg300.jpg' },
     // Motorsegler
-    { name: 'Dynamic WT9',            registration: 'D-MDYD', type: 'Ultraleichtflugzeug',         category: 'Motorsegler',    highlight: false, specs: 'Sitzplätze: 2\nMotorleistung: 115 PS',                                              imageUrl: 'https://raw.githubusercontent.com/profex1337/segelfliegen/main/images/dynamic.jpg' },
-    { name: 'Grob G109 BT',           registration: 'D-KGFT', type: 'Motorsegler',                 category: 'Motorsegler',    highlight: false, specs: 'Sitzplätze: 2\nMotorleistung: 130 PS',                                              imageUrl: 'https://raw.githubusercontent.com/profex1337/segelfliegen/main/images/grob-g109.jpg' },
+    { name: 'Dynamic WT9',            registration: 'D-MDYD', type: 'Ultraleichtflugzeug',         category: 'Motorflugzeuge',    highlight: false, specs: 'Sitzplätze: 2\nMotorleistung: 115 PS',                                              imageUrl: 'https://raw.githubusercontent.com/profex1337/segelfliegen/main/images/dynamic.jpg' },
+    { name: 'Grob G109 BT',           registration: 'D-KGFT', type: 'Motorflugzeuge',                 category: 'Motorflugzeuge',    highlight: false, specs: 'Sitzplätze: 2\nMotorleistung: 130 PS',                                              imageUrl: 'https://raw.githubusercontent.com/profex1337/segelfliegen/main/images/grob-g109.jpg' },
     // Oldtimer
     { name: 'Ka 6',                   registration: 'D-1088', type: 'Oldtimer Segelflugzeug',      category: 'Oldtimer',       highlight: false, specs: 'Sitzplätze: 1\nBaujahr: 1966\nGleitzahl: 30',                                       imageUrl: 'https://raw.githubusercontent.com/profex1337/segelfliegen/main/images/ka6.jpg' },
     // Winde
@@ -994,7 +994,7 @@ async function startAircraftLogic() {
         container.innerHTML = '';
 
         // Nach Kategorien gruppieren (gleiche Reihenfolge wie öffentliche Seite)
-        const categoryOrder = ['Segelflugzeuge', 'Motorsegler', 'Oldtimer', 'Winde'];
+        const categoryOrder = ['Segelflugzeuge', 'Motorflugzeuge', 'Oldtimer', 'Winde'];
         const byCategory = {};
         items.forEach(item => {
             const cat = item.category || 'Sonstige';
@@ -1100,7 +1100,7 @@ function renderAircraftPublic(container, items) {
     container.style.display = 'block';
 
     // Kategorien ermitteln und in gewünschter Reihenfolge rendern
-    const categoryOrder = ['Segelflugzeuge', 'Motorsegler', 'Oldtimer', 'Winde'];
+    const categoryOrder = ['Segelflugzeuge', 'Motorflugzeuge', 'Oldtimer', 'Winde'];
     const byCategory = {};
     items.forEach(item => {
         const cat = item.category || 'Sonstige';
@@ -1113,7 +1113,7 @@ function renderAircraftPublic(container, items) {
 
     const categoryDescriptions = {
         'Segelflugzeuge': 'Leistungsfähige Ein- und Doppelsitzer für Schulungs-, Strecken- und Gastflüge.',
-        'Motorsegler':    'Geeignet für den Flugzeugschlepp oder Rundflüge.',
+        'Motorflugzeuge':    'Geeignet für den Flugzeugschlepp oder Rundflüge.',
         'Oldtimer':       'Ein besonderes Flugerlebnis mit unseren historischen Schätzen.',
         'Winde':          'Unser Kraftpaket am Boden.',
     };
