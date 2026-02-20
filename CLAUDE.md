@@ -22,9 +22,9 @@ segelfliegen/
 ├── index.html            # Home page (hero video, dynamic news, reviews)
 ├── uber-uns.html         # About the club
 ├── mitfliegen.html       # Scenic flights & gift vouchers (with booking form)
-├── ausbildung.html       # Pilot training & licensing (with inquiry form)
+├── ausbildung.html       # Pilot training & licensing (zoomable images, no booking form)
 ├── flugzeugpark.html     # Aircraft fleet showcase
-├── veranstaltungen.html  # Events & photo galleries (with booking form)
+├── veranstaltungen.html  # Events & photo galleries (slideshows, video embeds, no booking form)
 ├── kontakt.html          # Contact page (map, contact form)
 ├── impressum.html        # Legal notice (Impressum — German legal requirement)
 ├── datenschutz.html      # Privacy policy & cookie consent
@@ -105,6 +105,8 @@ News images are **not** stored on a third-party service. The admin uploads a fil
 4. When a news item is deleted, `deleteFromGitHub()` removes the corresponding `images/news_*.webp` file from the repository.
 
 **GitHub Personal Access Token (PAT)**: The admin must provide a PAT with `contents: write` permission. It is stored in `localStorage` under the key `gh_pat` and persists across sessions. The admin panel on `intern.html` has a UI to enter, update, or remove the token.
+
+**News image hover**: On the news list, hovering a news item fades in its associated image in a sticky `.news-image-container` element (positioned `sticky; top: 120px` to account for the fixed header). The effect uses a 300 ms CSS opacity transition.
 
 ---
 
@@ -198,6 +200,24 @@ There is no test suite and no linter/formatter configuration. Validate changes b
 | `initForms()` | Intercepts all `form[action*="formspree"]` submit events and sends via `fetch` (AJAX) |
 | `getAvatarColor()` | Returns a random brand colour for review avatar backgrounds |
 
+### `news-db.js` Function Inventory
+
+| Function | Purpose |
+|---|---|
+| `initFirebase()` | Initialises Firebase app (`v11.6.1`), selects Firestore collection, calls `startNewsLogic()` |
+| `startNewsLogic()` | Sets up `onAuthStateChanged` listener; signs in anonymously if no user; sets up real-time `onSnapshot` listener |
+| `toggleAdminUI(isAdmin)` | Shows/hides edit+delete buttons on news items based on auth state |
+| `handleInternPageVisibility(isAdmin)` | Shows admin dashboard or login prompt on `intern.html` based on auth state |
+| `loadIntoForm(item)` | Populates the news edit form with an existing document's data |
+| `resetForm()` | Clears the news form and resets it to "new post" mode |
+| `deleteNewsItem(docId, imageUrl)` | Deletes a Firestore document and removes its associated GitHub image file |
+| `handleLogin()` | Authenticates admin with `info@segelfliegen-altdorf.de` and entered password |
+| `compressImage(file, maxWidth, quality)` | Resizes image to max 1200 px, encodes as WebP at 80% quality; returns a Blob |
+| `uploadToGitHub(blob, filename, token)` | Uploads WebP blob to `images/news_<timestamp>.webp` via GitHub Contents API; returns raw URL |
+| `deleteFromGitHub(imageUrl, token)` | Deletes a `images/news_*.webp` file from the repository when a news item is removed |
+
+**Anonymous auth**: Non-admin visitors are signed in anonymously via `signInAnonymously()` so the `onSnapshot` listener can read Firestore data without a password.
+
 ### Adding a New Page
 
 1. Copy an existing page as a template (e.g., `kontakt.html`).
@@ -214,7 +234,7 @@ There is no test suite and no linter/formatter configuration. Validate changes b
 |---|---|---|
 | **Firebase** | `news-db.js` lines 5–13 | Project ID: `segelfliegen`. SDK version: `11.6.1`. API key is public (restricted via Firebase console). |
 | **GitHub API** | `news-db.js` `uploadToGitHub()` / `deleteFromGitHub()` | Used for news image storage. Requires admin to supply a PAT with `contents: write`; stored in `localStorage`. |
-| **Formspree** | `action` attributes in HTML forms | One endpoint per form; find them in `mitfliegen.html`, `ausbildung.html`, `veranstaltungen.html`, `kontakt.html`. |
+| **Formspree** | `action` attributes in HTML forms | Both forms share the same endpoint (`f/meekadza`); present in `mitfliegen.html` and `kontakt.html` only. |
 | **Google Maps** | Embed `<iframe>` in `kontakt.html` | Uses consent overlay pattern; iframe only loads after cookie accept. |
 | **Flatpickr** | CDN `<script>` in booking-form pages | German locale (`flatpickr/dist/l10n/de.js`) is loaded separately. |
 | **Google Fonts** | `<link>` in `<head>` of each page | Montserrat (headings) + Open Sans (body) + Tangerine (decorative). |
@@ -230,6 +250,8 @@ There is no test suite and no linter/formatter configuration. Validate changes b
 - Image uploads: admins select a local file; it is compressed to WebP and uploaded to the repository via GitHub API. A GitHub PAT (`contents: write`) must be entered once and is saved in `localStorage`.
 - When a news item with a `news_*.webp` image is deleted, the image file is also removed from the repository automatically.
 - `intern.html` is linked in the footer of every page (not in the main nav). Clicking it opens a login modal if the user is not authenticated.
+- When logged in, `body.admin-mode` CSS class is added to the page — used for admin-only styling.
+- The admin dashboard also contains quick-links to the external member portal at `vereinsflieger.de` (Flugbuch, Dokumente, Dienste).
 
 ---
 
