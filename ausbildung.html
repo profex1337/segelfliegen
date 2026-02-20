@@ -51,6 +51,48 @@
     <link rel="stylesheet" href="style.css">
     <style>
         .section-image { border-radius: var(--radius); box-shadow: var(--shadow); object-fit: cover; width: 100%; height: 100%; min-height: 300px; }
+
+        .tooltip {
+            position: relative;
+            display: inline-block;
+            border-bottom: 1px dotted currentColor;
+            cursor: help;
+        }
+        .tooltip .tooltip-text {
+            visibility: hidden;
+            opacity: 0;
+            background-color: var(--primary);
+            color: #fff;
+            text-align: left;
+            border-radius: 8px;
+            padding: 10px 14px;
+            position: absolute;
+            z-index: 200;
+            bottom: 130%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 230px;
+            font-size: 0.85rem;
+            font-weight: normal;
+            line-height: 1.5;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.25);
+            transition: opacity 0.2s ease;
+            pointer-events: none;
+        }
+        .tooltip .tooltip-text::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 6px solid transparent;
+            border-top-color: var(--primary);
+        }
+        .tooltip:hover .tooltip-text,
+        .tooltip:focus .tooltip-text {
+            visibility: visible;
+            opacity: 1;
+        }
     </style>
 </head>
 <body>
@@ -113,7 +155,13 @@
             </div>
             <div class="highlight-box">
                 <strong>Weiterer Verlauf:</strong><br>
-                Nach der A-Prüfung folgen B- und C-Prüfung. Parallel läuft die Theorie. <br>
+                Nach der
+                <span class="tooltip" tabindex="0">A-Prüfung<span class="tooltip-text"><strong>A-Prüfung</strong><br>Erster Alleinflug & praktische Grundlagenprüfung. Der Schüler weist nach, dass er sicher starten, geradeaus fliegen, Kurven drehen und landen kann.</span></span>
+                folgen
+                <span class="tooltip" tabindex="0">B-Prüfung<span class="tooltip-text"><strong>B-Prüfung</strong><br>Fortgeschrittene Prüfung: Thermikfliegen, Kreisfliegen und erweiterte Flugtechnik im Alleinflug. Nachweis selbstständigen Segelfliegens.</span></span>
+                und
+                <span class="tooltip" tabindex="0">C-Prüfung<span class="tooltip-text"><strong>C-Prüfung</strong><br>Abschlussprüfung mit offiziellem Prüfer (praktisch & theoretisch). Erfolgreicher Abschluss führt zum SPL – dem Segelflugzeugführerschein.</span></span>.
+                Parallel läuft die Theorie.<br>
                 Mindestalter für die Lizenz-Erteilung: <strong>16 Jahre</strong>.
             </div>
         </div>
