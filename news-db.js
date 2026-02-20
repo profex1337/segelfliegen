@@ -85,8 +85,10 @@ async function initFirebase() {
     const newsContainer = document.getElementById('dynamic-news-list');
     const pricesContainer = document.getElementById('dynamic-prices-list');
     const pricesAdmin = document.getElementById('prices-admin-list');
+    const aircraftAdminList = document.getElementById('aircraft-admin-list');
+    const aircraftPublicList = document.getElementById('dynamic-aircraft-list');
 
-    if (!newsContainer && !pricesContainer && !pricesAdmin) return;
+    if (!newsContainer && !pricesContainer && !pricesAdmin && !aircraftAdminList && !aircraftPublicList) return;
 
     try {
         if (firebaseConfig && Object.keys(firebaseConfig).length > 0) {
@@ -107,6 +109,7 @@ async function initFirebase() {
 
         if (newsContainer) await startNewsLogic();
         if (pricesContainer || pricesAdmin) await startPricesLogic();
+        if (aircraftAdminList || aircraftPublicList) await startAircraftLogic();
 
     } catch (e) {
         if(newsContainer) {
@@ -543,7 +546,7 @@ async function startNewsLogic() {
                     
                     async function deleteFromGitHub(imageUrl, token) {
                         // Nur GitHub-Raw-URLs löschen (news_*.webp im images/-Ordner)
-                        const match = imageUrl && imageUrl.match(/raw\.githubusercontent\.com\/profex1337\/segelfliegen\/main\/(images\/news_[^?]+)/);
+                        const match = imageUrl && imageUrl.match(/raw\.githubusercontent\.com\/profex1337\/segelfliegen\/main\/(images\/(?:news|aircraft)_[^?]+)/);
                         if (!match) return;
                         const path = match[1];
                         const owner = 'profex1337';
@@ -763,6 +766,245 @@ async function seedDefaultPrices() {
     } catch (e) {
         alert('Import fehlgeschlagen: ' + e.message);
     }
+}
+
+// === Flugzeugpark ===
+
+let editingAircraftId = null;
+
+async function startAircraftLogic() {
+    const adminList = document.getElementById('aircraft-admin-list');
+    const publicList = document.getElementById('dynamic-aircraft-list');
+    const aircraftForm = document.getElementById('aircraft-form');
+    const submitBtn = document.getElementById('aircraft-submit-btn');
+    const cancelBtn = document.getElementById('aircraft-cancel-btn');
+    const formHeadline = document.getElementById('aircraft-form-headline');
+    const formStatus = document.getElementById('aircraft-form-status');
+
+    const aircraftRef = collection(db, 'aircraft');
+
+    // Bild-Vorschau beim Datei-Auswählen
+    const fileInputEl = document.getElementById('aircraft-image-file');
+    if (fileInputEl) {
+        fileInputEl.addEventListener('change', () => {
+            const container = document.getElementById('aircraft-image-preview-container');
+            const preview = document.getElementById('aircraft-image-preview');
+            const statusEl = document.getElementById('aircraft-image-upload-status');
+            if (fileInputEl.files.length > 0) {
+                const f = fileInputEl.files[0];
+                if (preview) preview.src = URL.createObjectURL(f);
+                if (container) container.style.display = 'block';
+                if (statusEl) statusEl.textContent = `Bereit: ${f.name} – wird beim Speichern komprimiert & hochgeladen`;
+            } else {
+                if (container) container.style.display = 'none';
+            }
+        });
+    }
+
+    onAuthStateChanged(auth, (user) => {
+        if (!user) return;
+        const isAdmin = !user.isAnonymous;
+
+        onSnapshot(aircraftRef, (snapshot) => {
+            const items = [];
+            snapshot.forEach(d => items.push({ id: d.id, ...d.data() }));
+            items.sort((a, b) => (a.order || 0) - (b.order || 0));
+
+            if (publicList) renderAircraftPublic(publicList, items);
+            if (adminList) renderAircraftAdmin(adminList, items, isAdmin);
+        });
+    });
+
+    // Formular absenden
+    if (aircraftForm) {
+        aircraftForm.onsubmit = async (e) => {
+            e.preventDefault();
+            if (auth.currentUser?.isAnonymous) { alert('Keine Berechtigung.'); return; }
+
+            const nameVal = document.getElementById('aircraft-name').value;
+            const regVal = document.getElementById('aircraft-registration').value;
+            const typeVal = document.getElementById('aircraft-type').value;
+            const catVal = document.getElementById('aircraft-category').value;
+            const specsVal = document.getElementById('aircraft-specs').value;
+            const highlightVal = document.getElementById('aircraft-highlight').checked;
+            const imageUrlHidden = document.getElementById('aircraft-image-url');
+            let imageVal = imageUrlHidden ? imageUrlHidden.value : '';
+
+            const fileEl = document.getElementById('aircraft-image-file');
+            if (fileEl && fileEl.files.length > 0) {
+                const token = localStorage.getItem('gh_pat') || '';
+                if (!token) { alert('Bitte zuerst einen GitHub Token eingeben.'); return; }
+                const statusEl = document.getElementById('aircraft-image-upload-status');
+                if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Bild wird hochgeladen…'; }
+                if (statusEl) statusEl.textContent = 'Komprimiere und lade hoch…';
+                try {
+                    const compressed = await compressImage(fileEl.files[0]);
+                    const safeName = `aircraft_${Date.now()}.webp`;
+                    imageVal = await uploadToGitHub(compressed, safeName, token);
+                    if (imageUrlHidden) imageUrlHidden.value = imageVal;
+                } catch (uploadErr) {
+                    alert('Bild-Upload fehlgeschlagen: ' + uploadErr.message);
+                    if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = editingAircraftId ? 'Änderungen speichern' : 'Flugzeug speichern'; }
+                    return;
+                } finally {
+                    if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = editingAircraftId ? 'Änderungen speichern' : 'Flugzeug speichern'; }
+                }
+            }
+
+            const dataToSave = {
+                name: nameVal,
+                registration: regVal,
+                type: typeVal,
+                category: catVal,
+                specs: specsVal,
+                highlight: highlightVal,
+                imageUrl: imageVal
+            };
+
+            try {
+                if (editingAircraftId) {
+                    await updateDoc(doc(db, 'aircraft', editingAircraftId), dataToSave);
+                } else {
+                    dataToSave.order = Date.now();
+                    await addDoc(aircraftRef, dataToSave);
+                }
+                resetAircraftForm();
+                if (formStatus) { formStatus.textContent = 'Gespeichert!'; formStatus.style.display = 'inline'; setTimeout(() => formStatus.style.display = 'none', 2500); }
+            } catch (err) {
+                alert('Fehler: ' + err.message);
+            }
+        };
+    }
+
+    if (cancelBtn) cancelBtn.onclick = resetAircraftForm;
+
+    function resetAircraftForm() {
+        editingAircraftId = null;
+        if (aircraftForm) aircraftForm.reset();
+        const imageUrlHidden = document.getElementById('aircraft-image-url');
+        const previewCont = document.getElementById('aircraft-image-preview-container');
+        const currentInfo = document.getElementById('aircraft-current-image-info');
+        if (imageUrlHidden) imageUrlHidden.value = '';
+        if (previewCont) previewCont.style.display = 'none';
+        if (currentInfo) currentInfo.style.display = 'none';
+        if (formHeadline) formHeadline.textContent = 'Neues Flugzeug hinzufügen';
+        if (submitBtn) submitBtn.textContent = 'Flugzeug speichern';
+        if (cancelBtn) cancelBtn.style.display = 'none';
+    }
+
+    function loadAircraftIntoForm(item) {
+        editingAircraftId = item.id;
+        document.getElementById('aircraft-name').value = item.name || '';
+        document.getElementById('aircraft-registration').value = item.registration || '';
+        document.getElementById('aircraft-type').value = item.type || '';
+        document.getElementById('aircraft-category').value = item.category || 'Segelflugzeuge';
+        document.getElementById('aircraft-specs').value = item.specs || '';
+        document.getElementById('aircraft-highlight').checked = !!item.highlight;
+        const imageUrlHidden = document.getElementById('aircraft-image-url');
+        if (imageUrlHidden) imageUrlHidden.value = item.imageUrl || '';
+        const previewCont = document.getElementById('aircraft-image-preview-container');
+        const fileEl2 = document.getElementById('aircraft-image-file');
+        const currentInfo = document.getElementById('aircraft-current-image-info');
+        const currentLink = document.getElementById('aircraft-current-image-link');
+        if (fileEl2) fileEl2.value = '';
+        if (previewCont) previewCont.style.display = 'none';
+        if (item.imageUrl && currentInfo && currentLink) {
+            currentLink.href = item.imageUrl;
+            currentInfo.style.display = 'block';
+        } else if (currentInfo) {
+            currentInfo.style.display = 'none';
+        }
+        if (formHeadline) formHeadline.textContent = 'Flugzeug bearbeiten';
+        if (submitBtn) submitBtn.textContent = 'Änderungen speichern';
+        if (cancelBtn) cancelBtn.style.display = 'inline-block';
+        const wrap = document.querySelector('.aircraft-admin-form-wrap');
+        if (wrap) wrap.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function renderAircraftAdmin(container, items, isAdmin) {
+        if (!isAdmin) { container.innerHTML = '<p style="color:#999;">Nur als Admin sichtbar.</p>'; return; }
+        if (items.length === 0) { container.innerHTML = '<p style="color:#999;">Noch keine Flugzeuge vorhanden.</p>'; return; }
+        container.innerHTML = '';
+        items.forEach(item => {
+            const row = document.createElement('div');
+            row.className = 'aircraft-admin-row';
+            row.style.cssText = 'background:#f9f9f9; padding:15px; margin-bottom:10px; border-radius:8px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;';
+            const info = document.createElement('div');
+            info.innerHTML = `<strong>${item.name || '—'}</strong> <span style="color:#888; font-size:0.85rem;">${item.registration || ''} · ${item.category || ''}</span>`;
+            const btns = document.createElement('div');
+            btns.style.cssText = 'display:flex; gap:8px;';
+            const editBtn = document.createElement('button');
+            editBtn.className = 'btn btn-secondary';
+            editBtn.style.cssText = 'padding:5px 12px; font-size:0.85rem;';
+            editBtn.textContent = 'Ändern';
+            editBtn.onclick = () => loadAircraftIntoForm(item);
+            const delBtn = document.createElement('button');
+            delBtn.className = 'btn btn-secondary';
+            delBtn.style.cssText = 'padding:5px 12px; font-size:0.85rem; background:#c0392b; color:#fff; border-color:#c0392b;';
+            delBtn.textContent = 'Löschen';
+            delBtn.onclick = async () => {
+                if (!confirm(`"${item.name || 'Flugzeug'}" wirklich löschen?`)) return;
+                try {
+                    await deleteDoc(doc(db, 'aircraft', item.id));
+                    const token = localStorage.getItem('gh_pat');
+                    if (token && item.imageUrl) await deleteFromGitHub(item.imageUrl, token);
+                } catch (e) { alert('Löschen fehlgeschlagen: ' + e.message); }
+            };
+            btns.appendChild(editBtn);
+            btns.appendChild(delBtn);
+            row.appendChild(info);
+            row.appendChild(btns);
+            container.appendChild(row);
+        });
+    }
+}
+
+function renderAircraftPublic(container, items) {
+    if (items.length === 0) { container.style.display = 'none'; return; }
+    container.style.display = 'block';
+
+    // Kategorien ermitteln und in gewünschter Reihenfolge rendern
+    const categoryOrder = ['Segelflugzeuge', 'Motorsegler', 'Oldtimer', 'Winde'];
+    const byCategory = {};
+    items.forEach(item => {
+        const cat = item.category || 'Sonstige';
+        if (!byCategory[cat]) byCategory[cat] = [];
+        byCategory[cat].push(item);
+    });
+
+    container.innerHTML = '';
+    const cats = categoryOrder.filter(c => byCategory[c]).concat(Object.keys(byCategory).filter(c => !categoryOrder.includes(c)));
+
+    cats.forEach(cat => {
+        const section = document.createElement('div');
+        section.style.cssText = 'margin-bottom: 40px;';
+        section.innerHTML = `<h3 style="color:var(--primary); font-family:Montserrat,sans-serif; margin-bottom:16px;">${cat}</h3>`;
+        const grid = document.createElement('div');
+        grid.className = 'card-grid';
+        byCategory[cat].forEach(item => {
+            const card = document.createElement('div');
+            card.className = 'card';
+            if (item.highlight) card.style.cssText = 'border: 2px solid var(--accent); transform: scale(1.02); position:relative;';
+
+            const specsLines = (item.specs || '').split('\n').filter(l => l.trim());
+            const specsList = specsLines.map(l => `<li>${l.trim()}</li>`).join('');
+
+            card.innerHTML = `
+                ${item.highlight ? '<div class="badge-highlight">★ Highlight</div>' : ''}
+                <div class="card-img-top">
+                    <img src="${item.imageUrl || 'images/hero.jpg'}" alt="${item.name || ''}" loading="lazy" class="zoomable" onerror="this.src='images/hero.jpg'">
+                </div>
+                <div class="card-body">
+                    <h3 class="card-title"${item.highlight ? ' style="color:var(--accent);"' : ''}>${item.name || '—'} ${item.registration ? `<span style="font-weight:normal; font-size:0.9rem; color:#666;">(${item.registration})</span>` : ''}</h3>
+                    ${item.type ? `<p style="font-size:0.9rem; margin-bottom:10px; font-weight:600;">${item.type}</p>` : ''}
+                    ${specsList ? `<ul class="data-list" style="font-size:0.9rem; margin-top:10px;">${specsList}</ul>` : ''}
+                </div>
+            `;
+            grid.appendChild(card);
+        });
+        section.appendChild(grid);
+        container.appendChild(section);
+    });
 }
 
                     if (document.readyState === 'loading') {

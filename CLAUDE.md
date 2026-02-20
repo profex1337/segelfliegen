@@ -23,18 +23,18 @@ segelfliegen/
 ├── uber-uns.html         # About the club
 ├── mitfliegen.html       # Scenic flights & gift vouchers (with booking form)
 ├── ausbildung.html       # Pilot training & licensing (zoomable images, no booking form)
-├── flugzeugpark.html     # Aircraft fleet showcase
+├── flugzeugpark.html     # Aircraft fleet showcase (static cards + dynamic Firestore section)
 ├── veranstaltungen.html  # Events & photo galleries (slideshows, video embeds, no booking form)
 ├── kontakt.html          # Contact page (map, contact form)
 ├── impressum.html        # Legal notice (Impressum — German legal requirement)
 ├── datenschutz.html      # Privacy policy & cookie consent
-├── intern.html           # Members-only admin panel (news CRUD)
+├── intern.html           # Members-only admin panel (3 tabs: News, Gastfluggebühren, Flugzeugpark)
 │
 ├── script.js             # Shared UI logic: header/footer injection, mobile menu,
 │                         #   accordion, cookie consent, lightbox, slideshow,
 │                         #   reviews sidebar, back-to-top, AJAX forms, favicon
 ├── news-db.js            # Firebase integration: auth, Firestore CRUD for news feed,
-│                         #   GitHub API image uploads
+│                         #   prices, and aircraft fleet; GitHub API image uploads
 ├── style.css             # All styling (~1 566 lines, CSS variables, responsive)
 │
 ├── images/               # Static image assets (logos, aircraft, team photos, news images)
@@ -55,7 +55,7 @@ There is **no server-side runtime** and **no build pipeline**. Every file is ser
 
 | Concern | Solution |
 |---|---|
-| Dynamic content (news) | Firebase Firestore + real-time `onSnapshot` listener |
+| Dynamic content (news, prices, aircraft fleet) | Firebase Firestore + real-time `onSnapshot` listener |
 | Form submissions | Formspree (third-party service, no backend needed) — AJAX via `fetch` |
 | Authentication (admin) | Firebase Authentication (email/password) |
 | News image hosting | GitHub repository (`images/` folder) via GitHub Contents API |
@@ -73,18 +73,22 @@ The footer contains links to `impressum.html`, `datenschutz.html`, and `intern.h
 
 The module is loaded as an **ES module** (`type="module"`) and handles:
 
-1. `initFirebase()` — initialises Firebase app (`v11.6.1`), chooses collection path, calls `startNewsLogic()`
+1. `initFirebase()` — initialises Firebase app (`v11.6.1`), chooses collection path, calls `startNewsLogic()`, `startPricesLogic()`, and/or `startAircraftLogic()` depending on which containers exist on the page
 2. `startNewsLogic()` — sets up `onAuthStateChanged` listener; renders news and admin UI accordingly
-3. `onSnapshot()` — real-time listener that re-renders the news list whenever Firestore data changes
-4. Admin CRUD — `addDoc`, `updateDoc`, `deleteDoc` are called from the admin panel on `intern.html`
-5. Image pipeline — `compressImage()` + `uploadToGitHub()` + `deleteFromGitHub()` manage news images via GitHub API
+3. `startPricesLogic()` — real-time listener for the `prices` collection; renders public price list and admin edit UI
+4. `startAircraftLogic()` — real-time listener for the `aircraft` collection; renders fleet cards on `flugzeugpark.html` and CRUD admin UI on `intern.html`
+5. `onSnapshot()` — real-time listeners that re-render lists whenever Firestore data changes
+6. Admin CRUD — `addDoc`, `updateDoc`, `deleteDoc` are called from the admin panel on `intern.html`
+7. Image pipeline — `compressImage()` + `uploadToGitHub()` + `deleteFromGitHub()` manage images (news and aircraft) via GitHub API
 
-**Firestore collection path (production)**:
+**Firestore collections (production)**:
 ```
-news/  (top-level collection, documents sorted descending by timestamp)
+news/      — top-level collection, documents sorted descending by timestamp
+prices/    — top-level collection, documents sorted ascending by order field
+aircraft/  — top-level collection, documents sorted ascending by order field
 ```
 
-**Document schema**:
+**`news` document schema**:
 ```js
 {
   title:     string,           // News headline
@@ -95,14 +99,28 @@ news/  (top-level collection, documents sorted descending by timestamp)
 }
 ```
 
+**`aircraft` document schema**:
+```js
+{
+  name:         string,        // Aircraft name, e.g. "DG-1001e neo"
+  registration: string,        // Registration, e.g. "D-KSFP"
+  type:         string,        // Type description, e.g. "Hochleistungs-Doppelsitzer"
+  category:     string,        // "Segelflugzeuge" | "Motorsegler" | "Oldtimer" | "Winde"
+  specs:        string,        // Free-text specs, one entry per line (e.g. "Spannweite: 20 m")
+  highlight:    boolean,       // If true, rendered with accent border and ★ badge
+  imageUrl:     string | null, // GitHub raw URL (images/aircraft_<timestamp>.webp) or null
+  order:        number         // Sort order (set to Date.now() on create)
+}
+```
+
 ### Image Upload Pipeline
 
-News images are **not** stored on a third-party service. The admin uploads a file through the admin panel and the following happens client-side:
+Images for news posts and aircraft are **not** stored on a third-party service. The admin uploads a file through the admin panel and the following happens client-side:
 
 1. `compressImage()` resizes the image to max 1200 px wide and encodes it as **WebP at 80% quality**.
-2. `uploadToGitHub()` uploads the blob to `images/news_<timestamp>.webp` in the repository via the GitHub Contents API (`PUT /repos/profex1337/segelfliegen/contents/...`).
+2. `uploadToGitHub()` uploads the blob to `images/news_<timestamp>.webp` (or `images/aircraft_<timestamp>.webp`) in the repository via the GitHub Contents API (`PUT /repos/profex1337/segelfliegen/contents/...`).
 3. The resulting `https://raw.githubusercontent.com/...` URL is stored in Firestore.
-4. When a news item is deleted, `deleteFromGitHub()` removes the corresponding `images/news_*.webp` file from the repository.
+4. When an item is deleted, `deleteFromGitHub()` removes the corresponding file from the repository. The regex matches both `news_*.webp` and `aircraft_*.webp` patterns.
 
 **GitHub Personal Access Token (PAT)**: The admin must provide a PAT with `contents: write` permission. It is stored in `localStorage` under the key `gh_pat` and persists across sessions. The admin panel on `intern.html` has a UI to enter, update, or remove the token.
 
@@ -150,7 +168,7 @@ There is no test suite and no linter/formatter configuration. Validate changes b
   ```html
   <script type="module" src="script.js"></script>
   ```
-- **Pages with news** also include `news-db.js` as `type="module"`.
+- **Pages with dynamic Firestore content** (news, prices, aircraft) also include `news-db.js` as `type="module"`. Currently: `index.html`, `mitfliegen.html`, `intern.html`, `flugzeugpark.html`.
 - **Inline JSON-LD** schema.org markup is present on content pages for SEO — keep it accurate.
 - **Open Graph** meta tags are on every page — update them when adding new pages.
 - **Language attribute**: `<html lang="de">` on all pages.
@@ -204,17 +222,20 @@ There is no test suite and no linter/formatter configuration. Validate changes b
 
 | Function | Purpose |
 |---|---|
-| `initFirebase()` | Initialises Firebase app (`v11.6.1`), selects Firestore collection, calls `startNewsLogic()` |
-| `startNewsLogic()` | Sets up `onAuthStateChanged` listener; signs in anonymously if no user; sets up real-time `onSnapshot` listener |
+| `initFirebase()` | Initialises Firebase app (`v11.6.1`), selects Firestore collection, dispatches to `startNewsLogic()` / `startPricesLogic()` / `startAircraftLogic()` based on page |
+| `startNewsLogic()` | Sets up `onAuthStateChanged` listener; signs in anonymously if no user; sets up real-time `onSnapshot` listener for news |
+| `startPricesLogic()` | Real-time listener for `prices` collection; renders public list and admin CRUD |
+| `startAircraftLogic()` | Real-time listener for `aircraft` collection; renders fleet on `flugzeugpark.html` and CRUD admin UI on `intern.html` |
 | `toggleAdminUI(isAdmin)` | Shows/hides edit+delete buttons on news items based on auth state |
 | `handleInternPageVisibility(isAdmin)` | Shows admin dashboard or login prompt on `intern.html` based on auth state |
 | `loadIntoForm(item)` | Populates the news edit form with an existing document's data |
 | `resetForm()` | Clears the news form and resets it to "new post" mode |
 | `deleteNewsItem(docId, imageUrl)` | Deletes a Firestore document and removes its associated GitHub image file |
+| `renderAircraftPublic(container, items)` | Renders aircraft cards grouped by category into a public container |
 | `handleLogin()` | Authenticates admin with `info@segelfliegen-altdorf.de` and entered password |
 | `compressImage(file, maxWidth, quality)` | Resizes image to max 1200 px, encodes as WebP at 80% quality; returns a Blob |
-| `uploadToGitHub(blob, filename, token)` | Uploads WebP blob to `images/news_<timestamp>.webp` via GitHub Contents API; returns raw URL |
-| `deleteFromGitHub(imageUrl, token)` | Deletes a `images/news_*.webp` file from the repository when a news item is removed |
+| `uploadToGitHub(blob, filename, token)` | Uploads WebP blob to `images/<filename>` via GitHub Contents API; returns raw URL |
+| `deleteFromGitHub(imageUrl, token)` | Deletes `images/news_*.webp` or `images/aircraft_*.webp` from the repository |
 
 **Anonymous auth**: Non-admin visitors are signed in anonymously via `signInAnonymously()` so the `onSnapshot` listener can read Firestore data without a password.
 
@@ -246,12 +267,29 @@ There is no test suite and no linter/formatter configuration. Validate changes b
 
 - Protected by Firebase email/password authentication.
 - Admin email: `info@segelfliegen-altdorf.de` (password managed in Firebase console).
-- Admins can create, edit, and delete news posts.
-- Image uploads: admins select a local file; it is compressed to WebP and uploaded to the repository via GitHub API. A GitHub PAT (`contents: write`) must be entered once and is saved in `localStorage`.
-- When a news item with a `news_*.webp` image is deleted, the image file is also removed from the repository automatically.
 - `intern.html` is linked in the footer of every page (not in the main nav). Clicking it opens a login modal if the user is not authenticated.
 - When logged in, `body.admin-mode` CSS class is added to the page — used for admin-only styling.
-- The admin dashboard also contains quick-links to the external member portal at `vereinsflieger.de` (Flugbuch, Dokumente, Dienste).
+
+The panel is organised in **three tabs**:
+
+### Tab 1 — News
+- Create, edit, and delete news posts (Firestore `news` collection).
+- Optional image upload per post: compressed to WebP, uploaded to `images/news_<timestamp>.webp` via GitHub API.
+- Quick-links to vereinsflieger.de (Flugbuch, Dokumente, Dienste) are shown below the news list.
+
+### Tab 2 — Gastfluggebühren
+- Edit the scenic-flight price list shown on `mitfliegen.html` (Firestore `prices` collection).
+- Each price row has a label, description, and price field — inline editing with a "Speichern" button per row.
+- "Standardpreise importieren" seeds the collection with default values if it is empty.
+
+### Tab 3 — Flugzeugpark
+- Full CRUD for the aircraft fleet (Firestore `aircraft` collection).
+- Fields: Name, Kennzeichen, Typ, Kategorie (dropdown), Technische Daten (multiline), Highlight-Checkbox, Bild.
+- Image uploads compressed to WebP and stored as `images/aircraft_<timestamp>.webp` via GitHub API.
+- Changes are immediately visible on `flugzeugpark.html` (real-time `onSnapshot` listener).
+- When an aircraft with an image is deleted, the image is also removed from the repository automatically.
+
+**GitHub PAT**: A PAT with `contents: write` must be entered once in the News tab; it is shared by both the news and aircraft image upload pipelines (stored in `localStorage` under `gh_pat`).
 
 ---
 
@@ -270,6 +308,7 @@ There is no test suite and no linter/formatter configuration. Validate changes b
 
 - Images live in `images/` — use descriptive filenames (e.g., `duo-discus-start.jpg`).
 - News images are automatically named `news_<timestamp>.webp` by the upload pipeline.
+- Aircraft images (admin-uploaded) are automatically named `aircraft_<timestamp>.webp` by the upload pipeline.
 - Videos live in `videos/` — used as `<source>` elements in hero `<video>` tags.
 - Prefer `.webp` for new images (smaller file size); `.jpg` is also acceptable.
 - Keep video files under ~10 MB where possible; the repository is already large (~357 MB).
@@ -281,7 +320,15 @@ There is no test suite and no linter/formatter configuration. Validate changes b
 
 ### Update the News Feed
 
-News is managed through the admin panel at `/intern.html`. Admins log in with their Firebase credentials and create/edit/delete posts through the UI. A GitHub PAT must be stored to enable image uploads. No code changes are needed.
+News is managed through the admin panel at `/intern.html` → Tab **News**. Admins log in with their Firebase credentials and create/edit/delete posts through the UI. A GitHub PAT must be stored to enable image uploads. No code changes are needed.
+
+### Manage the Aircraft Fleet (Flugzeugpark)
+
+Aircraft are managed through the admin panel at `/intern.html` → Tab **Flugzeugpark**. Entries are stored in Firestore (`aircraft` collection) and rendered dynamically at the top of `flugzeugpark.html`. The static aircraft cards hardcoded in `flugzeugpark.html` remain as a fallback/legacy section below. No code changes are needed to add or update aircraft.
+
+### Manage Gastfluggebühren (Prices)
+
+Prices are managed through the admin panel at `/intern.html` → Tab **Gastfluggebühren**. Entries are stored in Firestore (`prices` collection) and rendered on `mitfliegen.html`. No code changes are needed.
 
 ### Change Navigation Links
 

@@ -90,6 +90,9 @@
             <a href="#Oldtimer" class="btn-cat">Oldtimer</a>
             <a href="#Winde" class="btn-cat">Startwinde</a>
         </div>
+
+        <!-- Dynamisch über Admin verwaltete Flugzeuge (Firestore) -->
+        <div id="dynamic-aircraft-list" style="display:none; margin-bottom: 20px;"></div>
         
         <div class="content-block" id="Segelflugzeuge">
             <h2>Segelflugzeuge</h2>
@@ -279,6 +282,7 @@
     <footer id="main-footer"></footer>
     <button id="btn-back-to-top" title="Nach oben">↑</button>
     <script src="script.js"></script>
+    <script type="module" src="news-db.js"></script>
 </body>
 </html>
 
