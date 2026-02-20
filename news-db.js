@@ -963,6 +963,16 @@ async function startAircraftLogic() {
 
     function renderAircraftAdmin(container, items, isAdmin) {
         if (!isAdmin) { container.innerHTML = '<p style="color:#999;">Nur als Admin sichtbar.</p>'; return; }
+
+        // Migration: alte Kategorie 'Motorsegler' → 'Motorflugzeuge'
+        const legacyItems = items.filter(i => i.category === 'Motorsegler');
+        if (legacyItems.length > 0) {
+            Promise.all(legacyItems.map(i =>
+                updateDoc(doc(db, 'aircraft', i.id), { category: 'Motorflugzeuge' })
+            ));
+            return; // onSnapshot wird automatisch neu ausgelöst
+        }
+
         if (items.length === 0) {
             container.innerHTML = `
                 <p style="color:#999; margin-bottom:16px;">Noch keine Flugzeuge vorhanden.</p>
