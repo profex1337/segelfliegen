@@ -19,12 +19,12 @@ A static website for **Segelflugplatz Altdorf-Hagenhausen / Post-SV Nürnberg e.
 
 ```
 segelfliegen/
-├── index.html            # Home page (hero video, dynamic news, reviews)
+├── index.html            # Home page (hero video, dynamic news card-grid, reviews)
 ├── uber-uns.html         # About the club
 ├── mitfliegen.html       # Scenic flights & gift vouchers (with booking form)
 ├── ausbildung.html       # Pilot training & licensing (zoomable images, no booking form)
-├── flugzeugpark.html     # Aircraft fleet showcase (static cards + dynamic Firestore section)
-├── veranstaltungen.html  # Events & photo galleries (slideshows, video embeds, no booking form)
+├── flugzeugpark.html     # Aircraft fleet showcase (fully dynamic via Firestore, no static cards)
+├── veranstaltungen.html  # Events & photo galleries (slideshows, no booking form)
 ├── kontakt.html          # Contact page (map, contact form)
 ├── impressum.html        # Legal notice (Impressum — German legal requirement)
 ├── datenschutz.html      # Privacy policy & cookie consent
@@ -35,7 +35,7 @@ segelfliegen/
 │                         #   reviews sidebar, back-to-top, AJAX forms, favicon
 ├── news-db.js            # Firebase integration: auth, Firestore CRUD for news feed,
 │                         #   prices, and aircraft fleet; GitHub API image uploads
-├── style.css             # All styling (~1 566 lines, CSS variables, responsive)
+├── style.css             # All styling (CSS variables, responsive)
 │
 ├── images/               # Static image assets (logos, aircraft, team photos, news images)
 ├── videos/               # Hero section .mp4 videos
@@ -66,6 +66,8 @@ There is **no server-side runtime** and **no build pipeline**. Every file is ser
 ### Shared Header & Footer
 
 `script.js` injects a common header, footer, Google Reviews sidebar, and login modal into every page at runtime using `innerHTML`. There is **no server-side templating**. Changes to the navigation must be made in the `headerHTML` template literal inside `script.js`.
+
+All `target="_blank"` links must have `rel="noopener noreferrer"` — this applies in `script.js` (header/footer templates) and all HTML files.
 
 The footer contains links to `impressum.html`, `datenschutz.html`, and `intern.html`. The `intern.html` link is visible in the footer on every page (it is not in the main nav, but is not hidden either).
 
@@ -105,11 +107,11 @@ aircraft/  — top-level collection, documents sorted ascending by order field
   name:         string,        // Aircraft name, e.g. "DG-1001e neo"
   registration: string,        // Registration, e.g. "D-KSFP"
   type:         string,        // Type description, e.g. "Hochleistungs-Doppelsitzer"
-  category:     string,        // "Segelflugzeuge" | "Motorsegler" | "Oldtimer" | "Winde"
+  category:     string,        // "Segelflugzeuge" | "Motorflugzeuge" | "Oldtimer" | "Winde"
   specs:        string,        // Free-text specs, one entry per line (e.g. "Spannweite: 20 m")
   highlight:    boolean,       // If true, rendered with accent border and ★ badge
   imageUrl:     string | null, // GitHub raw URL (images/aircraft_<timestamp>.webp) or null
-  order:        number         // Sort order (set to Date.now() on create)
+  order:        number         // Sort order (set to Date.now() on create; used for drag & drop)
 }
 ```
 
@@ -124,7 +126,13 @@ Images for news posts and aircraft are **not** stored on a third-party service. 
 
 **GitHub Personal Access Token (PAT)**: The admin must provide a PAT with `contents: write` permission. It is stored in `localStorage` under the key `gh_pat` and persists across sessions. The admin panel on `intern.html` has a UI to enter, update, or remove the token.
 
-**News image hover**: On the news list, hovering a news item fades in its associated image in a sticky `.news-image-container` element (positioned `sticky; top: 120px` to account for the fixed header). The effect uses a 300 ms CSS opacity transition.
+### News Layout
+
+On `index.html`, news posts are rendered as a **card-grid** (`.news-card-grid`): 3 columns on desktop, 2 on tablet, 1 on mobile. Each card shows the post image (if available) as a header with `object-fit: cover`, then date, title, and text below. Clicking a card image opens the built-in lightbox (`.zoomable` class).
+
+On `intern.html`, the same news items are rendered in the same card-grid layout with admin controls (Ändern / Löschen) visible in the top-right of each card.
+
+The rendering mode is detected by the CSS class on the container: `news-card-grid` → card layout; otherwise → list layout (legacy, not currently used).
 
 ---
 
@@ -163,12 +171,14 @@ There is no test suite and no linter/formatter configuration. Validate changes b
 ### HTML
 
 - **Semantic HTML5** — use `<section>`, `<article>`, `<header>`, `<nav>`, `<footer>` appropriately.
-- **BEM-like class naming** — e.g., `.card-grid`, `.page-header`, `.hero-section`, `.news-item`.
-- **Every page** must include `script.js` as `type="module"` at the bottom of `<body>`:
+- **BEM-like class naming** — e.g., `.card-grid`, `.page-header`, `.hero-section`, `.news-card`.
+- **Every page** must include `script.js` as a classic script (NOT `type="module"`) at the bottom of `<body>`:
   ```html
-  <script type="module" src="script.js"></script>
+  <script src="script.js"></script>
   ```
+  `script.js` does not use ES module syntax (`import`/`export`) and must not be loaded as a module.
 - **Pages with dynamic Firestore content** (news, prices, aircraft) also include `news-db.js` as `type="module"`. Currently: `index.html`, `mitfliegen.html`, `intern.html`, `flugzeugpark.html`.
+- **External links** (`target="_blank"`) must always have `rel="noopener noreferrer"`.
 - **Inline JSON-LD** schema.org markup is present on content pages for SEO — keep it accurate.
 - **Open Graph** meta tags are on every page — update them when adding new pages.
 - **Language attribute**: `<html lang="de">` on all pages.
@@ -192,6 +202,9 @@ There is no test suite and no linter/formatter configuration. Validate changes b
 - **Mobile-first responsive** — base styles target mobile; media queries add larger-screen layouts.
 - **Breakpoints**: 500 px, 600 px, 700 px, 768 px, 992 px.
 - All new rules go into `style.css` — do not create additional CSS files.
+- **`.badge-highlight`** is defined globally in `style.css` (used by dynamically rendered aircraft cards).
+- **`.news-card-grid`** — card layout for news (3 col / 2 col / 1 col).
+- **`.aircraft-card-grid`** — card layout for aircraft fleet (3 col / 2 col / 1 col).
 
 ### JavaScript
 
@@ -218,10 +231,11 @@ There is no test suite and no linter/formatter configuration. Validate changes b
 | `initForms()` | Intercepts all `form[action*="formspree"]` submit events and sends via `fetch` (AJAX) |
 | `getAvatarColor()` | Returns a random brand colour for review avatar backgrounds |
 
-### `news-db.js` Function Inventory
+### `news-db.js` Function & Constant Inventory
 
-| Function | Purpose |
+| Symbol | Purpose |
 |---|---|
+| `FLUGZEUGPARK_IMPORT_DATA` | Array of 12 aircraft objects used for one-time Firestore import (shown as button when `aircraft` collection is empty) |
 | `initFirebase()` | Initialises Firebase app (`v11.6.1`), selects Firestore collection, dispatches to `startNewsLogic()` / `startPricesLogic()` / `startAircraftLogic()` based on page |
 | `startNewsLogic()` | Sets up `onAuthStateChanged` listener; signs in anonymously if no user; sets up real-time `onSnapshot` listener for news |
 | `startPricesLogic()` | Real-time listener for `prices` collection; renders public list and admin CRUD |
@@ -231,7 +245,8 @@ There is no test suite and no linter/formatter configuration. Validate changes b
 | `loadIntoForm(item)` | Populates the news edit form with an existing document's data |
 | `resetForm()` | Clears the news form and resets it to "new post" mode |
 | `deleteNewsItem(docId, imageUrl)` | Deletes a Firestore document and removes its associated GitHub image file |
-| `renderAircraftPublic(container, items)` | Renders aircraft cards grouped by category into a public container |
+| `renderAircraftPublic(container, items)` | Renders aircraft cards grouped by category (`.aircraft-card-grid`, 3-col) into a public container; adds section IDs for anchor links |
+| `renderAircraftAdmin(container, items, isAdmin)` | Renders aircraft admin list grouped by category; supports drag & drop reordering within categories; shows import button when collection is empty; auto-migrates legacy category names |
 | `handleLogin()` | Authenticates admin with `info@segelfliegen-altdorf.de` and entered password |
 | `compressImage(file, maxWidth, quality)` | Resizes image to max 1200 px, encodes as WebP at 80% quality; returns a Blob |
 | `uploadToGitHub(blob, filename, token)` | Uploads WebP blob to `images/<filename>` via GitHub Contents API; returns raw URL |
@@ -254,7 +269,7 @@ There is no test suite and no linter/formatter configuration. Validate changes b
 | Service | Config location | Notes |
 |---|---|---|
 | **Firebase** | `news-db.js` lines 5–13 | Project ID: `segelfliegen`. SDK version: `11.6.1`. API key is public (restricted via Firebase console). |
-| **GitHub API** | `news-db.js` `uploadToGitHub()` / `deleteFromGitHub()` | Used for news image storage. Requires admin to supply a PAT with `contents: write`; stored in `localStorage`. |
+| **GitHub API** | `news-db.js` `uploadToGitHub()` / `deleteFromGitHub()` | Used for news & aircraft image storage. Requires admin to supply a PAT with `contents: write`; stored in `localStorage`. |
 | **Formspree** | `action` attributes in HTML forms | Both forms share the same endpoint (`f/meekadza`); present in `mitfliegen.html` and `kontakt.html` only. |
 | **Google Maps** | Embed `<iframe>` in `kontakt.html` | Uses consent overlay pattern; iframe only loads after cookie accept. |
 | **Flatpickr** | CDN `<script>` in booking-form pages | German locale (`flatpickr/dist/l10n/de.js`) is loaded separately. |
@@ -275,6 +290,7 @@ The panel is organised in **three tabs**:
 ### Tab 1 — News
 - Create, edit, and delete news posts (Firestore `news` collection).
 - Optional image upload per post: compressed to WebP, uploaded to `images/news_<timestamp>.webp` via GitHub API.
+- News list displayed as card-grid (same layout as public `index.html`), with Ändern/Löschen buttons visible per card.
 - Quick-links to vereinsflieger.de (Flugbuch, Dokumente, Dienste) are shown below the news list.
 
 ### Tab 2 — Gastfluggebühren
@@ -286,6 +302,9 @@ The panel is organised in **three tabs**:
 - Full CRUD for the aircraft fleet (Firestore `aircraft` collection).
 - Fields: Name, Kennzeichen, Typ, Kategorie (dropdown), Technische Daten (multiline), Highlight-Checkbox, Bild.
 - Image uploads compressed to WebP and stored as `images/aircraft_<timestamp>.webp` via GitHub API.
+- Admin list is **grouped by category** with drag & drop reordering within each category (updates `order` field in Firestore).
+- When the collection is empty, an **import button** appears that seeds all 12 aircraft from `FLUGZEUGPARK_IMPORT_DATA` (incl. GitHub raw image URLs) into Firestore.
+- **Auto-migration**: on admin load, any documents with the legacy category `'Motorsegler'` are automatically updated to `'Motorflugzeuge'`.
 - Changes are immediately visible on `flugzeugpark.html` (real-time `onSnapshot` listener).
 - When an aircraft with an image is deleted, the image is also removed from the repository automatically.
 
@@ -324,7 +343,7 @@ News is managed through the admin panel at `/intern.html` → Tab **News**. Admi
 
 ### Manage the Aircraft Fleet (Flugzeugpark)
 
-Aircraft are managed through the admin panel at `/intern.html` → Tab **Flugzeugpark**. Entries are stored in Firestore (`aircraft` collection) and rendered dynamically at the top of `flugzeugpark.html`. The static aircraft cards hardcoded in `flugzeugpark.html` remain as a fallback/legacy section below. No code changes are needed to add or update aircraft.
+Aircraft are managed through the admin panel at `/intern.html` → Tab **Flugzeugpark**. All entries are stored in Firestore (`aircraft` collection) and rendered fully dynamically on `flugzeugpark.html` — there are no static fallback cards. The display order can be adjusted via drag & drop in the admin list. No code changes are needed to add, update, or reorder aircraft.
 
 ### Manage Gastfluggebühren (Prices)
 
