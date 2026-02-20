@@ -958,6 +958,9 @@ async function startAircraftLogic() {
         if (wrap) wrap.scrollIntoView({ behavior: 'smooth' });
     }
 
+    let draggedAircraftItem = null;
+    let draggedAircraftEl = null;
+
     function renderAircraftAdmin(container, items, isAdmin) {
         if (!isAdmin) { container.innerHTML = '<p style="color:#999;">Nur als Admin sichtbar.</p>'; return; }
         if (items.length === 0) {
@@ -1009,11 +1012,19 @@ async function startAircraftLogic() {
             byCategory[cat].forEach(item => {
                 const row = document.createElement('div');
                 row.className = 'aircraft-admin-row';
-                row.style.cssText = 'background:#f9f9f9; padding:15px; margin-bottom:8px; border-radius:8px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;';
+                row.draggable = true;
+                row.style.cssText = 'background:#f9f9f9; padding:15px; margin-bottom:8px; border-radius:8px; display:flex; align-items:center; flex-wrap:wrap; gap:10px;';
+
+                const handle = document.createElement('div');
+                handle.textContent = '⠿';
+                handle.style.cssText = 'color:#bbb; font-size:1.3rem; line-height:1; user-select:none; flex-shrink:0;';
+
                 const info = document.createElement('div');
+                info.style.cssText = 'flex:1;';
                 info.innerHTML = `<strong>${item.name || '—'}</strong>${item.registration ? ` <span style="color:#888; font-size:0.85rem;">(${item.registration})</span>` : ''}${item.type ? `<br><span style="color:#666; font-size:0.82rem;">${item.type}</span>` : ''}${item.highlight ? ' <span style="color:var(--accent); font-size:0.8rem;">★ Highlight</span>' : ''}`;
+
                 const btns = document.createElement('div');
-                btns.style.cssText = 'display:flex; gap:8px;';
+                btns.style.cssText = 'display:flex; gap:8px; flex-shrink:0;';
                 const editBtn = document.createElement('button');
                 editBtn.className = 'btn btn-secondary';
                 editBtn.style.cssText = 'padding:5px 12px; font-size:0.85rem;';
@@ -1033,6 +1044,49 @@ async function startAircraftLogic() {
                 };
                 btns.appendChild(editBtn);
                 btns.appendChild(delBtn);
+
+                // Drag & Drop Handler
+                row.addEventListener('dragstart', (e) => {
+                    draggedAircraftItem = item;
+                    draggedAircraftEl = row;
+                    setTimeout(() => { row.style.opacity = '0.4'; }, 0);
+                    e.dataTransfer.effectAllowed = 'move';
+                });
+                row.addEventListener('dragend', () => {
+                    row.style.opacity = '1';
+                    draggedAircraftEl = null;
+                    container.querySelectorAll('.aircraft-admin-row').forEach(r => r.classList.remove('drag-over'));
+                });
+                row.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    if (draggedAircraftEl && row !== draggedAircraftEl) row.classList.add('drag-over');
+                });
+                row.addEventListener('dragleave', () => row.classList.remove('drag-over'));
+                row.addEventListener('drop', async (e) => {
+                    e.preventDefault();
+                    row.classList.remove('drag-over');
+                    if (!draggedAircraftItem || draggedAircraftEl === row) return;
+                    // Nur innerhalb derselben Kategorie
+                    if ((draggedAircraftItem.category || 'Sonstige') !== (item.category || 'Sonstige')) return;
+                    const srcCat = draggedAircraftItem.category || 'Sonstige';
+                    const catItems = items
+                        .filter(i => (i.category || 'Sonstige') === srcCat)
+                        .sort((a, b) => (a.order || 0) - (b.order || 0));
+                    const without = catItems.filter(i => i.id !== draggedAircraftItem.id);
+                    const targetIdx = without.findIndex(i => i.id === item.id);
+                    without.splice(targetIdx === -1 ? without.length : targetIdx, 0, draggedAircraftItem);
+                    try {
+                        const base = Date.now();
+                        await Promise.all(without.map((fi, idx) =>
+                            updateDoc(doc(db, 'aircraft', fi.id), { order: base + idx * 100 })
+                        ));
+                    } catch (err) {
+                        alert('Sortierung konnte nicht gespeichert werden: ' + err.message);
+                    }
+                    draggedAircraftItem = null;
+                });
+
+                row.appendChild(handle);
                 row.appendChild(info);
                 row.appendChild(btns);
                 container.appendChild(row);
@@ -1071,7 +1125,7 @@ function renderAircraftPublic(container, items) {
         const desc = categoryDescriptions[cat] ? `<p style="color:var(--text-light); margin-bottom:20px;">${categoryDescriptions[cat]}</p>` : '';
         section.innerHTML = `<h2 style="color:var(--primary); font-family:Montserrat,sans-serif; margin-bottom:8px;">${cat}</h2>${desc}`;
         const grid = document.createElement('div');
-        grid.className = 'card-grid';
+        grid.className = 'aircraft-card-grid';
         byCategory[cat].forEach(item => {
             const card = document.createElement('div');
             card.className = 'card';
@@ -1086,7 +1140,8 @@ function renderAircraftPublic(container, items) {
                     <img src="${item.imageUrl || 'images/hero.jpg'}" alt="${item.name || ''}" loading="lazy" class="zoomable" onerror="this.src='images/hero.jpg'">
                 </div>
                 <div class="card-body">
-                    <h3 class="card-title"${item.highlight ? ' style="color:var(--accent);"' : ''}>${item.name || '—'} ${item.registration ? `<span style="font-weight:normal; font-size:0.9rem; color:#666;">(${item.registration})</span>` : ''}</h3>
+                    <h3 class="card-title"${item.highlight ? ' style="color:var(--accent);"' : ''}>${item.name || '—'}</h3>
+                    ${item.registration ? `<p style="font-size:0.9rem; color:#888; margin-top:-8px; margin-bottom:8px;">${item.registration}</p>` : ''}
                     ${item.type ? `<p style="font-size:0.9rem; margin-bottom:10px; font-weight:600;">${item.type}</p>` : ''}
                     ${specsList ? `<ul class="data-list" style="font-size:0.9rem; margin-top:10px;">${specsList}</ul>` : ''}
                 </div>
