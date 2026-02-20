@@ -83,8 +83,10 @@ async function uploadToGitHub(blob, filename, token) {
 
 async function initFirebase() {
     const newsContainer = document.getElementById('dynamic-news-list');
-    
-    if (!newsContainer) return;
+    const pricesContainer = document.getElementById('dynamic-prices-list');
+    const pricesAdmin = document.getElementById('prices-admin-list');
+
+    if (!newsContainer && !pricesContainer && !pricesAdmin) return;
 
     try {
         if (firebaseConfig && Object.keys(firebaseConfig).length > 0) {
@@ -103,7 +105,8 @@ async function initFirebase() {
             throw new Error("Fehler");
         }
 
-        await startNewsLogic();
+        if (newsContainer) await startNewsLogic();
+        if (pricesContainer || pricesAdmin) await startPricesLogic();
 
     } catch (e) {
         if(newsContainer) {
@@ -593,6 +596,175 @@ async function startNewsLogic() {
                         }
                     }
                     
+// === Preise (Gastfluggebühren) ===
+
+let currentPriceItems = [];
+
+async function startPricesLogic() {
+    const pricesContainer = document.getElementById('dynamic-prices-list');
+    const pricesAdminList = document.getElementById('prices-admin-list');
+    const addPriceBtn = document.getElementById('add-price-btn');
+
+    onAuthStateChanged(auth, (user) => {
+        if (!user) {
+            // Auf Seiten ohne News-Logik: Anonym einloggen
+            if (!document.getElementById('dynamic-news-list')) {
+                signInAnonymously(auth).catch(() => {});
+            }
+            return;
+        }
+
+        const isAdmin = user && !user.isAnonymous;
+        const pricesRef = collection(db, 'prices');
+
+        onSnapshot(pricesRef, (snapshot) => {
+            const items = [];
+            snapshot.forEach(d => items.push({ id: d.id, ...d.data() }));
+            items.sort((a, b) => (a.order || 0) - (b.order || 0));
+            currentPriceItems = items;
+
+            if (pricesContainer) renderPublicPrices(pricesContainer, items);
+            if (pricesAdminList) renderAdminPrices(pricesAdminList, items, isAdmin);
+        });
+    });
+
+    // Neuen Preis hinzufügen
+    if (addPriceBtn) {
+        addPriceBtn.onclick = async () => {
+            if (!auth.currentUser || auth.currentUser.isAnonymous) {
+                alert('Keine Berechtigung.');
+                return;
+            }
+            try {
+                await addDoc(collection(db, 'prices'), {
+                    label: 'Neue Position',
+                    description: 'Beschreibung eingeben',
+                    price: '0,00 €',
+                    order: currentPriceItems.length
+                });
+            } catch (e) {
+                alert('Fehler: ' + e.message);
+            }
+        };
+    }
+}
+
+function renderPublicPrices(container, items) {
+    if (items.length === 0) return; // Statische Fallback-Preise beibehalten
+    container.innerHTML = '';
+    items.forEach(item => {
+        const li = document.createElement('li');
+        const strong = document.createElement('strong');
+        strong.textContent = item.label || '';
+        li.appendChild(strong);
+        li.appendChild(document.createTextNode(' '));
+        const desc = document.createElement('span');
+        desc.textContent = item.description || '';
+        li.appendChild(desc);
+        li.appendChild(document.createTextNode(' '));
+        const priceSpan = document.createElement('span');
+        priceSpan.style.cssText = 'float:right; font-weight:bold; color:var(--primary);';
+        priceSpan.textContent = item.price || '';
+        li.appendChild(priceSpan);
+        container.appendChild(li);
+    });
+}
+
+function renderAdminPrices(container, items, isAdmin) {
+    if (!isAdmin) { container.innerHTML = ''; return; }
+
+    container.innerHTML = '';
+
+    if (items.length === 0) {
+        const info = document.createElement('p');
+        info.style.color = '#999';
+        info.textContent = 'Noch keine Preise vorhanden.';
+        container.appendChild(info);
+
+        const seedBtn = document.createElement('button');
+        seedBtn.className = 'btn';
+        seedBtn.textContent = 'Standardpreise importieren';
+        seedBtn.style.marginTop = '10px';
+        seedBtn.onclick = seedDefaultPrices;
+        container.appendChild(seedBtn);
+        return;
+    }
+
+    items.forEach((item, idx) => {
+        const row = document.createElement('div');
+        row.style.cssText = 'background:#f9f9f9; padding:15px; margin-bottom:10px; border-radius:8px;';
+
+        row.innerHTML = `
+            <div style="display:flex; flex-wrap:wrap; gap:10px; margin-bottom:8px;">
+                <input type="text" data-field="label" placeholder="Bezeichnung" style="flex:2 1 150px; padding:8px; border:1px solid #ddd; border-radius:4px;">
+                <input type="text" data-field="description" placeholder="Beschreibung" style="flex:2 1 150px; padding:8px; border:1px solid #ddd; border-radius:4px;">
+                <input type="text" data-field="price" placeholder="Preis" style="flex:0 0 100px; padding:8px; border:1px solid #ddd; border-radius:4px; text-align:right;">
+            </div>
+            <div style="display:flex; gap:8px; align-items:center;">
+                <button class="save-price-btn btn" style="padding:5px 12px; font-size:0.85rem;">Speichern</button>
+                <button class="delete-price-btn btn btn-secondary" style="padding:5px 12px; font-size:0.85rem; background:#c0392b; color:#fff; border-color:#c0392b;">Löschen</button>
+                <span class="price-save-status" style="color:#27ae60; font-size:0.8rem; display:none;"></span>
+            </div>
+        `;
+
+        // Werte sicher per DOM-Property setzen
+        row.querySelector('[data-field="label"]').value = item.label || '';
+        row.querySelector('[data-field="description"]').value = item.description || '';
+        row.querySelector('[data-field="price"]').value = item.price || '';
+
+        row.querySelector('.save-price-btn').onclick = async () => {
+            const data = {
+                label: row.querySelector('[data-field="label"]').value,
+                description: row.querySelector('[data-field="description"]').value,
+                price: row.querySelector('[data-field="price"]').value,
+                order: idx
+            };
+            try {
+                await updateDoc(doc(db, 'prices', item.id), data);
+                const status = row.querySelector('.price-save-status');
+                status.textContent = 'Gespeichert';
+                status.style.display = 'inline';
+                setTimeout(() => status.style.display = 'none', 2000);
+            } catch (e) {
+                alert('Fehler beim Speichern: ' + e.message);
+            }
+        };
+
+        row.querySelector('.delete-price-btn').onclick = async () => {
+            if (confirm('\"' + (item.label || 'Position') + '\" wirklich löschen?')) {
+                try {
+                    await deleteDoc(doc(db, 'prices', item.id));
+                } catch (e) {
+                    alert('Fehler beim Löschen: ' + e.message);
+                }
+            }
+        };
+
+        container.appendChild(row);
+    });
+}
+
+async function seedDefaultPrices() {
+    const defaults = [
+        { label: "Segelflug (Windenstart)", description: "bis 20 Minuten Flugzeit", price: "48,00 €", order: 0 },
+        { label: "Gruppen ab 10 Personen", description: "bis 20 Minuten, Windenstart", price: "30,00 €", order: 1 },
+        { label: "Segelflug (F-Schlepp)", description: "bis 20 Minuten", price: "80,00 €", order: 2 },
+        { label: "Verlängerung Segelflug", description: "Jede weitere Minute über 20 Min. Flugzeit", price: "0,75 €", order: 3 },
+        { label: "Motorsegler", description: "bis 15 Minuten", price: "55,00 €", order: 4 },
+        { label: "Verlängerung Motorsegler", description: "jede weitere Minute", price: "3,75 €", order: 5 },
+        { label: "Segelkunstflug", description: "mit F-Schlepp pauschal", price: "160,00 €", order: 6 }
+    ];
+
+    try {
+        const pricesRef = collection(db, 'prices');
+        for (const p of defaults) {
+            await addDoc(pricesRef, p);
+        }
+    } catch (e) {
+        alert('Import fehlgeschlagen: ' + e.message);
+    }
+}
+
                     if (document.readyState === 'loading') {
                         document.addEventListener('DOMContentLoaded', initFirebase);
                     } else {
