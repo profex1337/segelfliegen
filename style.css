@@ -878,7 +878,7 @@ textarea { resize: vertical; }
 }
 
 /* Sticky Image Container */
-.news-image-container { 
+.news-image-container {
     position: sticky;
     top: 120px;
     width: 100%;
@@ -889,14 +889,16 @@ textarea { resize: vertical; }
     justify-content: center;
     overflow: hidden;
     background: transparent;
-    box-shadow: none;
+    border-radius: var(--radius);
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.14);
 }
 
-.news-image-container img { 
+.news-image-container img {
     width: 100%;
     height: 100%;
     object-fit: contain;
     object-position: center;
+    border-radius: var(--radius);
     transition: opacity 0.5s ease, transform 0.8s ease;
 }
 
