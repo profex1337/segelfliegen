@@ -316,9 +316,10 @@ function initCookieConsent() {
     const bannerHTML = `
     <div id="cookie-banner" class="cookie-banner">
         <div class="cookie-content">
-            <h3>🍪 Datenschutzeinstellungen</h3>
+            <h3>Datenschutzeinstellungen</h3>
             <p>
-                Wir nutzen Cookies und externe Dienste (Google Maps, YouTube, Firebase), um Inhalte anzuzeigen. 
+                Diese Website nutzt essenzielle Dienste (Firebase) für die Anzeige von Inhalten.
+                Zusätzlich können optionale Inhalte (Google Maps, YouTube) eingebettet werden, die erst nach Ihrer Zustimmung geladen werden.
                 <a href="datenschutz.html" style="text-decoration: underline;">Mehr erfahren</a>.
             </p>
             <div class="cookie-buttons">

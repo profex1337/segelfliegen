@@ -37,6 +37,8 @@ segelfliegen/
 │                         #   prices, and aircraft fleet; GitHub API image uploads
 ├── style.css             # All styling (CSS variables, responsive)
 │
+├── fonts/                # Self-hosted web fonts (WOFF2): Montserrat, Open Sans, Tangerine
+├── lib/flatpickr/        # Self-hosted Flatpickr date picker (CSS, JS, German locale)
 ├── images/               # Static image assets (logos, aircraft, team photos, news images)
 ├── videos/               # Hero section .mp4 videos
 │
@@ -59,8 +61,8 @@ There is **no server-side runtime** and **no build pipeline**. Every file is ser
 | Form submissions | Formspree (third-party service, no backend needed) — AJAX via `fetch` |
 | Authentication (admin) | Firebase Authentication (email/password) |
 | News image hosting | GitHub repository (`images/` folder) via GitHub Contents API |
-| Date picker | Flatpickr loaded from jsDelivr CDN |
-| Fonts | Google Fonts CDN |
+| Date picker | Flatpickr self-hosted in `lib/flatpickr/` (DSGVO-compliant, no CDN) |
+| Fonts | Self-hosted in `fonts/` (WOFF2, DSGVO-compliant, no Google server contact) |
 | Maps | Google Maps Embed API |
 
 ### Shared Header & Footer
@@ -272,8 +274,8 @@ There is no test suite and no linter/formatter configuration. Validate changes b
 | **GitHub API** | `news-db.js` `uploadToGitHub()` / `deleteFromGitHub()` | Used for news & aircraft image storage. Requires admin to supply a PAT with `contents: write`; stored in `localStorage`. |
 | **Formspree** | `action` attributes in HTML forms | Both forms share the same endpoint (`f/meekadza`); present in `mitfliegen.html` and `kontakt.html` only. |
 | **Google Maps** | Embed `<iframe>` in `kontakt.html` | Uses consent overlay pattern; iframe only loads after cookie accept. |
-| **Flatpickr** | CDN `<script>` in booking-form pages | German locale (`flatpickr/dist/l10n/de.js`) is loaded separately. |
-| **Google Fonts** | `<link>` in `<head>` of each page | Montserrat (headings) + Open Sans (body) + Tangerine (decorative). |
+| **Flatpickr** | Self-hosted in `lib/flatpickr/` | Loaded locally in `mitfliegen.html` and `kontakt.html`. No CDN requests. |
+| **Fonts** | Self-hosted in `fonts/` | Montserrat, Open Sans, Tangerine as WOFF2. `@font-face` in `style.css`. No Google server contact. |
 | **GitHub Pages** | `CNAME` file | Do not delete or rename this file — it maps the domain. |
 
 ---
