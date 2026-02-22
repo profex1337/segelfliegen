@@ -49,7 +49,7 @@ const footerHTML = `
         <div class="footer-col-center">
             <div class="footer-contact">
                 <a href="tel:+499189310" style="display: block; margin-bottom: 5px;">📞 +49 9189 310</a>
-                <a href="mailto:info@segelfliegenaltdorf.de" style="display: block;">📧 info@segelfliegenaltdorf.de</a>
+                <a href="mailto:info@segelfliegen-altdorf.de" style="display: block;">📧 info@segelfliegen-altdorf.de</a>
             </div>
             
             <div class="footer-socials">
@@ -475,3 +475,4 @@ function initSlideshows() {
     });
 
 }
+
