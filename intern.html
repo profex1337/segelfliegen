@@ -176,6 +176,7 @@
                     <button class="intern-tab-btn active" data-tab="tab-news">📝 News</button>
                     <button class="intern-tab-btn" data-tab="tab-preise">💰 Gastfluggebühren</button>
                     <button class="intern-tab-btn" data-tab="tab-flugzeugpark">✈️ Flugzeugpark</button>
+                    <button class="intern-tab-btn" data-tab="tab-gutscheine">🎁 Gutscheine</button>
                 </div>
 
                 <div class="intern-tab-panels">
@@ -306,6 +307,47 @@
                         </div>
                     </div>
                 </div>
+                <!-- TAB 4: GUTSCHEINE -->
+                <div id="tab-gutscheine" class="intern-tab-panel">
+                    <div class="dashboard-card" style="border-top-color: var(--accent);">
+                        <h3>Gutschein erstellen</h3>
+                        <p style="color: var(--text-light); margin-bottom: 20px;">Erstellen Sie einen personalisierten Gutschein als PDF zum Versand per E-Mail.</p>
+                        <form id="gutschein-form">
+                            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px;">
+                                <div>
+                                    <label style="display:block; margin-bottom:6px; font-weight:600; font-size:0.9rem;">Empfänger-Name *</label>
+                                    <input type="text" id="voucher-recipient" placeholder="Name des Beschenkten" required style="width:100%; padding:10px; border:1px solid #ddd; border-radius:6px;">
+                                </div>
+                                <div>
+                                    <label style="display:block; margin-bottom:6px; font-weight:600; font-size:0.9rem;">Flugart *</label>
+                                    <select id="voucher-flight-type" required style="width:100%; padding:10px; border:1px solid #ddd; border-radius:6px; background:#fff;">
+                                        <option value="" disabled selected>Bitte wählen...</option>
+                                        <option value="Segelflug (Windenstart)">Segelflug (Windenstart)</option>
+                                        <option value="Segelflug (F-Schlepp)">Segelflug (F-Schlepp)</option>
+                                        <option value="Kunstflug">Kunstflug</option>
+                                        <option value="Motorflug">Motorflug</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div style="margin-bottom:10px;">
+                                <label style="display:block; margin-bottom:6px; font-weight:600; font-size:0.9rem;">Persönlicher Grußtext (optional)</label>
+                                <textarea id="voucher-greeting" rows="3" placeholder="z.B. Alles Gute zum Geburtstag!" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:6px;"></textarea>
+                            </div>
+                            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:20px;">
+                                <div>
+                                    <label style="display:block; margin-bottom:6px; font-weight:600; font-size:0.9rem;">Gutschein-Nummer</label>
+                                    <input type="text" id="voucher-number" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:6px;">
+                                </div>
+                                <div>
+                                    <label style="display:block; margin-bottom:6px; font-weight:600; font-size:0.9rem;">Gültig bis</label>
+                                    <input type="text" id="voucher-valid-until" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:6px;">
+                                </div>
+                            </div>
+                            <button type="button" id="gutschein-generate-btn" class="btn" style="min-width: 280px;">PDF generieren & herunterladen</button>
+                        </form>
+                    </div>
+                </div>
+
                 </div><!-- .intern-tab-panels -->
 
             </div><!-- .content-block -->
@@ -315,9 +357,199 @@
     <footer id="main-footer"></footer>
     <button id="btn-back-to-top" title="Nach oben">↑</button>
 
+    <script src="lib/jspdf/jspdf.umd.min.js"></script>
     <script src="script.js"></script>
     <script type="module" src="news-db.js"></script>
     <script>
+        // Gutschein-Nummer und Gültigkeitsdatum automatisch setzen
+        (function initVoucherDefaults() {
+            const now = new Date();
+            const pad = n => String(n).padStart(2, '0');
+            const nr = `GS-${now.getFullYear()}-${pad(now.getMonth()+1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}`;
+            const numInput = document.getElementById('voucher-number');
+            if (numInput) numInput.value = nr;
+
+            const validDate = new Date(now);
+            validDate.setFullYear(validDate.getFullYear() + 2);
+            const validInput = document.getElementById('voucher-valid-until');
+            if (validInput) validInput.value = `${pad(validDate.getDate())}.${pad(validDate.getMonth()+1)}.${validDate.getFullYear()}`;
+        })();
+
+        // Bilder als Base64 laden (einmalig, für PDF)
+        let logoBase64 = null;
+        let gutscheinBgBase64 = null;
+
+        function loadImageAsBase64(src) {
+            return fetch(src)
+                .then(r => r.blob())
+                .then(blob => new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onloadend = () => resolve(reader.result);
+                    reader.onerror = reject;
+                    reader.readAsDataURL(blob);
+                }));
+        }
+
+        loadImageAsBase64('images/logo.png').then(d => { logoBase64 = d; }).catch(() => {});
+        loadImageAsBase64('images/Gutschein.jpg').then(d => { gutscheinBgBase64 = d; }).catch(() => {});
+
+        // PDF-Generator
+        document.getElementById('gutschein-generate-btn')?.addEventListener('click', () => {
+            const recipient = document.getElementById('voucher-recipient').value.trim();
+            const flightType = document.getElementById('voucher-flight-type').value;
+            const greeting = document.getElementById('voucher-greeting').value.trim();
+            const voucherNr = document.getElementById('voucher-number').value.trim();
+            const validUntil = document.getElementById('voucher-valid-until').value.trim();
+
+            if (!recipient || !flightType) {
+                alert('Bitte Empfänger-Name und Flugart ausfüllen.');
+                return;
+            }
+
+            if (typeof jspdf === 'undefined') {
+                alert('jsPDF konnte nicht geladen werden.');
+                return;
+            }
+
+            const { jsPDF } = jspdf;
+            const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+            const w = doc.internal.pageSize.getWidth();   // 297
+            const h = doc.internal.pageSize.getHeight();  // 210
+
+            // --- Hintergrundbild (Gutschein.jpg) über die gesamte Seite ---
+            if (gutscheinBgBase64) {
+                try {
+                    // Bild proportional auf volle Breite skalieren, oben ausrichten
+                    // Originalbild ist Hochformat — wir nutzen es als linken Bildbereich
+                    // Bild links, ca. 40% der Breite
+                    const imgW = w * 0.4;
+                    const imgH = h;
+                    doc.addImage(gutscheinBgBase64, 'JPEG', 0, 0, imgW, imgH);
+
+                    // Sanfter Übergang: Gradient-Effekt durch mehrere halbtransparente Streifen
+                    for (let i = 0; i < 30; i++) {
+                        const alpha = Math.min(255, Math.round((i / 30) * 255));
+                        doc.setFillColor(255, 255, 255);
+                        doc.setGState(new doc.GState({ opacity: i / 30 }));
+                        doc.rect(imgW - 30 + i, 0, 1.2, h, 'F');
+                    }
+                    // Rest der Seite weiß
+                    doc.setGState(new doc.GState({ opacity: 1 }));
+                    doc.setFillColor(255, 255, 255);
+                    doc.rect(imgW, 0, w - imgW, h, 'F');
+                } catch(e) {
+                    // Fallback: weißer Hintergrund
+                    doc.setFillColor(255, 255, 255);
+                    doc.rect(0, 0, w, h, 'F');
+                }
+            } else {
+                doc.setFillColor(255, 255, 255);
+                doc.rect(0, 0, w, h, 'F');
+            }
+
+            // --- Rahmen ---
+            doc.setDrawColor(15, 52, 96);
+            doc.setLineWidth(2.5);
+            doc.rect(5, 5, w - 10, h - 10);
+
+            // Akzent-Linie oben (--accent: #e94560)
+            doc.setDrawColor(233, 69, 96);
+            doc.setLineWidth(1.5);
+            doc.line(5, 5, w - 5, 5);
+
+            // --- Textbereich (rechte Hälfte) ---
+            const textCenterX = w * 0.7;   // Mitte des Textbereichs
+            const textLeft = w * 0.45;
+            const textRight = w - 15;
+            const textWidth = textRight - textLeft;
+
+            // Logo oben rechts im Textbereich
+            if (logoBase64) {
+                try {
+                    doc.addImage(logoBase64, 'PNG', textCenterX - 12, 14, 24, 24);
+                } catch(e) {}
+            }
+
+            // Club-Name unter Logo
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(8);
+            doc.setTextColor(15, 52, 96);
+            doc.text('Segelflieger im Post-SV Nürnberg e.V.', textCenterX, 44, { align: 'center' });
+
+            // Überschrift "GUTSCHEIN"
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(38);
+            doc.setTextColor(15, 52, 96);
+            doc.text('GUTSCHEIN', textCenterX, 62, { align: 'center' });
+
+            // Dekorative Linie
+            doc.setDrawColor(233, 69, 96);
+            doc.setLineWidth(0.8);
+            doc.line(textCenterX - 40, 66, textCenterX + 40, 66);
+
+            // Flugart
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(14);
+            doc.setTextColor(233, 69, 96);
+            doc.text(flightType, textCenterX, 78, { align: 'center' });
+
+            // "Für" + Empfänger
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(11);
+            doc.setTextColor(120, 120, 120);
+            doc.text('für', textCenterX, 92, { align: 'center' });
+
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(22);
+            doc.setTextColor(15, 52, 96);
+            doc.text(recipient, textCenterX, 103, { align: 'center' });
+
+            // Grußtext
+            let nextY = 116;
+            if (greeting) {
+                doc.setFont('helvetica', 'italic');
+                doc.setFontSize(11);
+                doc.setTextColor(80, 80, 80);
+                const lines = doc.splitTextToSize(`\u201E${greeting}\u201C`, textWidth - 20);
+                doc.text(lines, textCenterX, nextY, { align: 'center' });
+                nextY += lines.length * 5.5 + 8;
+            }
+
+            // Trennlinie vor Details
+            nextY = Math.max(nextY, 135);
+            doc.setDrawColor(200, 200, 200);
+            doc.setLineWidth(0.3);
+            doc.line(textCenterX - 35, nextY, textCenterX + 35, nextY);
+            nextY += 8;
+
+            // Gutschein-Nr. und Gültig bis
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(9);
+            doc.setTextColor(100, 100, 100);
+            if (voucherNr) {
+                doc.text(`Gutschein-Nr.: ${voucherNr}`, textCenterX, nextY, { align: 'center' });
+                nextY += 5.5;
+            }
+            if (validUntil) {
+                doc.text(`Gültig bis: ${validUntil}`, textCenterX, nextY, { align: 'center' });
+            }
+
+            // --- Footer ---
+            doc.setDrawColor(15, 52, 96);
+            doc.setLineWidth(0.3);
+            doc.line(textLeft, h - 25, textRight, h - 25);
+
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(7);
+            doc.setTextColor(100, 100, 100);
+            doc.text('Segelflugplatz Altdorf-Hagenhausen | Kastanienweg 6, 92348 Berg bei Neumarkt', textCenterX, h - 20, { align: 'center' });
+            doc.text('Tel: +49 9189 310 | www.segelfliegenaltdorf.de', textCenterX, h - 16, { align: 'center' });
+
+            // PDF speichern
+            const filename = voucherNr ? `Gutschein_${voucherNr}.pdf` : 'Gutschein.pdf';
+            doc.save(filename);
+        });
+
         // Tab-Steuerung
         document.querySelectorAll('.intern-tab-btn').forEach(btn => {
             btn.addEventListener('click', () => {

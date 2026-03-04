@@ -101,6 +101,7 @@
         <div class="category-nav">
             <a href="#infos" class="btn-cat">Infos</a>
             <a href="#preise" class="btn-cat">Preise</a>
+            <a href="#gutschein" class="btn-cat">Gutschein</a>
             <a href="#anfrage-formular" class="btn-cat">Kontakt</a>
         </div>
 
@@ -236,7 +237,79 @@
             </div>
         </div>
 
-        
+
+        <div class="content-block" id="gutschein" style="border-top: 5px solid var(--accent); margin-top: 40px;">
+            <h2 style="text-align: center; margin-bottom: 10px;">Gutschein bestellen</h2>
+            <p style="text-align: center; margin-bottom: 40px; color: var(--text-light);">Verschenken Sie ein unvergessliches Flugerlebnis! Das perfekte Geschenk für jeden Anlass.</p>
+
+            <div style="display: flex; flex-wrap: wrap; gap: 30px; align-items: flex-start; margin-bottom: 40px;">
+                <div style="flex: 1 1 300px;">
+                    <img src="images/Gutschein.jpg" alt="Flug-Gutschein Segelflugplatz Altdorf" loading="lazy" class="zoomable" style="border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); width: 100%; height: auto; object-fit: cover;">
+                </div>
+                <div style="flex: 1 1 350px;">
+                    <h3 style="margin-top: 0;">So funktioniert's</h3>
+                    <ol style="line-height: 2; padding-left: 20px;">
+                        <li>Füllen Sie das Bestellformular unten aus</li>
+                        <li>Sie erhalten eine Bestätigung per E-Mail</li>
+                        <li>Überweisen Sie den Betrag auf unser Vereinskonto</li>
+                        <li>Nach Zahlungseingang senden wir Ihnen den personalisierten Gutschein als PDF per E-Mail</li>
+                    </ol>
+                </div>
+            </div>
+
+            <form action="https://formspree.io/f/meekadza" method="POST" style="max-width: 700px; margin: 0 auto;">
+                <input type="hidden" name="_subject" value="Neue Gutschein-Bestellung">
+
+                <h3 style="margin-bottom: 20px; font-size: 1.1rem; color: var(--primary);">Ihre Daten</h3>
+                <div class="form-responsive">
+                    <div class="form-group">
+                        <label for="gutschein-name">Ihr Name *</label>
+                        <input type="text" id="gutschein-name" name="name" required placeholder="Max Mustermann">
+                    </div>
+                    <div class="form-group">
+                        <label for="gutschein-email">E-Mail Adresse *</label>
+                        <input type="email" id="gutschein-email" name="email" required placeholder="ihre@email.de">
+                    </div>
+                </div>
+                <div class="form-responsive" style="margin-top: 20px;">
+                    <div class="form-group">
+                        <label for="gutschein-telefon">Telefonnummer</label>
+                        <input type="tel" id="gutschein-telefon" name="telefon" placeholder="Für Rückfragen">
+                    </div>
+                    <div class="form-group">
+                        <label for="gutschein-flugart">Flugart *</label>
+                        <select id="gutschein-flugart" name="flugart" required>
+                            <option value="" disabled selected>Bitte wählen...</option>
+                            <option value="Segelflug (Windenstart)">Segelflug (Windenstart)</option>
+                            <option value="Segelflug (F-Schlepp)">Segelflug (F-Schlepp)</option>
+                            <option value="Kunstflug">Kunstflug</option>
+                            <option value="Motorflug">Motorflug</option>
+                        </select>
+                    </div>
+                </div>
+
+                <h3 style="margin-top: 30px; margin-bottom: 20px; font-size: 1.1rem; color: var(--primary);">Gutschein-Details</h3>
+                <div class="form-group">
+                    <label for="gutschein-empfaenger">Name des Beschenkten *</label>
+                    <input type="text" id="gutschein-empfaenger" name="empfaenger" required placeholder="Für wen ist der Gutschein?">
+                </div>
+                <div class="form-group" style="margin-top: 20px;">
+                    <label for="gutschein-grusstext">Persönlicher Grußtext (optional)</label>
+                    <textarea id="gutschein-grusstext" name="grusstext" rows="3" placeholder="z.B. Alles Gute zum Geburtstag! Viel Spaß beim Fliegen!"></textarea>
+                </div>
+
+                <div class="checkbox-wrapper" style="margin-top: 25px;">
+                    <input type="checkbox" id="gutschein-datenschutz" name="datenschutz" required>
+                    <label for="gutschein-datenschutz">Ich bin damit einverstanden, dass diese Daten zum Zweck der Kontaktaufnahme gespeichert werden.*</label>
+                </div>
+
+                <div style="text-align: center; margin-top: 30px;">
+                    <button type="submit" class="btn" style="min-width: 250px;">Gutschein bestellen</button>
+                </div>
+            </form>
+        </div>
+
+
         <div class="content-block" id="anfrage-formular" style="border-top: 5px solid var(--accent); margin-top: 40px;">
             <h2 style="text-align: center; margin-bottom: 10px;">Flug- oder Gutschein-Anfrage</h2>
             <p style="text-align: center; margin-bottom: 40px; color: var(--text-light);">Senden Sie uns unverbindlich Ihren Wunschtermin.</p>

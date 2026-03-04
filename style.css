@@ -1723,3 +1723,10 @@ body.admin-mode .delete-btn { display: inline-block; }
     color: var(--accent);
     transform: translateY(-2px);
 }
+
+/* Gutschein-Formular im Admin: responsive Grid */
+@media (max-width: 600px) {
+    #gutschein-form div[style*="grid-template-columns"] {
+        grid-template-columns: 1fr !important;
+    }
+}
