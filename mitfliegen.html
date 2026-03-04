@@ -290,12 +290,12 @@
                 <div class="form-responsive" style="margin-top: 20px;">
                     <div class="form-group" id="gutschein-zusatzzeit-wrap">
                         <label for="gutschein-zusatzzeit">Zusätzliche Flugzeit (Minuten)</label>
-                        <input type="number" id="gutschein-zusatzzeit" name="zusatzzeit" min="0" max="120" value="0" placeholder="0" oninput="updateGutscheinWert()" style="width:100%;">
+                        <input type="number" id="gutschein-zusatzzeit" name="zusatzzeit" min="0" max="120" value="0" placeholder="0" oninput="updateGutscheinWert()">
                         <small style="color:var(--text-light);">Über die inkludierte Grundzeit hinaus</small>
                     </div>
                     <div class="form-group">
                         <label>Gutscheinwert</label>
-                        <div id="gutschein-wert-display" style="padding:10px; background:var(--bg-light); border-radius:6px; font-size:1.2rem; font-weight:700; color:var(--primary); text-align:center;">— €</div>
+                        <div id="gutschein-wert-display" style="padding:12px 15px; background:var(--bg-light); border:1px solid #ddd; border-radius:8px; font-size:1.1rem; font-weight:700; color:var(--primary); text-align:center;">— €</div>
                         <input type="hidden" id="gutschein-wert-hidden" name="wert" value="">
                     </div>
                 </div>
