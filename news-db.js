@@ -87,8 +87,9 @@ async function initFirebase() {
     const pricesAdmin = document.getElementById('prices-admin-list');
     const aircraftAdminList = document.getElementById('aircraft-admin-list');
     const aircraftPublicList = document.getElementById('dynamic-aircraft-list');
+    const voucherList = document.getElementById('voucher-list');
 
-    if (!newsContainer && !pricesContainer && !pricesAdmin && !aircraftAdminList && !aircraftPublicList) return;
+    if (!newsContainer && !pricesContainer && !pricesAdmin && !aircraftAdminList && !aircraftPublicList && !voucherList) return;
 
     try {
         if (firebaseConfig && Object.keys(firebaseConfig).length > 0) {
@@ -110,6 +111,7 @@ async function initFirebase() {
         if (newsContainer) await startNewsLogic();
         if (pricesContainer || pricesAdmin) await startPricesLogic();
         if (aircraftAdminList || aircraftPublicList) await startAircraftLogic();
+        if (voucherList) await startVoucherLogic();
 
     } catch (e) {
         if(newsContainer) {
@@ -1160,6 +1162,129 @@ function renderAircraftPublic(container, items) {
         });
         section.appendChild(grid);
         container.appendChild(section);
+    });
+}
+
+// === GUTSCHEIN-VERWALTUNG ===
+
+async function startVoucherLogic() {
+    const listContainer = document.getElementById('voucher-list');
+    if (!listContainer) return;
+
+    const voucherRef = collection(db, 'vouchers');
+
+    onAuthStateChanged(auth, (user) => {
+        if (!user) return;
+        const isAdmin = !user.isAnonymous;
+        if (!isAdmin) return;
+
+        onSnapshot(voucherRef, (snapshot) => {
+            const items = [];
+            snapshot.forEach(d => items.push({ id: d.id, ...d.data() }));
+            items.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+            renderVoucherList(listContainer, items);
+        });
+    });
+
+    // Gutschein nach PDF-Generierung speichern (Event von intern.html)
+    window.saveVoucherToFirestore = async (data) => {
+        if (!auth.currentUser || auth.currentUser.isAnonymous) return;
+        try {
+            await addDoc(voucherRef, {
+                ...data,
+                timestamp: Date.now()
+            });
+        } catch (e) {
+            console.error('Gutschein speichern fehlgeschlagen:', e);
+        }
+    };
+
+    // Gutschein als eingelöst markieren
+    window.toggleVoucherRedeemed = async (docId, currentStatus) => {
+        if (!auth.currentUser || auth.currentUser.isAnonymous) return;
+        try {
+            await updateDoc(doc(db, 'vouchers', docId), { redeemed: !currentStatus });
+        } catch (e) {
+            console.error('Status-Update fehlgeschlagen:', e);
+        }
+    };
+
+    // Gutschein löschen
+    window.deleteVoucher = async (docId) => {
+        if (!auth.currentUser || auth.currentUser.isAnonymous) return;
+        if (!confirm('Gutschein wirklich löschen?')) return;
+        try {
+            await deleteDoc(doc(db, 'vouchers', docId));
+        } catch (e) {
+            console.error('Löschen fehlgeschlagen:', e);
+        }
+    };
+}
+
+function renderVoucherList(container, items) {
+    if (items.length === 0) {
+        container.innerHTML = '<p style="color:#999; text-align:center; padding:20px;">Noch keine Gutscheine erstellt.</p>';
+        return;
+    }
+
+    const openCount = items.filter(v => !v.redeemed).length;
+    const redeemedCount = items.filter(v => v.redeemed).length;
+
+    container.innerHTML = `
+        <div style="display:flex; gap:16px; margin-bottom:20px; flex-wrap:wrap;">
+            <div style="background:var(--bg-light); padding:12px 20px; border-radius:8px; flex:1; min-width:120px; text-align:center;">
+                <div style="font-size:1.8rem; font-weight:700; color:var(--primary);">${items.length}</div>
+                <div style="font-size:0.8rem; color:var(--text-light);">Gesamt</div>
+            </div>
+            <div style="background:#e8f5e9; padding:12px 20px; border-radius:8px; flex:1; min-width:120px; text-align:center;">
+                <div style="font-size:1.8rem; font-weight:700; color:#2e7d32;">${openCount}</div>
+                <div style="font-size:0.8rem; color:#2e7d32;">Offen</div>
+            </div>
+            <div style="background:#fff3e0; padding:12px 20px; border-radius:8px; flex:1; min-width:120px; text-align:center;">
+                <div style="font-size:1.8rem; font-weight:700; color:#e65100;">${redeemedCount}</div>
+                <div style="font-size:0.8rem; color:#e65100;">Eingelöst</div>
+            </div>
+        </div>
+        <div id="voucher-items"></div>
+    `;
+
+    const itemsContainer = container.querySelector('#voucher-items');
+    items.forEach(item => {
+        const row = document.createElement('div');
+        row.style.cssText = \`
+            display:flex; align-items:center; gap:16px; padding:14px 18px;
+            margin-bottom:8px; border-radius:8px; flex-wrap:wrap;
+            background:\${item.redeemed ? '#fff8e1' : '#f9f9f9'};
+            border-left:4px solid \${item.redeemed ? '#ffa000' : '#2e7d32'};
+            opacity:\${item.redeemed ? '0.75' : '1'};
+        \`;
+
+        const createdDate = item.timestamp ? new Date(item.timestamp).toLocaleDateString('de-DE') : '—';
+
+        row.innerHTML = \`
+            <div style="flex:1; min-width:200px;">
+                <strong style="font-size:1rem;\${item.redeemed ? ' text-decoration:line-through; color:#999;' : ''}">\${item.recipient || '—'}</strong>
+                <div style="font-size:0.82rem; color:var(--text-light); margin-top:3px;">
+                    \${item.flightType || ''} &middot; \${item.number || ''} &middot; Erstellt: \${createdDate}
+                </div>
+                \${item.validUntil ? \`<div style="font-size:0.78rem; color:#888;">Gültig bis: \${item.validUntil}</div>\` : ''}
+            </div>
+            <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                <span style="font-size:0.78rem; padding:4px 10px; border-radius:20px; font-weight:600;
+                    background:\${item.redeemed ? '#fff3e0' : '#e8f5e9'}; color:\${item.redeemed ? '#e65100' : '#2e7d32'};">
+                    \${item.redeemed ? 'Eingelöst' : 'Offen'}
+                </span>
+                <button onclick="toggleVoucherRedeemed('\${item.id}', \${!!item.redeemed})"
+                    class="btn btn-secondary" style="padding:6px 12px; font-size:0.78rem;">
+                    \${item.redeemed ? 'Wieder öffnen' : 'Als eingelöst'}
+                </button>
+                <button onclick="deleteVoucher('\${item.id}')"
+                    class="btn btn-secondary" style="padding:6px 12px; font-size:0.78rem; background:#c0392b; color:#fff; border-color:#c0392b;">
+                    Löschen
+                </button>
+            </div>
+        \`;
+        itemsContainer.appendChild(row);
     });
 }
 

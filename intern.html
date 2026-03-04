@@ -346,6 +346,13 @@
                             <button type="button" id="gutschein-generate-btn" class="btn" style="min-width: 280px;">PDF generieren & herunterladen</button>
                         </form>
                     </div>
+
+                    <div class="dashboard-card" style="border-top-color: var(--primary);">
+                        <h3>Erstellte Gutscheine</h3>
+                        <div id="voucher-list">
+                            <p style="color:#999;">Lade Gutscheine...</p>
+                        </div>
+                    </div>
                 </div>
 
                 </div><!-- .intern-tab-panels -->
@@ -378,6 +385,9 @@
         // Bilder als Base64 laden (einmalig, für PDF)
         let logoBase64 = null;
         let gutscheinBgBase64 = null;
+        // Originale Bild-Dimensionen merken für proportionale Darstellung
+        let bgImgNaturalW = 0;
+        let bgImgNaturalH = 0;
 
         function loadImageAsBase64(src) {
             return fetch(src)
@@ -391,7 +401,13 @@
         }
 
         loadImageAsBase64('images/logo.png').then(d => { logoBase64 = d; }).catch(() => {});
-        loadImageAsBase64('images/Gutschein.jpg').then(d => { gutscheinBgBase64 = d; }).catch(() => {});
+        loadImageAsBase64('images/Gutschein.jpg').then(d => {
+            gutscheinBgBase64 = d;
+            // Originale Dimensionen ermitteln
+            const img = new Image();
+            img.onload = () => { bgImgNaturalW = img.width; bgImgNaturalH = img.height; };
+            img.src = d;
+        }).catch(() => {});
 
         // PDF-Generator
         document.getElementById('gutschein-generate-btn')?.addEventListener('click', () => {
@@ -415,139 +431,175 @@
             const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
             const w = doc.internal.pageSize.getWidth();   // 297
             const h = doc.internal.pageSize.getHeight();  // 210
+            const margin = 8;
 
-            // --- Hintergrundbild (Gutschein.jpg) über die gesamte Seite ---
-            if (gutscheinBgBase64) {
+            // --- Weißer Hintergrund ---
+            doc.setFillColor(255, 255, 255);
+            doc.rect(0, 0, w, h, 'F');
+
+            // --- Bild links: proportional korrekt (cover-Methode) ---
+            const imgAreaW = w * 0.38;
+            if (gutscheinBgBase64 && bgImgNaturalW > 0) {
                 try {
-                    // Bild proportional auf volle Breite skalieren, oben ausrichten
-                    // Originalbild ist Hochformat — wir nutzen es als linken Bildbereich
-                    // Bild links, ca. 40% der Breite
-                    const imgW = w * 0.4;
-                    const imgH = h;
-                    doc.addImage(gutscheinBgBase64, 'JPEG', 0, 0, imgW, imgH);
-
-                    // Sanfter Übergang: Gradient-Effekt durch mehrere halbtransparente Streifen
-                    for (let i = 0; i < 30; i++) {
-                        const alpha = Math.min(255, Math.round((i / 30) * 255));
-                        doc.setFillColor(255, 255, 255);
-                        doc.setGState(new doc.GState({ opacity: i / 30 }));
-                        doc.rect(imgW - 30 + i, 0, 1.2, h, 'F');
+                    const aspectRatio = bgImgNaturalW / bgImgNaturalH;
+                    // Cover: Bild füllt die volle Höhe, Breite wird proportional berechnet
+                    let drawW = h * aspectRatio;
+                    let drawH = h;
+                    // Falls Bild schmaler als Bereich, auf Breite skalieren
+                    if (drawW < imgAreaW) {
+                        drawW = imgAreaW;
+                        drawH = imgAreaW / aspectRatio;
                     }
-                    // Rest der Seite weiß
+                    // Zentriert im Bildbereich positionieren (Überschuss abschneiden per Clipping)
+                    const offsetX = (imgAreaW - drawW) / 2;
+                    const offsetY = (h - drawH) / 2;
+                    doc.addImage(gutscheinBgBase64, 'JPEG', offsetX, offsetY, drawW, drawH);
+
+                    // Sanfter Übergang: halbtransparente Streifen für Fade-Out nach rechts
+                    const fadeStart = imgAreaW - 40;
+                    const fadeEnd = imgAreaW + 5;
+                    const steps = 50;
+                    for (let i = 0; i < steps; i++) {
+                        const x = fadeStart + (i / steps) * (fadeEnd - fadeStart);
+                        const opacity = i / steps;
+                        doc.setGState(new doc.GState({ opacity: opacity }));
+                        doc.setFillColor(255, 255, 255);
+                        doc.rect(x, 0, (fadeEnd - fadeStart) / steps + 0.3, h, 'F');
+                    }
                     doc.setGState(new doc.GState({ opacity: 1 }));
+                    // Weißer Bereich rechts vom Bild
                     doc.setFillColor(255, 255, 255);
-                    doc.rect(imgW, 0, w - imgW, h, 'F');
-                } catch(e) {
-                    // Fallback: weißer Hintergrund
-                    doc.setFillColor(255, 255, 255);
-                    doc.rect(0, 0, w, h, 'F');
-                }
-            } else {
-                doc.setFillColor(255, 255, 255);
-                doc.rect(0, 0, w, h, 'F');
-            }
-
-            // --- Rahmen ---
-            doc.setDrawColor(15, 52, 96);
-            doc.setLineWidth(2.5);
-            doc.rect(5, 5, w - 10, h - 10);
-
-            // Akzent-Linie oben (--accent: #e94560)
-            doc.setDrawColor(233, 69, 96);
-            doc.setLineWidth(1.5);
-            doc.line(5, 5, w - 5, 5);
-
-            // --- Textbereich (rechte Hälfte) ---
-            const textCenterX = w * 0.7;   // Mitte des Textbereichs
-            const textLeft = w * 0.45;
-            const textRight = w - 15;
-            const textWidth = textRight - textLeft;
-
-            // Logo oben rechts im Textbereich
-            if (logoBase64) {
-                try {
-                    doc.addImage(logoBase64, 'PNG', textCenterX - 12, 14, 24, 24);
+                    doc.rect(imgAreaW + 5, 0, w - imgAreaW - 5, h, 'F');
                 } catch(e) {}
             }
 
-            // Club-Name unter Logo
+            // --- Minimalistischer Rahmen ---
+            doc.setDrawColor(15, 52, 96);
+            doc.setLineWidth(1.5);
+            doc.rect(margin, margin, w - margin * 2, h - margin * 2);
+
+            // --- Textbereich ---
+            const textCenterX = imgAreaW + (w - imgAreaW) / 2;
+            const textLeft = imgAreaW + 15;
+            const textRight = w - margin - 10;
+            const textWidth = textRight - textLeft;
+
+            // Logo
+            if (logoBase64) {
+                try {
+                    doc.addImage(logoBase64, 'PNG', textCenterX - 10, 16, 20, 20);
+                } catch(e) {}
+            }
+
+            // Club-Name
             doc.setFont('helvetica', 'normal');
-            doc.setFontSize(8);
-            doc.setTextColor(15, 52, 96);
-            doc.text('Segelflieger im Post-SV Nürnberg e.V.', textCenterX, 44, { align: 'center' });
-
-            // Überschrift "GUTSCHEIN"
-            doc.setFont('helvetica', 'bold');
-            doc.setFontSize(38);
-            doc.setTextColor(15, 52, 96);
-            doc.text('GUTSCHEIN', textCenterX, 62, { align: 'center' });
-
-            // Dekorative Linie
-            doc.setDrawColor(233, 69, 96);
-            doc.setLineWidth(0.8);
-            doc.line(textCenterX - 40, 66, textCenterX + 40, 66);
-
-            // Flugart
-            doc.setFont('helvetica', 'bold');
-            doc.setFontSize(14);
-            doc.setTextColor(233, 69, 96);
-            doc.text(flightType, textCenterX, 78, { align: 'center' });
-
-            // "Für" + Empfänger
-            doc.setFont('helvetica', 'normal');
-            doc.setFontSize(11);
+            doc.setFontSize(7.5);
             doc.setTextColor(120, 120, 120);
-            doc.text('für', textCenterX, 92, { align: 'center' });
+            doc.text('SEGELFLIEGER IM POST-SV NÜRNBERG E.V.', textCenterX, 42, { align: 'center' });
 
+            // Trennlinie dünn
+            doc.setDrawColor(233, 69, 96);
+            doc.setLineWidth(0.6);
+            doc.line(textCenterX - 30, 46, textCenterX + 30, 46);
+
+            // "GUTSCHEIN" — groß und modern
             doc.setFont('helvetica', 'bold');
-            doc.setFontSize(22);
+            doc.setFontSize(36);
             doc.setTextColor(15, 52, 96);
-            doc.text(recipient, textCenterX, 103, { align: 'center' });
+            doc.text('GUTSCHEIN', textCenterX, 60, { align: 'center', charSpace: 3 });
+
+            // Flugart als Akzent-Tag
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(12);
+            doc.setTextColor(233, 69, 96);
+            doc.text(flightType.toUpperCase(), textCenterX, 72, { align: 'center', charSpace: 1.5 });
+
+            // Dezente Trennlinie
+            doc.setDrawColor(220, 220, 220);
+            doc.setLineWidth(0.3);
+            doc.line(textCenterX - 25, 77, textCenterX + 25, 77);
+
+            // "für" — klein
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(10);
+            doc.setTextColor(160, 160, 160);
+            doc.text('für', textCenterX, 87, { align: 'center' });
+
+            // Empfänger — groß und prominent
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(24);
+            doc.setTextColor(15, 52, 96);
+            doc.text(recipient, textCenterX, 98, { align: 'center' });
 
             // Grußtext
-            let nextY = 116;
+            let nextY = 112;
             if (greeting) {
                 doc.setFont('helvetica', 'italic');
-                doc.setFontSize(11);
-                doc.setTextColor(80, 80, 80);
-                const lines = doc.splitTextToSize(`\u201E${greeting}\u201C`, textWidth - 20);
+                doc.setFontSize(10);
+                doc.setTextColor(100, 100, 100);
+                const lines = doc.splitTextToSize(`\u201E${greeting}\u201C`, textWidth - 10);
                 doc.text(lines, textCenterX, nextY, { align: 'center' });
-                nextY += lines.length * 5.5 + 8;
+                nextY += lines.length * 5 + 8;
             }
 
-            // Trennlinie vor Details
-            nextY = Math.max(nextY, 135);
-            doc.setDrawColor(200, 200, 200);
-            doc.setLineWidth(0.3);
-            doc.line(textCenterX - 35, nextY, textCenterX + 35, nextY);
-            nextY += 8;
+            // Gutschein-Nr. und Gültigkeits-Box
+            nextY = Math.max(nextY, 130);
 
-            // Gutschein-Nr. und Gültig bis
+            // Minimales Info-Layout
             doc.setFont('helvetica', 'normal');
-            doc.setFontSize(9);
-            doc.setTextColor(100, 100, 100);
+            doc.setFontSize(8);
+            doc.setTextColor(140, 140, 140);
+            const infoLeft = textCenterX - 40;
+            const infoRight = textCenterX + 40;
+
             if (voucherNr) {
-                doc.text(`Gutschein-Nr.: ${voucherNr}`, textCenterX, nextY, { align: 'center' });
-                nextY += 5.5;
+                doc.text('NR.', infoLeft, nextY, { align: 'left' });
+                doc.setFont('helvetica', 'bold');
+                doc.setTextColor(60, 60, 60);
+                doc.text(voucherNr, infoRight, nextY, { align: 'right' });
+                nextY += 6;
             }
             if (validUntil) {
-                doc.text(`Gültig bis: ${validUntil}`, textCenterX, nextY, { align: 'center' });
+                doc.setFont('helvetica', 'normal');
+                doc.setTextColor(140, 140, 140);
+                doc.text('GÜLTIG BIS', infoLeft, nextY, { align: 'left' });
+                doc.setFont('helvetica', 'bold');
+                doc.setTextColor(60, 60, 60);
+                doc.text(validUntil, infoRight, nextY, { align: 'right' });
             }
 
             // --- Footer ---
             doc.setDrawColor(15, 52, 96);
-            doc.setLineWidth(0.3);
-            doc.line(textLeft, h - 25, textRight, h - 25);
+            doc.setLineWidth(0.2);
+            doc.line(textLeft, h - 22, textRight, h - 22);
 
             doc.setFont('helvetica', 'normal');
-            doc.setFontSize(7);
-            doc.setTextColor(100, 100, 100);
-            doc.text('Segelflugplatz Altdorf-Hagenhausen | Kastanienweg 6, 92348 Berg bei Neumarkt', textCenterX, h - 20, { align: 'center' });
-            doc.text('Tel: +49 9189 310 | www.segelfliegenaltdorf.de', textCenterX, h - 16, { align: 'center' });
+            doc.setFontSize(6.5);
+            doc.setTextColor(140, 140, 140);
+            doc.text('Segelflugplatz Altdorf-Hagenhausen  \u00B7  Kastanienweg 6, 92348 Berg bei Neumarkt', textCenterX, h - 17, { align: 'center' });
+            doc.text('+49 9189 310  \u00B7  www.segelfliegenaltdorf.de  \u00B7  info@segelfliegenaltdorf.de', textCenterX, h - 13, { align: 'center' });
 
             // PDF speichern
             const filename = voucherNr ? `Gutschein_${voucherNr}.pdf` : 'Gutschein.pdf';
             doc.save(filename);
+
+            // In Firestore speichern (falls verfügbar)
+            if (typeof window.saveVoucherToFirestore === 'function') {
+                window.saveVoucherToFirestore({
+                    recipient,
+                    flightType,
+                    greeting: greeting || '',
+                    number: voucherNr,
+                    validUntil: validUntil || '',
+                    redeemed: false
+                });
+            }
+
+            // Gutschein-Nr. für den nächsten aktualisieren
+            const now = new Date();
+            const pad = n => String(n).padStart(2, '0');
+            document.getElementById('voucher-number').value =
+                `GS-${now.getFullYear()}-${pad(now.getMonth()+1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}`;
         });
 
         // Tab-Steuerung
