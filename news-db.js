@@ -1267,7 +1267,7 @@ function renderVoucherList(container, items) {
         row.innerHTML = '<div style="flex:1; min-width:200px;">'
             + '<strong style="font-size:1rem;' + nameStyle + '">' + (item.recipient || '\u2014') + '</strong>'
             + '<div style="font-size:0.82rem; color:var(--text-light); margin-top:3px;">'
-            + (item.flightType || '') + ' &middot; ' + (item.number || '') + ' &middot; Erstellt: ' + createdDate
+            + (item.flightType || '') + (item.value ? ' &middot; ' + item.value + ' \u20AC' : '') + ' &middot; ' + (item.number || '') + ' &middot; Erstellt: ' + createdDate
             + '</div>' + validLine + '</div>'
             + '<div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">'
             + '<span style="font-size:0.78rem; padding:4px 10px; border-radius:20px; font-weight:600; background:' + statusBg + '; color:' + statusColor + ';">' + statusText + '</span>'

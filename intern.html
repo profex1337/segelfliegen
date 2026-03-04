@@ -333,10 +333,14 @@
                                 <label style="display:block; margin-bottom:6px; font-weight:600; font-size:0.9rem;">Persönlicher Grußtext (optional)</label>
                                 <textarea id="voucher-greeting" rows="3" placeholder="z.B. Alles Gute zum Geburtstag!" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:6px;"></textarea>
                             </div>
-                            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:20px;">
+                            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-bottom:20px;">
                                 <div>
                                     <label style="display:block; margin-bottom:6px; font-weight:600; font-size:0.9rem;">Gutschein-Nummer</label>
                                     <input type="text" id="voucher-number" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:6px;">
+                                </div>
+                                <div>
+                                    <label style="display:block; margin-bottom:6px; font-weight:600; font-size:0.9rem;">Wert (€)</label>
+                                    <input type="text" id="voucher-value" placeholder="z.B. 80,00" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:6px;">
                                 </div>
                                 <div>
                                     <label style="display:block; margin-bottom:6px; font-weight:600; font-size:0.9rem;">Gültig bis</label>
@@ -415,6 +419,7 @@
             const flightType = document.getElementById('voucher-flight-type').value;
             const greeting = document.getElementById('voucher-greeting').value.trim();
             const voucherNr = document.getElementById('voucher-number').value.trim();
+            const voucherValue = document.getElementById('voucher-value').value.trim();
             const validUntil = document.getElementById('voucher-valid-until').value.trim();
 
             if (!recipient || !flightType) {
@@ -508,31 +513,40 @@
             doc.setTextColor(15, 52, 96);
             doc.text('GUTSCHEIN', textCenterX, 60, { align: 'center', charSpace: 3 });
 
-            // Flugart als Akzent-Tag
+            // Flugart
             doc.setFont('helvetica', 'bold');
-            doc.setFontSize(12);
+            doc.setFontSize(11);
             doc.setTextColor(233, 69, 96);
-            doc.text(flightType.toUpperCase(), textCenterX, 72, { align: 'center', charSpace: 1.5 });
+            doc.text(flightType, textCenterX, 71, { align: 'center' });
+
+            // Wert prominent
+            if (voucherValue) {
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(18);
+                doc.setTextColor(15, 52, 96);
+                doc.text('Wert: ' + voucherValue + ' \u20AC', textCenterX, 82, { align: 'center' });
+            }
 
             // Dezente Trennlinie
+            const lineY = voucherValue ? 87 : 77;
             doc.setDrawColor(220, 220, 220);
             doc.setLineWidth(0.3);
-            doc.line(textCenterX - 25, 77, textCenterX + 25, 77);
+            doc.line(textCenterX - 25, lineY, textCenterX + 25, lineY);
 
             // "für" — klein
             doc.setFont('helvetica', 'normal');
             doc.setFontSize(10);
             doc.setTextColor(160, 160, 160);
-            doc.text('für', textCenterX, 87, { align: 'center' });
+            doc.text('für', textCenterX, lineY + 10, { align: 'center' });
 
             // Empfänger — groß und prominent
             doc.setFont('helvetica', 'bold');
             doc.setFontSize(24);
             doc.setTextColor(15, 52, 96);
-            doc.text(recipient, textCenterX, 98, { align: 'center' });
+            doc.text(recipient, textCenterX, lineY + 21, { align: 'center' });
 
             // Grußtext
-            let nextY = 112;
+            let nextY = lineY + 32;
             if (greeting) {
                 doc.setFont('helvetica', 'italic');
                 doc.setFontSize(10);
@@ -543,7 +557,7 @@
             }
 
             // Gutschein-Nr. und Gültigkeits-Box
-            nextY = Math.max(nextY, 130);
+            nextY = Math.max(nextY, lineY + 50);
 
             // Minimales Info-Layout
             doc.setFont('helvetica', 'normal');
@@ -590,6 +604,7 @@
                     flightType,
                     greeting: greeting || '',
                     number: voucherNr,
+                    value: voucherValue || '',
                     validUntil: validUntil || '',
                     redeemed: false
                 });
