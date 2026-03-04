@@ -376,11 +376,8 @@ function initForms() {
                                 <div style="font-size: 3rem; margin-bottom: 15px;">🎁</div>
                                 <h3 style="color: var(--primary);">Gutschein-Bestellung eingegangen!</h3>
                                 <p style="color: var(--text-light); margin-bottom: 25px;">Vielen Dank für Ihre Bestellung! Bitte überweisen Sie den Betrag auf folgendes Konto:</p>
-                                <div style="background: var(--bg-light); border: 2px solid var(--primary); border-radius: var(--radius); padding: 25px; display: inline-block; text-align: left; max-width: 400px;">
-                                    <p style="margin: 0 0 8px;"><strong>Kontoinhaber:</strong> Post-SV Nürnberg e.V.</p>
-                                    <p style="margin: 0 0 8px;"><strong>IBAN:</strong> DE42 7601 0085 0020 6598 56</p>
-                                    <p style="margin: 0 0 8px;"><strong>BIC:</strong> PBNKDEFF</p>
-                                    <p style="margin: 0;"><strong>Verwendungszweck:</strong> Gutschein + Ihr Name</p>
+                                <div style="background: var(--bg-light); border: 2px solid var(--primary); border-radius: var(--radius); padding: 25px; display: inline-block; text-align: center; max-width: 400px;">
+                                    <p style="margin: 0;">Bankdaten werden nachgeliefert</p>
                                 </div>
                                 <p style="color: var(--text-light); margin-top: 25px; font-size: 0.9rem;">Nach Zahlungseingang erhalten Sie Ihren personalisierten Gutschein per E-Mail.</p>
                             </div>`;
