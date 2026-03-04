@@ -89,7 +89,11 @@ async function initFirebase() {
     const aircraftPublicList = document.getElementById('dynamic-aircraft-list');
     const voucherList = document.getElementById('voucher-list');
 
-    if (!newsContainer && !pricesContainer && !pricesAdmin && !aircraftAdminList && !aircraftPublicList && !voucherList) return;
+    // Gutschein-Bestellformular auf mitfliegen.html erkennen
+    const gutscheinForm = document.querySelector('form[action*="formspree"] input[name="_subject"][value*="Gutschein"]');
+    const hasGutscheinForm = !!gutscheinForm;
+
+    if (!newsContainer && !pricesContainer && !pricesAdmin && !aircraftAdminList && !aircraftPublicList && !voucherList && !hasGutscheinForm) return;
 
     try {
         if (firebaseConfig && Object.keys(firebaseConfig).length > 0) {
@@ -107,6 +111,20 @@ async function initFirebase() {
         } else {
             throw new Error("Fehler");
         }
+
+        // Globale Funktion zum Speichern von Gutschein-Bestellungen (auch für anonyme User)
+        window.saveVoucherOrder = async (orderData) => {
+            try {
+                const orderRef = collection(db, 'voucherOrders');
+                await addDoc(orderRef, {
+                    ...orderData,
+                    status: 'neu',
+                    timestamp: Date.now()
+                });
+            } catch (e) {
+                console.error('Gutschein-Bestellung speichern fehlgeschlagen:', e);
+            }
+        };
 
         if (newsContainer) await startNewsLogic();
         if (pricesContainer || pricesAdmin) await startPricesLogic();
@@ -1172,6 +1190,13 @@ async function startVoucherLogic() {
     if (!listContainer) return;
 
     const voucherRef = collection(db, 'vouchers');
+    const orderRef = collection(db, 'voucherOrders');
+    let cachedVouchers = [];
+    let cachedOrders = [];
+
+    function renderAll() {
+        renderVoucherList(listContainer, cachedVouchers, cachedOrders);
+    }
 
     onAuthStateChanged(auth, (user) => {
         if (!user) return;
@@ -1179,10 +1204,17 @@ async function startVoucherLogic() {
         if (!isAdmin) return;
 
         onSnapshot(voucherRef, (snapshot) => {
-            const items = [];
-            snapshot.forEach(d => items.push({ id: d.id, ...d.data() }));
-            items.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
-            renderVoucherList(listContainer, items);
+            cachedVouchers = [];
+            snapshot.forEach(d => cachedVouchers.push({ id: d.id, ...d.data() }));
+            cachedVouchers.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+            renderAll();
+        });
+
+        onSnapshot(orderRef, (snapshot) => {
+            cachedOrders = [];
+            snapshot.forEach(d => cachedOrders.push({ id: d.id, ...d.data() }));
+            cachedOrders.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+            renderAll();
         });
     });
 
@@ -1219,63 +1251,137 @@ async function startVoucherLogic() {
             console.error('Löschen fehlgeschlagen:', e);
         }
     };
+
+    // Bestellung ins Formular laden
+    window.loadVoucherOrder = (order) => {
+        const recipient = document.getElementById('voucher-recipient');
+        const flightType = document.getElementById('voucher-flight-type');
+        const greeting = document.getElementById('voucher-greeting');
+        const value = document.getElementById('voucher-value');
+        if (recipient) recipient.value = order.empfaenger || '';
+        if (flightType) flightType.value = order.flugart || '';
+        if (greeting) greeting.value = order.grusstext || '';
+        if (value) value.value = order.wert || '';
+        // Zum Formular scrollen
+        const form = document.getElementById('gutschein-form');
+        if (form) form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    };
+
+    // Bestellung löschen
+    window.deleteVoucherOrder = async (docId) => {
+        if (!auth.currentUser || auth.currentUser.isAnonymous) return;
+        if (!confirm('Bestellung wirklich löschen?')) return;
+        try {
+            await deleteDoc(doc(db, 'voucherOrders', docId));
+        } catch (e) {
+            console.error('Bestellung löschen fehlgeschlagen:', e);
+        }
+    };
 }
 
-function renderVoucherList(container, items) {
-    if (items.length === 0) {
-        container.innerHTML = '<p style="color:#999; text-align:center; padding:20px;">Noch keine Gutscheine erstellt.</p>';
-        return;
-    }
-
+function renderVoucherList(container, items, orders) {
+    orders = orders || [];
     const openCount = items.filter(v => !v.redeemed).length;
     const redeemedCount = items.filter(v => v.redeemed).length;
 
-    container.innerHTML = `
-        <div style="display:flex; gap:16px; margin-bottom:20px; flex-wrap:wrap;">
-            <div style="background:var(--bg-light); padding:12px 20px; border-radius:8px; flex:1; min-width:120px; text-align:center;">
-                <div style="font-size:1.8rem; font-weight:700; color:var(--primary);">${items.length}</div>
-                <div style="font-size:0.8rem; color:var(--text-light);">Gesamt</div>
-            </div>
-            <div style="background:#e8f5e9; padding:12px 20px; border-radius:8px; flex:1; min-width:120px; text-align:center;">
-                <div style="font-size:1.8rem; font-weight:700; color:#2e7d32;">${openCount}</div>
-                <div style="font-size:0.8rem; color:#2e7d32;">Offen</div>
-            </div>
-            <div style="background:#fff3e0; padding:12px 20px; border-radius:8px; flex:1; min-width:120px; text-align:center;">
-                <div style="font-size:1.8rem; font-weight:700; color:#e65100;">${redeemedCount}</div>
-                <div style="font-size:0.8rem; color:#e65100;">Eingelöst</div>
-            </div>
-        </div>
-        <div id="voucher-items"></div>
-    `;
+    var html = '<div style="display:flex; gap:16px; margin-bottom:20px; flex-wrap:wrap;">'
+        + '<div style="background:var(--bg-light); padding:12px 20px; border-radius:8px; flex:1; min-width:100px; text-align:center;">'
+        + '<div style="font-size:1.8rem; font-weight:700; color:var(--primary);">' + items.length + '</div>'
+        + '<div style="font-size:0.8rem; color:var(--text-light);">Gesamt</div></div>'
+        + '<div style="background:#e8f5e9; padding:12px 20px; border-radius:8px; flex:1; min-width:100px; text-align:center;">'
+        + '<div style="font-size:1.8rem; font-weight:700; color:#2e7d32;">' + openCount + '</div>'
+        + '<div style="font-size:0.8rem; color:#2e7d32;">Offen</div></div>'
+        + '<div style="background:#fff3e0; padding:12px 20px; border-radius:8px; flex:1; min-width:100px; text-align:center;">'
+        + '<div style="font-size:1.8rem; font-weight:700; color:#e65100;">' + redeemedCount + '</div>'
+        + '<div style="font-size:0.8rem; color:#e65100;">Eingelöst</div></div>';
 
-    const itemsContainer = container.querySelector('#voucher-items');
-    items.forEach(item => {
-        const row = document.createElement('div');
-        const bgColor = item.redeemed ? '#fff8e1' : '#f9f9f9';
-        const borderColor = item.redeemed ? '#ffa000' : '#2e7d32';
-        const opacityVal = item.redeemed ? '0.75' : '1';
-        row.style.cssText = 'display:flex; align-items:center; gap:16px; padding:14px 18px; margin-bottom:8px; border-radius:8px; flex-wrap:wrap; background:' + bgColor + '; border-left:4px solid ' + borderColor + '; opacity:' + opacityVal + ';';
+    if (orders.length > 0) {
+        html += '<div style="background:#e3f2fd; padding:12px 20px; border-radius:8px; flex:1; min-width:100px; text-align:center;">'
+            + '<div style="font-size:1.8rem; font-weight:700; color:#1565c0;">' + orders.length + '</div>'
+            + '<div style="font-size:0.8rem; color:#1565c0;">Bestellungen</div></div>';
+    }
+    html += '</div>';
 
-        const createdDate = item.timestamp ? new Date(item.timestamp).toLocaleDateString('de-DE') : '\u2014';
-        const nameStyle = item.redeemed ? ' text-decoration:line-through; color:#999;' : '';
-        const statusBg = item.redeemed ? '#fff3e0' : '#e8f5e9';
-        const statusColor = item.redeemed ? '#e65100' : '#2e7d32';
-        const statusText = item.redeemed ? 'Eingelöst' : 'Offen';
-        const toggleText = item.redeemed ? 'Wieder öffnen' : 'Als eingelöst';
-        const validLine = item.validUntil ? '<div style="font-size:0.78rem; color:#888;">Gültig bis: ' + item.validUntil + '</div>' : '';
+    // --- Neue Bestellungen ---
+    if (orders.length > 0) {
+        html += '<h4 style="margin:25px 0 12px; color:#1565c0;">Neue Bestellungen</h4>';
+        html += '<div id="voucher-orders"></div>';
+    }
 
-        row.innerHTML = '<div style="flex:1; min-width:200px;">'
-            + '<strong style="font-size:1rem;' + nameStyle + '">' + (item.recipient || '\u2014') + '</strong>'
-            + '<div style="font-size:0.82rem; color:var(--text-light); margin-top:3px;">'
-            + (item.flightType || '') + (item.value ? ' &middot; ' + item.value + ' \u20AC' : '') + ' &middot; ' + (item.number || '') + ' &middot; Erstellt: ' + createdDate
-            + '</div>' + validLine + '</div>'
-            + '<div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">'
-            + '<span style="font-size:0.78rem; padding:4px 10px; border-radius:20px; font-weight:600; background:' + statusBg + '; color:' + statusColor + ';">' + statusText + '</span>'
-            + '<button onclick="toggleVoucherRedeemed(\'' + item.id + '\', ' + (!!item.redeemed) + ')" class="btn btn-secondary" style="padding:6px 12px; font-size:0.78rem;">' + toggleText + '</button>'
-            + '<button onclick="deleteVoucher(\'' + item.id + '\')" class="btn btn-secondary" style="padding:6px 12px; font-size:0.78rem; background:#c0392b; color:#fff; border-color:#c0392b;">Löschen</button>'
-            + '</div>';
-        itemsContainer.appendChild(row);
-    });
+    html += '<h4 style="margin:25px 0 12px; color:var(--primary);">Erstellte Gutscheine</h4>';
+    html += '<div id="voucher-items"></div>';
+
+    container.innerHTML = html;
+
+    // Bestellungen rendern
+    if (orders.length > 0) {
+        var ordersContainer = container.querySelector('#voucher-orders');
+        orders.forEach(function(order) {
+            var row = document.createElement('div');
+            var orderDate = order.timestamp ? new Date(order.timestamp).toLocaleDateString('de-DE') : '\u2014';
+            row.style.cssText = 'display:flex; align-items:center; gap:16px; padding:14px 18px; margin-bottom:8px; border-radius:8px; flex-wrap:wrap; background:#e3f2fd; border-left:4px solid #1565c0; cursor:pointer; transition:background 0.2s;';
+            row.onmouseenter = function() { row.style.background = '#bbdefb'; };
+            row.onmouseleave = function() { row.style.background = '#e3f2fd'; };
+
+            var besteller = order.name || '\u2014';
+            var email = order.email || '';
+            var telefon = order.telefon || '';
+            var flugart = order.flugart || '';
+            var empfaenger = order.empfaenger || '';
+            var wert = order.wert || '';
+            var gruss = order.grusstext || '';
+
+            row.innerHTML = '<div style="flex:1; min-width:200px;" onclick="loadVoucherOrder(' + JSON.stringify(order).replace(/"/g, '&quot;') + ')">'
+                + '<strong style="font-size:1rem;">\u2709 ' + besteller + '</strong>'
+                + '<div style="font-size:0.82rem; color:var(--text-light); margin-top:3px;">'
+                + flugart + (wert ? ' &middot; ' + wert + ' \u20AC' : '') + ' &middot; F\u00FCr: ' + empfaenger
+                + '</div>'
+                + '<div style="font-size:0.78rem; color:#888; margin-top:2px;">'
+                + email + (telefon ? ' &middot; ' + telefon : '') + ' &middot; ' + orderDate
+                + '</div>'
+                + (gruss ? '<div style="font-size:0.78rem; color:#666; margin-top:4px; font-style:italic;">\u201E' + gruss + '\u201C</div>' : '')
+                + '</div>'
+                + '<div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">'
+                + '<button onclick="loadVoucherOrder(' + JSON.stringify(order).replace(/"/g, '&quot;') + ')" class="btn" style="padding:6px 14px; font-size:0.78rem;">\u00DCbernehmen</button>'
+                + '<button onclick="event.stopPropagation(); deleteVoucherOrder(\'' + order.id + '\')" class="btn btn-secondary" style="padding:6px 12px; font-size:0.78rem; background:#c0392b; color:#fff; border-color:#c0392b;">L\u00F6schen</button>'
+                + '</div>';
+            ordersContainer.appendChild(row);
+        });
+    }
+
+    // Erstellte Gutscheine rendern
+    var itemsContainer = container.querySelector('#voucher-items');
+    if (items.length === 0) {
+        itemsContainer.innerHTML = '<p style="color:#999; text-align:center; padding:20px;">Noch keine Gutscheine erstellt.</p>';
+    } else {
+        items.forEach(function(item) {
+            var row = document.createElement('div');
+            var bgColor = item.redeemed ? '#fff8e1' : '#f9f9f9';
+            var borderColor = item.redeemed ? '#ffa000' : '#2e7d32';
+            var opacityVal = item.redeemed ? '0.75' : '1';
+            row.style.cssText = 'display:flex; align-items:center; gap:16px; padding:14px 18px; margin-bottom:8px; border-radius:8px; flex-wrap:wrap; background:' + bgColor + '; border-left:4px solid ' + borderColor + '; opacity:' + opacityVal + ';';
+
+            var createdDate = item.timestamp ? new Date(item.timestamp).toLocaleDateString('de-DE') : '\u2014';
+            var nameStyle = item.redeemed ? ' text-decoration:line-through; color:#999;' : '';
+            var statusBg = item.redeemed ? '#fff3e0' : '#e8f5e9';
+            var statusColor = item.redeemed ? '#e65100' : '#2e7d32';
+            var statusText = item.redeemed ? 'Eingelöst' : 'Offen';
+            var toggleText = item.redeemed ? 'Wieder öffnen' : 'Als eingelöst';
+            var validLine = item.validUntil ? '<div style="font-size:0.78rem; color:#888;">Gültig bis: ' + item.validUntil + '</div>' : '';
+
+            row.innerHTML = '<div style="flex:1; min-width:200px;">'
+                + '<strong style="font-size:1rem;' + nameStyle + '">' + (item.recipient || '\u2014') + '</strong>'
+                + '<div style="font-size:0.82rem; color:var(--text-light); margin-top:3px;">'
+                + (item.flightType || '') + (item.value ? ' &middot; ' + item.value + ' \u20AC' : '') + ' &middot; ' + (item.number || '') + ' &middot; Erstellt: ' + createdDate
+                + '</div>' + validLine + '</div>'
+                + '<div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">'
+                + '<span style="font-size:0.78rem; padding:4px 10px; border-radius:20px; font-weight:600; background:' + statusBg + '; color:' + statusColor + ';">' + statusText + '</span>'
+                + '<button onclick="toggleVoucherRedeemed(\'' + item.id + '\', ' + (!!item.redeemed) + ')" class="btn btn-secondary" style="padding:6px 12px; font-size:0.78rem;">' + toggleText + '</button>'
+                + '<button onclick="deleteVoucher(\'' + item.id + '\')" class="btn btn-secondary" style="padding:6px 12px; font-size:0.78rem; background:#c0392b; color:#fff; border-color:#c0392b;">L\u00F6schen</button>'
+                + '</div>';
+            itemsContainer.appendChild(row);
+        });
+    }
 }
 
                     if (document.readyState === 'loading') {

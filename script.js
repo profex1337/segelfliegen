@@ -370,6 +370,21 @@ function initForms() {
                     const subjectField = form.querySelector('input[name="_subject"]');
                     const isGutschein = subjectField && subjectField.value.includes('Gutschein');
 
+                    // Bestelldaten in Firestore speichern
+                    if (isGutschein && typeof window.saveVoucherOrder === 'function') {
+                        const fd = new FormData(form);
+                        window.saveVoucherOrder({
+                            name: fd.get('name') || '',
+                            email: fd.get('email') || '',
+                            telefon: fd.get('telefon') || '',
+                            flugart: fd.get('flugart') || '',
+                            zusatzzeit: fd.get('zusatzzeit') || '0',
+                            wert: fd.get('wert') || '',
+                            empfaenger: fd.get('empfaenger') || '',
+                            grusstext: fd.get('grusstext') || ''
+                        });
+                    }
+
                     if (isGutschein) {
                         form.innerHTML = `
                             <div style="text-align:center; padding: 40px 20px;">
