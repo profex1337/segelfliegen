@@ -1251,39 +1251,29 @@ function renderVoucherList(container, items) {
     const itemsContainer = container.querySelector('#voucher-items');
     items.forEach(item => {
         const row = document.createElement('div');
-        row.style.cssText = \`
-            display:flex; align-items:center; gap:16px; padding:14px 18px;
-            margin-bottom:8px; border-radius:8px; flex-wrap:wrap;
-            background:\${item.redeemed ? '#fff8e1' : '#f9f9f9'};
-            border-left:4px solid \${item.redeemed ? '#ffa000' : '#2e7d32'};
-            opacity:\${item.redeemed ? '0.75' : '1'};
-        \`;
+        const bgColor = item.redeemed ? '#fff8e1' : '#f9f9f9';
+        const borderColor = item.redeemed ? '#ffa000' : '#2e7d32';
+        const opacityVal = item.redeemed ? '0.75' : '1';
+        row.style.cssText = 'display:flex; align-items:center; gap:16px; padding:14px 18px; margin-bottom:8px; border-radius:8px; flex-wrap:wrap; background:' + bgColor + '; border-left:4px solid ' + borderColor + '; opacity:' + opacityVal + ';';
 
-        const createdDate = item.timestamp ? new Date(item.timestamp).toLocaleDateString('de-DE') : '—';
+        const createdDate = item.timestamp ? new Date(item.timestamp).toLocaleDateString('de-DE') : '\u2014';
+        const nameStyle = item.redeemed ? ' text-decoration:line-through; color:#999;' : '';
+        const statusBg = item.redeemed ? '#fff3e0' : '#e8f5e9';
+        const statusColor = item.redeemed ? '#e65100' : '#2e7d32';
+        const statusText = item.redeemed ? 'Eingelöst' : 'Offen';
+        const toggleText = item.redeemed ? 'Wieder öffnen' : 'Als eingelöst';
+        const validLine = item.validUntil ? '<div style="font-size:0.78rem; color:#888;">Gültig bis: ' + item.validUntil + '</div>' : '';
 
-        row.innerHTML = \`
-            <div style="flex:1; min-width:200px;">
-                <strong style="font-size:1rem;\${item.redeemed ? ' text-decoration:line-through; color:#999;' : ''}">\${item.recipient || '—'}</strong>
-                <div style="font-size:0.82rem; color:var(--text-light); margin-top:3px;">
-                    \${item.flightType || ''} &middot; \${item.number || ''} &middot; Erstellt: \${createdDate}
-                </div>
-                \${item.validUntil ? \`<div style="font-size:0.78rem; color:#888;">Gültig bis: \${item.validUntil}</div>\` : ''}
-            </div>
-            <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
-                <span style="font-size:0.78rem; padding:4px 10px; border-radius:20px; font-weight:600;
-                    background:\${item.redeemed ? '#fff3e0' : '#e8f5e9'}; color:\${item.redeemed ? '#e65100' : '#2e7d32'};">
-                    \${item.redeemed ? 'Eingelöst' : 'Offen'}
-                </span>
-                <button onclick="toggleVoucherRedeemed('\${item.id}', \${!!item.redeemed})"
-                    class="btn btn-secondary" style="padding:6px 12px; font-size:0.78rem;">
-                    \${item.redeemed ? 'Wieder öffnen' : 'Als eingelöst'}
-                </button>
-                <button onclick="deleteVoucher('\${item.id}')"
-                    class="btn btn-secondary" style="padding:6px 12px; font-size:0.78rem; background:#c0392b; color:#fff; border-color:#c0392b;">
-                    Löschen
-                </button>
-            </div>
-        \`;
+        row.innerHTML = '<div style="flex:1; min-width:200px;">'
+            + '<strong style="font-size:1rem;' + nameStyle + '">' + (item.recipient || '\u2014') + '</strong>'
+            + '<div style="font-size:0.82rem; color:var(--text-light); margin-top:3px;">'
+            + (item.flightType || '') + ' &middot; ' + (item.number || '') + ' &middot; Erstellt: ' + createdDate
+            + '</div>' + validLine + '</div>'
+            + '<div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">'
+            + '<span style="font-size:0.78rem; padding:4px 10px; border-radius:20px; font-weight:600; background:' + statusBg + '; color:' + statusColor + ';">' + statusText + '</span>'
+            + '<button onclick="toggleVoucherRedeemed(\'' + item.id + '\', ' + (!!item.redeemed) + ')" class="btn btn-secondary" style="padding:6px 12px; font-size:0.78rem;">' + toggleText + '</button>'
+            + '<button onclick="deleteVoucher(\'' + item.id + '\')" class="btn btn-secondary" style="padding:6px 12px; font-size:0.78rem; background:#c0392b; color:#fff; border-color:#c0392b;">Löschen</button>'
+            + '</div>';
         itemsContainer.appendChild(row);
     });
 }
