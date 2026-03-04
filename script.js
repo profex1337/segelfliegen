@@ -375,11 +375,13 @@ function initForms() {
                             <div style="text-align:center; padding: 40px 20px;">
                                 <div style="font-size: 3rem; margin-bottom: 15px;">🎁</div>
                                 <h3 style="color: var(--primary);">Gutschein-Bestellung eingegangen!</h3>
-                                <p style="color: var(--text-light); margin-bottom: 25px;">Vielen Dank für Ihre Bestellung! Bitte überweisen Sie den Betrag auf folgendes Konto:</p>
+                                <p style="color: var(--text-light); margin-bottom: 25px;">Vielen Dank für Ihre Bestellung!</p>
                                 <div style="background: var(--bg-light); border: 2px solid var(--primary); border-radius: var(--radius); padding: 25px; display: inline-block; text-align: center; max-width: 400px;">
-                                    <p style="margin: 0;">Bankdaten werden nachgeliefert</p>
+                                    <p style="margin: 0; font-weight: 600;">Bankverbindung</p>
+                                    <p style="margin: 8px 0 0; color: var(--text-light);">(aktuell nicht verfügbar)</p>
                                 </div>
                                 <p style="color: var(--text-light); margin-top: 25px; font-size: 0.9rem;">Nach Zahlungseingang erhalten Sie Ihren personalisierten Gutschein per E-Mail.</p>
+                                <p style="color: var(--text-light); font-size: 0.85rem; font-style: italic;">Hinweis: Es wird keine separate Bestätigungs-E-Mail versendet. Ihre Bestellung ist bei uns eingegangen.</p>
                             </div>`;
                     } else {
                         form.innerHTML = `

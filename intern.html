@@ -404,14 +404,30 @@
                 }));
         }
 
+        // Gutschein-Bilder: Mapping Flugart → Bilddatei
+        // Fallback: Gutschein.jpg für Flugarten ohne eigenes Bild
+        const gutscheinImages = {};
+        const gutscheinImageMap = {
+            'Motorflug': 'images/Gutschein_Motorflug.jpg',
+            'Segelflug (Windenstart)': 'images/Gutschein_Segelflug.jpg',
+            'Segelflug (F-Schlepp)': 'images/Gutschein_Flugzeugschlepp.jpg',
+            'Kunstflug': 'images/Gutschein_Kunstflug.jpg',
+            '_default': 'images/Gutschein.jpg'
+        };
+
         loadImageAsBase64('images/logo.png').then(d => { logoBase64 = d; }).catch(() => {});
-        loadImageAsBase64('images/Gutschein.jpg').then(d => {
-            gutscheinBgBase64 = d;
-            // Originale Dimensionen ermitteln
-            const img = new Image();
-            img.onload = () => { bgImgNaturalW = img.width; bgImgNaturalH = img.height; };
-            img.src = d;
-        }).catch(() => {});
+
+        // Alle vorhandenen Gutschein-Bilder vorladen
+        const uniqueImages = [...new Set(Object.values(gutscheinImageMap))];
+        uniqueImages.forEach(src => {
+            loadImageAsBase64(src).then(d => {
+                const img = new Image();
+                img.onload = () => {
+                    gutscheinImages[src] = { base64: d, w: img.width, h: img.height };
+                };
+                img.src = d;
+            }).catch(() => {});
+        });
 
         // PDF-Generator
         document.getElementById('gutschein-generate-btn')?.addEventListener('click', () => {
@@ -444,9 +460,12 @@
 
             // --- Bild links: proportional korrekt (cover-Methode) ---
             const imgAreaW = w * 0.38;
-            if (gutscheinBgBase64 && bgImgNaturalW > 0) {
+            // Passendes Bild für Flugart auswählen (Fallback: _default)
+            const imgSrc = gutscheinImageMap[flightType] || gutscheinImageMap['_default'];
+            const bgData = gutscheinImages[imgSrc] || gutscheinImages[gutscheinImageMap['_default']];
+            if (bgData) {
                 try {
-                    const aspectRatio = bgImgNaturalW / bgImgNaturalH;
+                    const aspectRatio = bgData.w / bgData.h;
                     // Cover: Bild füllt die volle Höhe, Breite wird proportional berechnet
                     let drawW = h * aspectRatio;
                     let drawH = h;
@@ -458,7 +477,7 @@
                     // Zentriert im Bildbereich positionieren (Überschuss abschneiden per Clipping)
                     const offsetX = (imgAreaW - drawW) / 2;
                     const offsetY = (h - drawH) / 2;
-                    doc.addImage(gutscheinBgBase64, 'JPEG', offsetX, offsetY, drawW, drawH);
+                    doc.addImage(bgData.base64, 'JPEG', offsetX, offsetY, drawW, drawH);
 
                     // Sanfter Übergang: halbtransparente Streifen für Fade-Out nach rechts
                     const fadeStart = imgAreaW - 40;
@@ -511,7 +530,7 @@
             doc.setFont('helvetica', 'bold');
             doc.setFontSize(36);
             doc.setTextColor(15, 52, 96);
-            doc.text('GUTSCHEIN', textCenterX, 60, { align: 'center', charSpace: 3 });
+            doc.text('G U T S C H E I N', textCenterX, 60, { align: 'center' });
 
             // Flugart
             doc.setFont('helvetica', 'bold');
@@ -590,7 +609,7 @@
             doc.setFont('helvetica', 'normal');
             doc.setFontSize(6.5);
             doc.setTextColor(140, 140, 140);
-            doc.text('Segelflugplatz Altdorf-Hagenhausen  \u00B7  Kastanienweg 6, 92348 Berg bei Neumarkt', textCenterX, h - 17, { align: 'center' });
+            doc.text('Segelflugplatz Altdorf-Hagenhausen  \u00B7  Hagenhausener Str. in 92348 St\u00F6ckelsberg (Beschilderung folgen)', textCenterX, h - 17, { align: 'center' });
             doc.text('+49 9189 310  \u00B7  www.segelfliegenaltdorf.de  \u00B7  info@segelfliegenaltdorf.de', textCenterX, h - 13, { align: 'center' });
 
             // PDF speichern
