@@ -1444,7 +1444,7 @@ function renderVoucherList(container, items, orders) {
             var statusBg = item.redeemed ? '#fff3e0' : '#e8f5e9';
             var statusColor = item.redeemed ? '#e65100' : '#2e7d32';
             var statusText = item.redeemed ? 'Eingelöst' : 'Offen';
-            var toggleText = item.redeemed ? 'Wieder öffnen' : 'Als eingelöst';
+            var toggleText = item.redeemed ? 'Wieder öffnen' : 'Eingelöst';
             var validLine = item.validUntil ? '<div style="font-size:0.78rem; color:#888;">Gültig bis: ' + item.validUntil + '</div>' : '';
 
             row.innerHTML = '<div style="flex:1; min-width:200px;">'
