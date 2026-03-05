@@ -1358,7 +1358,7 @@ function renderOrderRow(order, isClosed) {
 
         buttonsHtml += '<button onclick="event.stopPropagation(); toggleOrderPaid(\'' + order.id + '\', ' + isPaid + ')" class="btn btn-secondary" style="' + paidBtnStyle + '">' + paidBtnText + '</button>'
             + '<button onclick="event.stopPropagation(); loadVoucherOrder(' + JSON.stringify(order).replace(/"/g, '&quot;') + ')" class="btn" style="padding:6px 14px; font-size:0.78rem;">\u00DCbernehmen</button>'
-            + '<button onclick="event.stopPropagation(); completeVoucherOrder(\'' + order.id + '\')" class="btn btn-secondary" style="padding:6px 12px; font-size:0.78rem; background:#6a1b9a; color:#fff; border-color:#6a1b9a;">Abschlie\u00DFen</button>'
+            + (isPaid ? '<button onclick="event.stopPropagation(); completeVoucherOrder(\'' + order.id + '\')" class="btn btn-secondary" style="padding:6px 12px; font-size:0.78rem; background:#6a1b9a; color:#fff; border-color:#6a1b9a;">Abschlie\u00DFen</button>' : '')
             + '<button onclick="event.stopPropagation(); deleteVoucherOrder(\'' + order.id + '\')" class="btn btn-secondary" style="padding:6px 12px; font-size:0.78rem; background:#c0392b; color:#fff; border-color:#c0392b;">L\u00F6schen</button>';
     }
     buttonsHtml += '</div>';
