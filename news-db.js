@@ -1400,12 +1400,20 @@ function renderVoucherList(container, items, orders) {
         html += '<div id="voucher-orders"></div>';
     }
 
-    html += '<h4 style="margin:25px 0 12px; color:var(--primary);">Erstellte Gutscheine</h4>';
+    // Gutscheine aufteilen
+    var openVouchers = items.filter(function(v) { return !v.redeemed; });
+    var redeemedVouchers = items.filter(function(v) { return v.redeemed; });
+
+    html += '<h4 style="margin:25px 0 12px; color:var(--primary);">Erstellte Gutscheine (' + openVouchers.length + ')</h4>';
     html += '<div id="voucher-items"></div>';
 
-    // --- Abgeschlossene Bestellungen (aufklappbar) ---
+    // --- Aufklappbare Sektionen ---
+    if (redeemedVouchers.length > 0) {
+        html += '<details style="margin-top:25px;"><summary style="cursor:pointer; font-weight:600; color:#e65100; font-size:0.95rem; padding:8px 0;">Eingelöste Gutscheine (' + redeemedVouchers.length + ')</summary>';
+        html += '<div id="voucher-items-redeemed" style="margin-top:10px;"></div></details>';
+    }
     if (closedOrders.length > 0) {
-        html += '<details style="margin-top:25px;"><summary style="cursor:pointer; font-weight:600; color:#888; font-size:0.95rem; padding:8px 0;">Abgeschlossene Bestellungen (' + closedOrders.length + ')</summary>';
+        html += '<details style="margin-top:15px;"><summary style="cursor:pointer; font-weight:600; color:#888; font-size:0.95rem; padding:8px 0;">Abgeschlossene Bestellungen (' + closedOrders.length + ')</summary>';
         html += '<div id="voucher-orders-closed" style="margin-top:10px;"></div></details>';
     }
 
@@ -1427,39 +1435,50 @@ function renderVoucherList(container, items, orders) {
         });
     }
 
-    // Erstellte Gutscheine rendern
-    var itemsContainer = container.querySelector('#voucher-items');
-    if (items.length === 0) {
-        itemsContainer.innerHTML = '<p style="color:#999; text-align:center; padding:20px;">Noch keine Gutscheine erstellt.</p>';
-    } else {
-        items.forEach(function(item) {
-            var row = document.createElement('div');
-            var bgColor = item.redeemed ? '#fff8e1' : '#f9f9f9';
-            var borderColor = item.redeemed ? '#ffa000' : '#2e7d32';
-            var opacityVal = item.redeemed ? '0.75' : '1';
-            row.style.cssText = 'display:flex; align-items:center; gap:16px; padding:14px 18px; margin-bottom:8px; border-radius:8px; flex-wrap:wrap; background:' + bgColor + '; border-left:4px solid ' + borderColor + '; opacity:' + opacityVal + ';';
-
-            var createdDate = item.timestamp ? new Date(item.timestamp).toLocaleDateString('de-DE') : '\u2014';
-            var nameStyle = item.redeemed ? ' text-decoration:line-through; color:#999;' : '';
-            var statusBg = item.redeemed ? '#fff3e0' : '#e8f5e9';
-            var statusColor = item.redeemed ? '#e65100' : '#2e7d32';
-            var statusText = item.redeemed ? 'Eingelöst' : 'Offen';
-            var toggleText = item.redeemed ? 'Wieder öffnen' : 'Eingelöst';
-            var validLine = item.validUntil ? '<div style="font-size:0.78rem; color:#888;">Gültig bis: ' + item.validUntil + '</div>' : '';
-
-            row.innerHTML = '<div style="flex:1; min-width:200px;">'
-                + '<strong style="font-size:1rem;' + nameStyle + '">' + (item.recipient || '\u2014') + '</strong>'
-                + '<div style="font-size:0.82rem; color:var(--text-light); margin-top:3px;">'
-                + (item.flightType || '') + (item.value ? ' &middot; ' + item.value + ' \u20AC' : '') + ' &middot; ' + (item.number || '') + ' &middot; Erstellt: ' + createdDate
-                + '</div>' + validLine + '</div>'
-                + '<div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">'
-                + '<span style="font-size:0.78rem; padding:4px 10px; border-radius:20px; font-weight:600; background:' + statusBg + '; color:' + statusColor + ';">' + statusText + '</span>'
-                + '<button onclick="toggleVoucherRedeemed(\'' + item.id + '\', ' + (!!item.redeemed) + ')" class="btn btn-secondary" style="padding:6px 12px; font-size:0.78rem;">' + toggleText + '</button>'
-                + '<button onclick="deleteVoucher(\'' + item.id + '\')" class="btn btn-secondary" style="padding:6px 12px; font-size:0.78rem; background:#c0392b; color:#fff; border-color:#c0392b;">L\u00F6schen</button>'
-                + '</div>';
-            itemsContainer.appendChild(row);
+    // Eingelöste Gutscheine rendern
+    if (redeemedVouchers.length > 0) {
+        var redeemedContainer = container.querySelector('#voucher-items-redeemed');
+        redeemedVouchers.forEach(function(item) {
+            redeemedContainer.appendChild(renderVoucherRow(item));
         });
     }
+
+    // Offene Gutscheine rendern
+    var itemsContainer = container.querySelector('#voucher-items');
+    if (openVouchers.length === 0) {
+        itemsContainer.innerHTML = '<p style="color:#999; text-align:center; padding:20px;">Noch keine offenen Gutscheine.</p>';
+    } else {
+        openVouchers.forEach(function(item) {
+            itemsContainer.appendChild(renderVoucherRow(item));
+        });
+    }
+}
+
+function renderVoucherRow(item) {
+    var row = document.createElement('div');
+    var bgColor = item.redeemed ? '#fff8e1' : '#f9f9f9';
+    var borderColor = item.redeemed ? '#ffa000' : '#2e7d32';
+    var opacityVal = item.redeemed ? '0.75' : '1';
+    row.style.cssText = 'display:flex; align-items:center; gap:16px; padding:14px 18px; margin-bottom:8px; border-radius:8px; flex-wrap:wrap; background:' + bgColor + '; border-left:4px solid ' + borderColor + '; opacity:' + opacityVal + ';';
+
+    var createdDate = item.timestamp ? new Date(item.timestamp).toLocaleDateString('de-DE') : '\u2014';
+    var nameStyle = item.redeemed ? ' text-decoration:line-through; color:#999;' : '';
+    var statusBg = item.redeemed ? '#fff3e0' : '#e8f5e9';
+    var statusColor = item.redeemed ? '#e65100' : '#2e7d32';
+    var statusText = item.redeemed ? 'Eingelöst' : 'Offen';
+    var toggleText = item.redeemed ? 'Wieder \u00F6ffnen' : 'Eingelöst';
+    var validLine = item.validUntil ? '<div style="font-size:0.78rem; color:#888;">Gültig bis: ' + item.validUntil + '</div>' : '';
+
+    row.innerHTML = '<div style="flex:1; min-width:200px;">'
+        + '<strong style="font-size:1rem;' + nameStyle + '">' + (item.recipient || '\u2014') + '</strong>'
+        + '<div style="font-size:0.82rem; color:var(--text-light); margin-top:3px;">'
+        + (item.flightType || '') + (item.value ? ' &middot; ' + item.value + ' \u20AC' : '') + ' &middot; ' + (item.number || '') + ' &middot; Erstellt: ' + createdDate
+        + '</div>' + validLine + '</div>'
+        + '<div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">'
+        + '<button onclick="toggleVoucherRedeemed(\'' + item.id + '\', ' + (!!item.redeemed) + ')" class="btn btn-secondary" style="padding:6px 12px; font-size:0.78rem;">' + toggleText + '</button>'
+        + '<button onclick="deleteVoucher(\'' + item.id + '\')" class="btn btn-secondary" style="padding:6px 12px; font-size:0.78rem; background:#c0392b; color:#fff; border-color:#c0392b;">L\u00F6schen</button>'
+        + '</div>';
+    return row;
 }
 
                     if (document.readyState === 'loading') {
