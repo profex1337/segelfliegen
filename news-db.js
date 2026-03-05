@@ -1267,6 +1267,37 @@ async function startVoucherLogic() {
         if (form) form.scrollIntoView({ behavior: 'smooth', block: 'start' });
     };
 
+    // Bestellung als bezahlt markieren
+    window.toggleOrderPaid = async (docId, currentStatus) => {
+        if (!auth.currentUser || auth.currentUser.isAnonymous) return;
+        try {
+            await updateDoc(doc(db, 'voucherOrders', docId), { paid: !currentStatus });
+        } catch (e) {
+            console.error('Bezahlt-Status fehlgeschlagen:', e);
+        }
+    };
+
+    // Bestellung abschließen
+    window.completeVoucherOrder = async (docId) => {
+        if (!auth.currentUser || auth.currentUser.isAnonymous) return;
+        if (!confirm('Bestellung als abgeschlossen markieren?')) return;
+        try {
+            await updateDoc(doc(db, 'voucherOrders', docId), { status: 'abgeschlossen', completedAt: Date.now() });
+        } catch (e) {
+            console.error('Abschließen fehlgeschlagen:', e);
+        }
+    };
+
+    // Bestellung wieder öffnen
+    window.reopenVoucherOrder = async (docId) => {
+        if (!auth.currentUser || auth.currentUser.isAnonymous) return;
+        try {
+            await updateDoc(doc(db, 'voucherOrders', docId), { status: 'neu', completedAt: null });
+        } catch (e) {
+            console.error('Wieder öffnen fehlgeschlagen:', e);
+        }
+    };
+
     // Bestellung löschen
     window.deleteVoucherOrder = async (docId) => {
         if (!auth.currentUser || auth.currentUser.isAnonymous) return;
@@ -1277,6 +1308,63 @@ async function startVoucherLogic() {
             console.error('Bestellung löschen fehlgeschlagen:', e);
         }
     };
+}
+
+function renderOrderRow(order, isClosed) {
+    var row = document.createElement('div');
+    var orderDate = order.timestamp ? new Date(order.timestamp).toLocaleDateString('de-DE') : '\u2014';
+    var isPaid = !!order.paid;
+    var bgColor = isClosed ? '#f5f5f5' : (isPaid ? '#e8f5e9' : '#e3f2fd');
+    var borderColor = isClosed ? '#bbb' : (isPaid ? '#2e7d32' : '#1565c0');
+    var hoverColor = isClosed ? '#eee' : (isPaid ? '#c8e6c9' : '#bbdefb');
+
+    row.style.cssText = 'display:flex; align-items:center; gap:16px; padding:14px 18px; margin-bottom:8px; border-radius:8px; flex-wrap:wrap; background:' + bgColor + '; border-left:4px solid ' + borderColor + '; cursor:pointer; transition:background 0.2s;' + (isClosed ? ' opacity:0.7;' : '');
+    row.onmouseenter = function() { row.style.background = hoverColor; };
+    row.onmouseleave = function() { row.style.background = bgColor; };
+
+    var besteller = order.name || '\u2014';
+    var email = order.email || '';
+    var telefon = order.telefon || '';
+    var flugart = order.flugart || '';
+    var empfaenger = order.empfaenger || '';
+    var wert = order.wert || '';
+    var gruss = order.grusstext || '';
+
+    var paidBadge = isPaid
+        ? '<span style="font-size:0.75rem; padding:3px 8px; border-radius:12px; font-weight:600; background:#e8f5e9; color:#2e7d32; margin-left:8px;">Bezahlt</span>'
+        : '<span style="font-size:0.75rem; padding:3px 8px; border-radius:12px; font-weight:600; background:#fff3e0; color:#e65100; margin-left:8px;">Unbezahlt</span>';
+
+    var infoHtml = '<div style="flex:1; min-width:200px;"' + (isClosed ? '' : ' onclick="loadVoucherOrder(' + JSON.stringify(order).replace(/"/g, '&quot;') + ')"') + '>'
+        + '<strong style="font-size:1rem;">\u2709 ' + besteller + '</strong>' + paidBadge
+        + '<div style="font-size:0.82rem; color:var(--text-light); margin-top:3px;">'
+        + flugart + (wert ? ' &middot; ' + wert + ' \u20AC' : '') + ' &middot; F\u00FCr: ' + empfaenger
+        + '</div>'
+        + '<div style="font-size:0.78rem; color:#888; margin-top:2px;">'
+        + email + (telefon ? ' &middot; ' + telefon : '') + ' &middot; ' + orderDate
+        + '</div>'
+        + (gruss ? '<div style="font-size:0.78rem; color:#666; margin-top:4px; font-style:italic;">\u201E' + gruss + '\u201C</div>' : '')
+        + '</div>';
+
+    var buttonsHtml = '<div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">';
+
+    if (isClosed) {
+        buttonsHtml += '<button onclick="event.stopPropagation(); reopenVoucherOrder(\'' + order.id + '\')" class="btn btn-secondary" style="padding:6px 12px; font-size:0.78rem;">Wieder \u00F6ffnen</button>'
+            + '<button onclick="event.stopPropagation(); deleteVoucherOrder(\'' + order.id + '\')" class="btn btn-secondary" style="padding:6px 12px; font-size:0.78rem; background:#c0392b; color:#fff; border-color:#c0392b;">L\u00F6schen</button>';
+    } else {
+        var paidBtnStyle = isPaid
+            ? 'padding:6px 12px; font-size:0.78rem; background:#fff3e0; color:#e65100; border-color:#e65100;'
+            : 'padding:6px 12px; font-size:0.78rem; background:#2e7d32; color:#fff; border-color:#2e7d32;';
+        var paidBtnText = isPaid ? 'Unbezahlt' : 'Bezahlt';
+
+        buttonsHtml += '<button onclick="event.stopPropagation(); toggleOrderPaid(\'' + order.id + '\', ' + isPaid + ')" class="btn btn-secondary" style="' + paidBtnStyle + '">' + paidBtnText + '</button>'
+            + '<button onclick="event.stopPropagation(); loadVoucherOrder(' + JSON.stringify(order).replace(/"/g, '&quot;') + ')" class="btn" style="padding:6px 14px; font-size:0.78rem;">\u00DCbernehmen</button>'
+            + '<button onclick="event.stopPropagation(); completeVoucherOrder(\'' + order.id + '\')" class="btn btn-secondary" style="padding:6px 12px; font-size:0.78rem; background:#6a1b9a; color:#fff; border-color:#6a1b9a;">Abschlie\u00DFen</button>'
+            + '<button onclick="event.stopPropagation(); deleteVoucherOrder(\'' + order.id + '\')" class="btn btn-secondary" style="padding:6px 12px; font-size:0.78rem; background:#c0392b; color:#fff; border-color:#c0392b;">L\u00F6schen</button>';
+    }
+    buttonsHtml += '</div>';
+
+    row.innerHTML = infoHtml + buttonsHtml;
+    return row;
 }
 
 function renderVoucherList(container, items, orders) {
@@ -1296,56 +1384,47 @@ function renderVoucherList(container, items, orders) {
         + '<div style="font-size:0.8rem; color:#e65100;">Eingelöst</div></div>';
 
     if (orders.length > 0) {
+        var pendingOrders = orders.filter(function(o) { return o.status !== 'abgeschlossen'; });
         html += '<div style="background:#e3f2fd; padding:12px 20px; border-radius:8px; flex:1; min-width:100px; text-align:center;">'
-            + '<div style="font-size:1.8rem; font-weight:700; color:#1565c0;">' + orders.length + '</div>'
+            + '<div style="font-size:1.8rem; font-weight:700; color:#1565c0;">' + pendingOrders.length + '</div>'
             + '<div style="font-size:0.8rem; color:#1565c0;">Bestellungen</div></div>';
     }
     html += '</div>';
 
-    // --- Neue Bestellungen ---
-    if (orders.length > 0) {
-        html += '<h4 style="margin:25px 0 12px; color:#1565c0;">Neue Bestellungen</h4>';
+    // Bestellungen aufteilen
+    var openOrders = orders.filter(function(o) { return o.status !== 'abgeschlossen'; });
+    var closedOrders = orders.filter(function(o) { return o.status === 'abgeschlossen'; });
+
+    // --- Offene Bestellungen ---
+    if (openOrders.length > 0) {
+        html += '<h4 style="margin:25px 0 12px; color:#1565c0;">Neue Bestellungen (' + openOrders.length + ')</h4>';
         html += '<div id="voucher-orders"></div>';
     }
 
     html += '<h4 style="margin:25px 0 12px; color:var(--primary);">Erstellte Gutscheine</h4>';
     html += '<div id="voucher-items"></div>';
 
+    // --- Abgeschlossene Bestellungen (aufklappbar) ---
+    if (closedOrders.length > 0) {
+        html += '<details style="margin-top:25px;"><summary style="cursor:pointer; font-weight:600; color:#888; font-size:0.95rem; padding:8px 0;">Abgeschlossene Bestellungen (' + closedOrders.length + ')</summary>';
+        html += '<div id="voucher-orders-closed" style="margin-top:10px;"></div></details>';
+    }
+
     container.innerHTML = html;
 
-    // Bestellungen rendern
-    if (orders.length > 0) {
+    // Offene Bestellungen rendern
+    if (openOrders.length > 0) {
         var ordersContainer = container.querySelector('#voucher-orders');
-        orders.forEach(function(order) {
-            var row = document.createElement('div');
-            var orderDate = order.timestamp ? new Date(order.timestamp).toLocaleDateString('de-DE') : '\u2014';
-            row.style.cssText = 'display:flex; align-items:center; gap:16px; padding:14px 18px; margin-bottom:8px; border-radius:8px; flex-wrap:wrap; background:#e3f2fd; border-left:4px solid #1565c0; cursor:pointer; transition:background 0.2s;';
-            row.onmouseenter = function() { row.style.background = '#bbdefb'; };
-            row.onmouseleave = function() { row.style.background = '#e3f2fd'; };
+        openOrders.forEach(function(order) {
+            ordersContainer.appendChild(renderOrderRow(order, false));
+        });
+    }
 
-            var besteller = order.name || '\u2014';
-            var email = order.email || '';
-            var telefon = order.telefon || '';
-            var flugart = order.flugart || '';
-            var empfaenger = order.empfaenger || '';
-            var wert = order.wert || '';
-            var gruss = order.grusstext || '';
-
-            row.innerHTML = '<div style="flex:1; min-width:200px;" onclick="loadVoucherOrder(' + JSON.stringify(order).replace(/"/g, '&quot;') + ')">'
-                + '<strong style="font-size:1rem;">\u2709 ' + besteller + '</strong>'
-                + '<div style="font-size:0.82rem; color:var(--text-light); margin-top:3px;">'
-                + flugart + (wert ? ' &middot; ' + wert + ' \u20AC' : '') + ' &middot; F\u00FCr: ' + empfaenger
-                + '</div>'
-                + '<div style="font-size:0.78rem; color:#888; margin-top:2px;">'
-                + email + (telefon ? ' &middot; ' + telefon : '') + ' &middot; ' + orderDate
-                + '</div>'
-                + (gruss ? '<div style="font-size:0.78rem; color:#666; margin-top:4px; font-style:italic;">\u201E' + gruss + '\u201C</div>' : '')
-                + '</div>'
-                + '<div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">'
-                + '<button onclick="loadVoucherOrder(' + JSON.stringify(order).replace(/"/g, '&quot;') + ')" class="btn" style="padding:6px 14px; font-size:0.78rem;">\u00DCbernehmen</button>'
-                + '<button onclick="event.stopPropagation(); deleteVoucherOrder(\'' + order.id + '\')" class="btn btn-secondary" style="padding:6px 12px; font-size:0.78rem; background:#c0392b; color:#fff; border-color:#c0392b;">L\u00F6schen</button>'
-                + '</div>';
-            ordersContainer.appendChild(row);
+    // Abgeschlossene Bestellungen rendern
+    if (closedOrders.length > 0) {
+        var closedContainer = container.querySelector('#voucher-orders-closed');
+        closedOrders.forEach(function(order) {
+            closedContainer.appendChild(renderOrderRow(order, true));
         });
     }
 
