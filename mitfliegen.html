@@ -438,6 +438,7 @@
             if (!anlass) { alert('Bitte einen Anlass eingeben.'); return; }
 
             var empfaenger = document.getElementById('gutschein-empfaenger').value.trim() || 'den Beschenkten';
+            var besteller = document.getElementById('gutschein-name').value.trim() || '';
             var flugart = document.getElementById('gutschein-flugart').value || 'einen Rundflug';
 
             var btn = document.getElementById('ki-generate-btn');
@@ -448,12 +449,14 @@
             var prompt = 'Erstelle einen kreativen, herzlichen Gutscheintext für einen Flug-Gutschein mit folgenden Daten:\n'
                 + '- Name des Beschenkten: ' + empfaenger + '\n'
                 + '- Flugart: ' + flugart + '\n'
-                + '- Anlass: ' + anlass + '\n\n'
-                + 'Der Gutschein ist vom Segelflugplatz Altdorf-Hagenhausen (Segelfliegen). '
+                + '- Anlass: ' + anlass + '\n'
+                + (besteller ? '- Geschenk von: ' + besteller + '\n' : '')
+                + '\nDer Gutschein ist vom Segelflugplatz Altdorf-Hagenhausen (Segelfliegen). '
                 + 'Schreibe 3-5 begeisternde Sätze. Verwende gerne Metaphern rund ums Fliegen, Freiheit und Abenteuer. '
                 + 'Gehe auf den Anlass und den Namen ein. '
-                + 'Baue den Namen des Beschenkten gerne in den Text ein. '
-                + 'Schreibe NUR den Grußtext — keine Überschrift, keine Grußformel wie "Liebe Grüße" am Ende. '
+                + 'Beginne mit einer persönlichen Anrede (z.B. "Lieber Hans,"). '
+                + (besteller ? 'Ende mit einer persönlichen Grußformel vom Schenkenden (z.B. "Dein ' + besteller + '"). ' : '')
+                + 'Schreibe NUR den Grußtext — keine Überschrift. '
                 + 'Sprache: Deutsch.';
 
             try {
