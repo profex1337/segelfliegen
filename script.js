@@ -391,9 +391,12 @@ function initForms() {
                                 <div style="font-size: 3rem; margin-bottom: 15px;">🎁</div>
                                 <h3 style="color: var(--primary);">Gutschein-Bestellung eingegangen!</h3>
                                 <p style="color: var(--text-light); margin-bottom: 25px;">Vielen Dank für Ihre Bestellung!</p>
-                                <div style="background: var(--bg-light); border: 2px solid var(--primary); border-radius: var(--radius); padding: 25px; display: inline-block; text-align: center; max-width: 400px;">
-                                    <p style="margin: 0; font-weight: 600;">Bankverbindung</p>
-                                    <p style="margin: 8px 0 0; color: var(--text-light);">(aktuell nicht verfügbar)</p>
+                                <div style="background: var(--bg-light); border: 2px solid var(--primary); border-radius: var(--radius); padding: 25px; display: inline-block; text-align: left; max-width: 400px;">
+                                    <p style="margin: 0; font-weight: 600; text-align: center;">Bankverbindung</p>
+                                    <p style="margin: 12px 0 0; font-size: 0.95rem;"><strong>Empfänger:</strong> Segelflieger im Post SV Nürnberg</p>
+                                    <p style="margin: 6px 0 0; font-size: 0.95rem;"><strong>IBAN:</strong> DE20 7606 1482 0004 5555 54</p>
+                                    <p style="margin: 6px 0 0; font-size: 0.95rem;"><strong>BIC:</strong> GENODEF1HSB</p>
+                                    <p style="margin: 6px 0 0; font-size: 0.85rem; color: var(--text-light);">Raiffeisenbank im Nürnberger Land</p>
                                 </div>
                                 <p style="color: var(--text-light); margin-top: 25px; font-size: 0.9rem;">Nach Zahlungseingang erhalten Sie Ihren personalisierten Gutschein per E-Mail.</p>
                                 <p style="color: var(--text-light); font-size: 0.85rem; font-style: italic;">Hinweis: Es wird keine separate Bestätigungs-E-Mail versendet. Ihre Bestellung ist bei uns eingegangen.</p>
