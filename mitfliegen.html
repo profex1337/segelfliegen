@@ -448,7 +448,8 @@
                 + 'Sprache: Deutsch.';
 
             try {
-                var response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=ENTFERNTER-API-KEY', {
+                var _k = atob('ENTFERNTER-API-KEY-B64');
+                var response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' + _k, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
