@@ -90,7 +90,7 @@ async function initFirebase() {
     const voucherList = document.getElementById('voucher-list');
 
     // Gutschein-Bestellformular auf mitfliegen.html erkennen
-    const gutscheinForm = document.querySelector('form[action*="formspree"] input[name="_subject"][value*="Gutschein"]');
+    const gutscheinForm = document.querySelector('form[data-emailjs="gutschein"]');
     const hasGutscheinForm = !!gutscheinForm;
 
     if (!newsContainer && !pricesContainer && !pricesAdmin && !aircraftAdminList && !aircraftPublicList && !voucherList && !hasGutscheinForm) return;

@@ -116,6 +116,14 @@ const reviewsHTML = `<aside id="reviews-sidebar" class="reviews-sidebar">
 </aside>
 <div id="reviews-overlay" class="reviews-overlay"></div>`;
 
+// EmailJS laden
+(function() {
+    var s = document.createElement('script');
+    s.src = 'https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js';
+    s.onload = function() { emailjs.init({ publicKey: 'XJb8wPMVJVP-bvjJo' }); };
+    document.head.appendChild(s);
+})();
+
 function injectLayout() {
     const headerElement = document.getElementById('main-header');
     if (headerElement && !headerElement.innerHTML.trim()) {
@@ -346,7 +354,7 @@ function initCookieConsent() {
 }
 
 function initForms() {
-    document.querySelectorAll('form[action*="formspree"]').forEach(form => {
+    document.querySelectorAll('form[data-emailjs]').forEach(form => {
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = form.querySelector('[type="submit"]');
@@ -358,21 +366,81 @@ function initForms() {
             const existingError = form.querySelector('.form-error');
             if (existingError) existingError.remove();
 
+            const formType = form.getAttribute('data-emailjs');
+            const fd = new FormData(form);
+
+            // Parameter für EmailJS zusammenbauen
+            var subject = '';
+            var details = '';
+            var message = '';
+
+            if (formType === 'kontakt') {
+                var betreff = fd.get('betreff') || 'Allgemein';
+                subject = 'Kontaktanfrage: ' + betreff;
+                message = fd.get('message') || '';
+                details = '<table role="presentation" style="width:100%;border-collapse:collapse;margin-top:15px;">'
+                    + '<tr><td style="padding:8px 12px;background:#f4f6f8;border-bottom:1px solid #e8e8e8;width:130px;font-weight:bold;color:#0f3460;">Betreff</td>'
+                    + '<td style="padding:8px 12px;background:#f4f6f8;border-bottom:1px solid #e8e8e8;">' + betreff + '</td></tr></table>';
+
+            } else if (formType === 'gutschein') {
+                subject = 'Neue Gutschein-Bestellung';
+                message = fd.get('grusstext') || '(kein Grußtext)';
+                var flugart = fd.get('flugart') || '';
+                var zusatzzeit = fd.get('zusatzzeit') || '0';
+                var wert = fd.get('wert') || '';
+                var empfaenger = fd.get('empfaenger') || '';
+                var anlass = fd.get('anlass') || '';
+                details = '<table role="presentation" style="width:100%;border-collapse:collapse;margin-top:15px;">'
+                    + '<tr><td style="padding:8px 12px;background:#f4f6f8;border-bottom:1px solid #e8e8e8;width:130px;font-weight:bold;color:#0f3460;">Flugart</td>'
+                    + '<td style="padding:8px 12px;background:#f4f6f8;border-bottom:1px solid #e8e8e8;">' + flugart + '</td></tr>'
+                    + '<tr><td style="padding:8px 12px;border-bottom:1px solid #e8e8e8;width:130px;font-weight:bold;color:#0f3460;">Zusatzzeit</td>'
+                    + '<td style="padding:8px 12px;border-bottom:1px solid #e8e8e8;">' + zusatzzeit + ' Min.</td></tr>'
+                    + '<tr><td style="padding:8px 12px;background:#f4f6f8;border-bottom:1px solid #e8e8e8;width:130px;font-weight:bold;color:#0f3460;">Gutscheinwert</td>'
+                    + '<td style="padding:8px 12px;background:#f4f6f8;border-bottom:1px solid #e8e8e8;font-weight:bold;color:#e94560;">' + wert + ' €</td></tr>'
+                    + '<tr><td style="padding:8px 12px;border-bottom:1px solid #e8e8e8;width:130px;font-weight:bold;color:#0f3460;">Empfänger</td>'
+                    + '<td style="padding:8px 12px;border-bottom:1px solid #e8e8e8;">' + empfaenger + '</td></tr>'
+                    + (anlass ? '<tr><td style="padding:8px 12px;background:#f4f6f8;border-bottom:1px solid #e8e8e8;width:130px;font-weight:bold;color:#0f3460;">Anlass</td>'
+                    + '<td style="padding:8px 12px;background:#f4f6f8;border-bottom:1px solid #e8e8e8;">' + anlass + '</td></tr>' : '')
+                    + '</table>';
+
+            } else if (formType === 'gastflug') {
+                subject = 'Neue Gastflug-Anfrage';
+                message = fd.get('message') || '';
+                var interesse = fd.get('interest') || '';
+                var wunschtermin = fd.get('date') || '';
+                details = '<table role="presentation" style="width:100%;border-collapse:collapse;margin-top:15px;">'
+                    + '<tr><td style="padding:8px 12px;background:#f4f6f8;border-bottom:1px solid #e8e8e8;width:130px;font-weight:bold;color:#0f3460;">Interesse an</td>'
+                    + '<td style="padding:8px 12px;background:#f4f6f8;border-bottom:1px solid #e8e8e8;">' + interesse + '</td></tr>'
+                    + (wunschtermin ? '<tr><td style="padding:8px 12px;border-bottom:1px solid #e8e8e8;width:130px;font-weight:bold;color:#0f3460;">Wunschtermin</td>'
+                    + '<td style="padding:8px 12px;border-bottom:1px solid #e8e8e8;">' + wunschtermin + '</td></tr>' : '')
+                    + '</table>';
+            }
+
+            var params = {
+                subject: subject,
+                name: fd.get('name') || '',
+                email: fd.get('email') || '',
+                telefon: fd.get('telefon') || '',
+                details: details,
+                message: message
+            };
+
             try {
-                const response = await fetch(form.action, {
-                    method: 'POST',
-                    body: new FormData(form),
-                    headers: { 'Accept': 'application/json' }
-                });
+                // Benachrichtigung an den Verein senden
+                await emailjs.send('service_cd14twj', 'template_eakr6dl', params);
 
-                if (response.ok) {
-                    // Prüfe ob es eine Gutschein-Bestellung ist
-                    const subjectField = form.querySelector('input[name="_subject"]');
-                    const isGutschein = subjectField && subjectField.value.includes('Gutschein');
+                // Bei Gutschein: Auto-Reply an Kunden + Firestore-Speicherung
+                if (formType === 'gutschein') {
+                    var replyParams = {
+                        name: fd.get('name') || '',
+                        email: fd.get('email') || '',
+                        flugart: fd.get('flugart') || '',
+                        empfaenger: fd.get('empfaenger') || '',
+                        wert: fd.get('wert') || ''
+                    };
+                    await emailjs.send('service_cd14twj', 'template_ygdqime', replyParams);
 
-                    // Bestelldaten in Firestore speichern
-                    if (isGutschein && typeof window.saveVoucherOrder === 'function') {
-                        const fd = new FormData(form);
+                    if (typeof window.saveVoucherOrder === 'function') {
                         window.saveVoucherOrder({
                             name: fd.get('name') || '',
                             email: fd.get('email') || '',
@@ -384,37 +452,34 @@ function initForms() {
                             grusstext: fd.get('grusstext') || ''
                         });
                     }
+                }
 
-                    if (isGutschein) {
-                        const gWert = fd.get('wert') || '';
-                        const gName = fd.get('name') || '';
-                        form.innerHTML = `
-                            <div style="text-align:center; padding: 40px 20px;">
-                                <div style="font-size: 3rem; margin-bottom: 15px;">🎁</div>
-                                <h3 style="color: var(--primary);">Gutschein-Bestellung eingegangen!</h3>
-                                <p style="color: var(--text-light); margin-bottom: 25px;">Vielen Dank für Ihre Bestellung!</p>
-                                <div style="background: var(--bg-light); border: 2px solid var(--primary); border-radius: var(--radius); padding: 25px; display: inline-block; text-align: left; max-width: 400px;">
-                                    <p style="margin: 0; font-weight: 600; text-align: center;">Bankverbindung</p>
-                                    <p style="margin: 12px 0 0; font-size: 0.95rem;"><strong>Empfänger:</strong> Segelflieger im Post SV Nürnberg</p>
-                                    <p style="margin: 6px 0 0; font-size: 0.95rem;"><strong>IBAN:</strong> DE20 7606 1482 0004 5555 54</p>
-                                    <p style="margin: 6px 0 0; font-size: 0.95rem;"><strong>BIC:</strong> GENODEF1HSB</p>
-                                    <p style="margin: 6px 0 0; font-size: 0.85rem; color: var(--text-light);">Raiffeisenbank im Nürnberger Land</p>
-                                    ${gWert ? `<p style="margin: 12px 0 0; font-size: 0.95rem;"><strong>Betrag:</strong> ${gWert} €</p>` : ''}
-                                    <p style="margin: 6px 0 0; font-size: 0.95rem;"><strong>Verwendungszweck:</strong> Gutschein ${gName}</p>
-                                </div>
-                                <p style="color: var(--text-light); margin-top: 25px; font-size: 0.9rem;">Nach Zahlungseingang erhalten Sie Ihren personalisierten Gutschein per E-Mail.</p>
-                                <p style="color: var(--text-light); font-size: 0.85rem; font-style: italic;">Hinweis: Es wird keine separate Bestätigungs-E-Mail versendet. Ihre Bestellung ist bei uns eingegangen.</p>
-                            </div>`;
-                    } else {
-                        form.innerHTML = `
-                            <div style="text-align:center; padding: 40px 20px;">
-                                <div style="font-size: 3rem; margin-bottom: 15px;">✅</div>
-                                <h3 style="color: var(--primary);">Nachricht gesendet!</h3>
-                                <p style="color: var(--text-light);">Vielen Dank! Wir melden uns so schnell wie möglich bei Ihnen.</p>
-                            </div>`;
-                    }
+                // Erfolgsmeldung anzeigen
+                if (formType === 'gutschein') {
+                    var gWert = fd.get('wert') || '';
+                    var gName = fd.get('name') || '';
+                    form.innerHTML = '<div style="text-align:center; padding: 40px 20px;">'
+                        + '<div style="font-size: 3rem; margin-bottom: 15px;">🎁</div>'
+                        + '<h3 style="color: var(--primary);">Gutschein-Bestellung eingegangen!</h3>'
+                        + '<p style="color: var(--text-light); margin-bottom: 25px;">Vielen Dank für Ihre Bestellung!</p>'
+                        + '<div style="background: var(--bg-light); border: 2px solid var(--primary); border-radius: var(--radius); padding: 25px; display: inline-block; text-align: left; max-width: 400px;">'
+                        + '<p style="margin: 0; font-weight: 600; text-align: center;">Bankverbindung</p>'
+                        + '<p style="margin: 12px 0 0; font-size: 0.95rem;"><strong>Empfänger:</strong> Segelflieger im Post SV Nürnberg</p>'
+                        + '<p style="margin: 6px 0 0; font-size: 0.95rem;"><strong>IBAN:</strong> DE20 7606 1482 0004 5555 54</p>'
+                        + '<p style="margin: 6px 0 0; font-size: 0.95rem;"><strong>BIC:</strong> GENODEF1HSB</p>'
+                        + '<p style="margin: 6px 0 0; font-size: 0.85rem; color: var(--text-light);">Raiffeisenbank im Nürnberger Land</p>'
+                        + (gWert ? '<p style="margin: 12px 0 0; font-size: 0.95rem;"><strong>Betrag:</strong> ' + gWert + ' €</p>' : '')
+                        + '<p style="margin: 6px 0 0; font-size: 0.95rem;"><strong>Verwendungszweck:</strong> Gutschein ' + gName + '</p>'
+                        + '</div>'
+                        + '<p style="color: var(--text-light); margin-top: 25px; font-size: 0.9rem;">Nach Zahlungseingang erhalten Sie Ihren personalisierten Gutschein per E-Mail.</p>'
+                        + '<p style="color: var(--text-light); font-size: 0.85rem; font-style: italic;">Sie erhalten in Kürze eine Bestätigung per E-Mail mit den Zahlungsinformationen.</p>'
+                        + '</div>';
                 } else {
-                    throw new Error('Serverfehler');
+                    form.innerHTML = '<div style="text-align:center; padding: 40px 20px;">'
+                        + '<div style="font-size: 3rem; margin-bottom: 15px;">✅</div>'
+                        + '<h3 style="color: var(--primary);">Nachricht gesendet!</h3>'
+                        + '<p style="color: var(--text-light);">Vielen Dank! Wir melden uns so schnell wie möglich bei Ihnen.</p>'
+                        + '</div>';
                 }
             } catch (err) {
                 btn.textContent = originalText;
