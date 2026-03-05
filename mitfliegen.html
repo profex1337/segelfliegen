@@ -308,17 +308,14 @@
                     <input type="text" id="gutschein-empfaenger" name="empfaenger" required placeholder="Für wen ist der Gutschein?">
                 </div>
                 <div class="form-group" style="margin-top: 20px;">
+                    <label for="ki-anlass">Anlass (optional)</label>
+                    <input type="text" id="ki-anlass" name="anlass" placeholder="z.B. Geburtstag, Weihnachten, Hochzeitstag...">
+                </div>
+                <div class="form-group" style="margin-top: 20px;">
                     <label for="gutschein-grusstext">Persönlicher Grußtext (optional)</label>
-                    <div id="ki-gruss-input" style="display:none; margin-bottom:12px;">
-                        <div style="display:flex; gap:8px; align-items:center;">
-                            <input type="text" id="ki-anlass" placeholder="z.B. Geburtstag, Weihnachten, Hochzeitstag..." style="flex:1;">
-                            <button type="button" id="ki-generate-btn" class="btn" style="padding:10px 18px; font-size:0.85rem; white-space:nowrap;" onclick="generateGreeting()">Erstellen</button>
-                        </div>
-                        <p style="font-size:0.75rem; color:var(--text-light); margin:6px 0 0;">Anlass eingeben — der Grußtext wird automatisch generiert</p>
-                    </div>
                     <div style="position:relative;">
                         <textarea id="gutschein-grusstext" name="grusstext" rows="3" placeholder="z.B. Alles Gute zum Geburtstag! Viel Spaß beim Fliegen!"></textarea>
-                        <button type="button" id="ki-toggle-btn" title="KI-Grußtext generieren" onclick="toggleKiInput()" style="position:absolute; top:8px; right:8px; background:linear-gradient(135deg, #667eea, #764ba2); color:#fff; border:none; border-radius:6px; padding:4px 10px; font-size:0.75rem; cursor:pointer; font-weight:600; opacity:0.85; transition:opacity 0.2s;">KI</button>
+                        <button type="button" id="ki-toggle-btn" title="KI-Grußtext generieren" onclick="generateGreeting()" style="position:absolute; top:8px; right:8px; background:linear-gradient(135deg, #667eea, #764ba2); color:#fff; border:none; border-radius:6px; padding:4px 10px; font-size:0.75rem; cursor:pointer; font-weight:600; opacity:0.85; transition:opacity 0.2s;">KI</button>
                     </div>
                 </div>
 
@@ -426,24 +423,15 @@
             hidden.value = total.toFixed(2).replace('.', ',');
         }
 
-        function toggleKiInput() {
-            var panel = document.getElementById('ki-gruss-input');
-            var isVisible = panel.style.display !== 'none';
-            panel.style.display = isVisible ? 'none' : 'block';
-            if (!isVisible) document.getElementById('ki-anlass').focus();
-        }
-
         async function generateGreeting() {
-            var anlass = document.getElementById('ki-anlass').value.trim();
-            if (!anlass) { alert('Bitte einen Anlass eingeben.'); return; }
-
+            var anlass = document.getElementById('ki-anlass').value.trim() || 'ohne bestimmten Anlass';
             var empfaenger = document.getElementById('gutschein-empfaenger').value.trim() || 'den Beschenkten';
             var besteller = document.getElementById('gutschein-name').value.trim() || '';
             var flugart = document.getElementById('gutschein-flugart').value || 'einen Rundflug';
 
-            var btn = document.getElementById('ki-generate-btn');
+            var btn = document.getElementById('ki-toggle-btn');
             var originalText = btn.textContent;
-            btn.textContent = 'Generiere...';
+            btn.textContent = '...';
             btn.disabled = true;
 
             var prompt = 'Erstelle einen kreativen, herzlichen Gutscheintext für einen Flug-Gutschein mit folgenden Daten:\n'
