@@ -1384,9 +1384,8 @@ function renderVoucherList(container, items, orders) {
         + '<div style="font-size:0.8rem; color:#e65100;">Eingelöst</div></div>';
 
     if (orders.length > 0) {
-        var pendingOrders = orders.filter(function(o) { return o.status !== 'abgeschlossen'; });
         html += '<div style="background:#e3f2fd; padding:12px 20px; border-radius:8px; flex:1; min-width:100px; text-align:center;">'
-            + '<div style="font-size:1.8rem; font-weight:700; color:#1565c0;">' + pendingOrders.length + '</div>'
+            + '<div style="font-size:1.8rem; font-weight:700; color:#1565c0;">' + orders.length + '</div>'
             + '<div style="font-size:0.8rem; color:#1565c0;">Bestellungen</div></div>';
     }
     html += '</div>';
