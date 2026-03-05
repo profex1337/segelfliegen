@@ -445,13 +445,15 @@
             btn.textContent = 'Generiere...';
             btn.disabled = true;
 
-            var prompt = 'Schreibe einen herzlichen, persönlichen Grußtext (3-5 Sätze) für einen Flug-Gutschein. '
-                + 'Anlass: ' + anlass + '. '
-                + 'Der Gutschein ist für: ' + empfaenger + '. '
-                + 'Flugart: ' + flugart + '. '
-                + 'Der Gutschein ist vom Segelflugplatz Altdorf-Hagenhausen. '
-                + 'Schreibe nur den Grußtext, keine Anrede, keine Überschrift, kein "Liebe Grüße" am Ende. '
-                + 'Schreibe auf Deutsch, freundlich und persönlich.';
+            var prompt = 'Erstelle einen kreativen, herzlichen Gutscheintext für einen Flug-Gutschein mit folgenden Daten:\n'
+                + '- Name des Beschenkten: ' + empfaenger + '\n'
+                + '- Flugart: ' + flugart + '\n'
+                + '- Anlass: ' + anlass + '\n\n'
+                + 'Der Gutschein ist vom Segelflugplatz Altdorf-Hagenhausen (Segelfliegen). '
+                + 'Schreibe 3-5 begeisternde Sätze. Verwende gerne Metaphern rund ums Fliegen, Freiheit und Abenteuer. '
+                + 'Gehe auf den Anlass und den Namen ein. '
+                + 'Schreibe NUR den Grußtext — keine Anrede wie "Lieber...", keine Überschrift, keine Grußformel am Ende. '
+                + 'Sprache: Deutsch.';
 
             try {
                 var response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=ENTFERNTER-API-KEY', {
