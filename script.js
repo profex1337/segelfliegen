@@ -386,6 +386,8 @@ function initForms() {
                     }
 
                     if (isGutschein) {
+                        const gWert = fd.get('wert') || '';
+                        const gName = fd.get('name') || '';
                         form.innerHTML = `
                             <div style="text-align:center; padding: 40px 20px;">
                                 <div style="font-size: 3rem; margin-bottom: 15px;">🎁</div>
@@ -397,6 +399,8 @@ function initForms() {
                                     <p style="margin: 6px 0 0; font-size: 0.95rem;"><strong>IBAN:</strong> DE20 7606 1482 0004 5555 54</p>
                                     <p style="margin: 6px 0 0; font-size: 0.95rem;"><strong>BIC:</strong> GENODEF1HSB</p>
                                     <p style="margin: 6px 0 0; font-size: 0.85rem; color: var(--text-light);">Raiffeisenbank im Nürnberger Land</p>
+                                    ${gWert ? `<p style="margin: 12px 0 0; font-size: 0.95rem;"><strong>Betrag:</strong> ${gWert} €</p>` : ''}
+                                    <p style="margin: 6px 0 0; font-size: 0.95rem;"><strong>Verwendungszweck:</strong> Gutschein ${gName}</p>
                                 </div>
                                 <p style="color: var(--text-light); margin-top: 25px; font-size: 0.9rem;">Nach Zahlungseingang erhalten Sie Ihren personalisierten Gutschein per E-Mail.</p>
                                 <p style="color: var(--text-light); font-size: 0.85rem; font-style: italic;">Hinweis: Es wird keine separate Bestätigungs-E-Mail versendet. Ihre Bestellung ist bei uns eingegangen.</p>
