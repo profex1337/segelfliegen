@@ -314,7 +314,8 @@
                 <div class="form-group" style="margin-top: 20px;">
                     <label for="gutschein-grusstext">Persönlicher Grußtext (optional)</label>
                     <div style="position:relative;">
-                        <textarea id="gutschein-grusstext" name="grusstext" rows="3" placeholder="z.B. Alles Gute zum Geburtstag! Viel Spaß beim Fliegen!"></textarea>
+                        <textarea id="gutschein-grusstext" name="grusstext" rows="3" maxlength="800" placeholder="z.B. Alles Gute zum Geburtstag! Viel Spaß beim Fliegen!" oninput="document.getElementById('gruss-counter').textContent=this.value.length+' / 800'"></textarea>
+                        <div id="gruss-counter" style="text-align:right; font-size:0.75rem; color:var(--text-light); margin-top:4px;">0 / 800</div>
                         <button type="button" id="ki-toggle-btn" title="KI-Grußtext generieren" onclick="generateGreeting()" class="ki-btn">KI</button>
                     </div>
                 </div>
@@ -445,7 +446,7 @@
                 + 'Beginne mit einer persönlichen Anrede (z.B. "Lieber Hans,"). '
                 + (besteller ? 'Ende mit einer persönlichen Grußformel vom Schenkenden (z.B. "Dein ' + besteller + '"). ' : '')
                 + 'Schreibe NUR den Grußtext — keine Überschrift. '
-                + 'Sprache: Deutsch.';
+                + 'Der Text darf maximal 800 Zeichen lang sein. Sprache: Deutsch.';
 
             try {
                 var _k = atob('ENTFERNTER-API-KEY-B64');
