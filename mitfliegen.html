@@ -462,7 +462,19 @@
                         generationConfig: { temperature: 0.9, maxOutputTokens: 200 }
                     })
                 });
+                if (response.status === 429) {
+                    alert('Zu viele Anfragen. Bitte warten Sie einen Moment und versuchen Sie es erneut.');
+                    btn.textContent = originalText;
+                    btn.disabled = false;
+                    return;
+                }
                 var data = await response.json();
+                if (!response.ok) {
+                    alert('Fehler: ' + (data.error && data.error.message || 'Unbekannter Fehler'));
+                    btn.textContent = originalText;
+                    btn.disabled = false;
+                    return;
+                }
                 var text = data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts[0].text;
                 if (text) {
                     document.getElementById('gutschein-grusstext').value = text.trim();
