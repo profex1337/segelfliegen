@@ -369,61 +369,41 @@ function initForms() {
             const formType = form.getAttribute('data-emailjs');
             const fd = new FormData(form);
 
-            // Parameter für EmailJS zusammenbauen
-            var subject = '';
-            var details = '';
-            var message = '';
-
-            if (formType === 'kontakt') {
-                var betreff = fd.get('betreff') || 'Allgemein';
-                subject = 'Kontaktanfrage: ' + betreff;
-                message = fd.get('message') || '';
-                details = '<table role="presentation" style="width:100%;border-collapse:collapse;margin-top:15px;">'
-                    + '<tr><td style="padding:8px 12px;background:#f4f6f8;border-bottom:1px solid #e8e8e8;width:130px;font-weight:bold;color:#0f3460;">Betreff</td>'
-                    + '<td style="padding:8px 12px;background:#f4f6f8;border-bottom:1px solid #e8e8e8;">' + betreff + '</td></tr></table>';
-
-            } else if (formType === 'gutschein') {
-                subject = 'Neue Gutschein-Bestellung';
-                message = fd.get('grusstext') || '(kein Grußtext)';
-                var flugart = fd.get('flugart') || '';
-                var zusatzzeit = fd.get('zusatzzeit') || '0';
-                var wert = fd.get('wert') || '';
-                var empfaenger = fd.get('empfaenger') || '';
-                var anlass = fd.get('anlass') || '';
-                details = '<table role="presentation" style="width:100%;border-collapse:collapse;margin-top:15px;">'
-                    + '<tr><td style="padding:8px 12px;background:#f4f6f8;border-bottom:1px solid #e8e8e8;width:130px;font-weight:bold;color:#0f3460;">Flugart</td>'
-                    + '<td style="padding:8px 12px;background:#f4f6f8;border-bottom:1px solid #e8e8e8;">' + flugart + '</td></tr>'
-                    + '<tr><td style="padding:8px 12px;border-bottom:1px solid #e8e8e8;width:130px;font-weight:bold;color:#0f3460;">Zusatzzeit</td>'
-                    + '<td style="padding:8px 12px;border-bottom:1px solid #e8e8e8;">' + zusatzzeit + ' Min.</td></tr>'
-                    + '<tr><td style="padding:8px 12px;background:#f4f6f8;border-bottom:1px solid #e8e8e8;width:130px;font-weight:bold;color:#0f3460;">Gutscheinwert</td>'
-                    + '<td style="padding:8px 12px;background:#f4f6f8;border-bottom:1px solid #e8e8e8;font-weight:bold;color:#e94560;">' + wert + ' €</td></tr>'
-                    + '<tr><td style="padding:8px 12px;border-bottom:1px solid #e8e8e8;width:130px;font-weight:bold;color:#0f3460;">Empfänger</td>'
-                    + '<td style="padding:8px 12px;border-bottom:1px solid #e8e8e8;">' + empfaenger + '</td></tr>'
-                    + (anlass ? '<tr><td style="padding:8px 12px;background:#f4f6f8;border-bottom:1px solid #e8e8e8;width:130px;font-weight:bold;color:#0f3460;">Anlass</td>'
-                    + '<td style="padding:8px 12px;background:#f4f6f8;border-bottom:1px solid #e8e8e8;">' + anlass + '</td></tr>' : '')
-                    + '</table>';
-
-            } else if (formType === 'gastflug') {
-                subject = 'Neue Gastflug-Anfrage';
-                message = fd.get('message') || '';
-                var interesse = fd.get('interest') || '';
-                var wunschtermin = fd.get('date') || '';
-                details = '<table role="presentation" style="width:100%;border-collapse:collapse;margin-top:15px;">'
-                    + '<tr><td style="padding:8px 12px;background:#f4f6f8;border-bottom:1px solid #e8e8e8;width:130px;font-weight:bold;color:#0f3460;">Interesse an</td>'
-                    + '<td style="padding:8px 12px;background:#f4f6f8;border-bottom:1px solid #e8e8e8;">' + interesse + '</td></tr>'
-                    + (wunschtermin ? '<tr><td style="padding:8px 12px;border-bottom:1px solid #e8e8e8;width:130px;font-weight:bold;color:#0f3460;">Wunschtermin</td>'
-                    + '<td style="padding:8px 12px;border-bottom:1px solid #e8e8e8;">' + wunschtermin + '</td></tr>' : '')
-                    + '</table>';
-            }
-
+            // Parameter für EmailJS zusammenbauen — alle Felder einzeln (kein HTML)
             var params = {
-                subject: subject,
+                subject: '',
                 name: fd.get('name') || '',
                 email: fd.get('email') || '',
                 telefon: fd.get('telefon') || '',
-                details: details,
-                message: message
+                message: fd.get('message') || '',
+                betreff: '',
+                flugart: '',
+                zusatzzeit: '',
+                wert: '',
+                empfaenger: '',
+                anlass: '',
+                interesse: '',
+                wunschtermin: ''
             };
+
+            if (formType === 'kontakt') {
+                params.subject = 'Kontaktanfrage: ' + (fd.get('betreff') || 'Allgemein');
+                params.betreff = fd.get('betreff') || 'Allgemein';
+
+            } else if (formType === 'gutschein') {
+                params.subject = 'Neue Gutschein-Bestellung';
+                params.message = fd.get('grusstext') || '(kein Grußtext)';
+                params.flugart = fd.get('flugart') || '';
+                params.zusatzzeit = (fd.get('zusatzzeit') || '0') + ' Min.';
+                params.wert = (fd.get('wert') || '') + ' €';
+                params.empfaenger = fd.get('empfaenger') || '';
+                params.anlass = fd.get('anlass') || '';
+
+            } else if (formType === 'gastflug') {
+                params.subject = 'Neue Gastflug-Anfrage';
+                params.interesse = fd.get('interest') || '';
+                params.wunschtermin = fd.get('date') || '';
+            }
 
             try {
                 // Benachrichtigung an den Verein senden
@@ -438,6 +418,7 @@ function initForms() {
                         empfaenger: fd.get('empfaenger') || '',
                         wert: fd.get('wert') || ''
                     };
+                    // wert ohne € für Auto-Reply (Template fügt es selbst hinzu)
                     await emailjs.send('service_cd14twj', 'template_ygdqime', replyParams);
 
                     if (typeof window.saveVoucherOrder === 'function') {
