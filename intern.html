@@ -578,9 +578,12 @@
                 doc.setFont('helvetica', 'italic');
                 doc.setFontSize(10);
                 doc.setTextColor(100, 100, 100);
-                const lines = doc.splitTextToSize(`\u201E${greeting}\u201C`, textWidth - 10);
-                doc.text(lines, textCenterX, nextY, { align: 'center' });
-                nextY += lines.length * 5 + 8;
+                var allLines = doc.splitTextToSize(`\u201E${greeting}\u201C`, textWidth - 10);
+                // Maximal 10 Zeilen im PDF (entspricht ~Beispieltext mit Zeilenumbrüchen)
+                var maxLines = 10;
+                if (allLines.length > maxLines) allLines = allLines.slice(0, maxLines);
+                doc.text(allLines, textCenterX, nextY, { align: 'center' });
+                nextY += allLines.length * 5 + 14;
             }
 
             // Gutschein-Nr. und Gültigkeits-Box
