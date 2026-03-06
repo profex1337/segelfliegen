@@ -420,11 +420,26 @@
         let watermarkW = 0;
         let watermarkH = 0;
         loadImageAsBase64('images/logo.png').then(d => { logoBase64 = d; }).catch(() => {});
-        loadImageAsBase64('images/spn_flieger.png').then(d => {
-            const img = new Image();
-            img.onload = () => { watermarkBase64 = d; watermarkW = img.width; watermarkH = img.height; };
-            img.src = d;
-        }).catch(() => {});
+        // Wasserzeichen verkleinern (Original 3508x2481 RGBA → ~33MB in PDF)
+        // Per Canvas auf max 500px skalieren und als JPEG konvertieren
+        (function() {
+            var img = new Image();
+            img.onload = function() {
+                var maxW = 500;
+                var scale = maxW / img.width;
+                var canvas = document.createElement('canvas');
+                canvas.width = maxW;
+                canvas.height = Math.round(img.height * scale);
+                var ctx = canvas.getContext('2d');
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                watermarkBase64 = canvas.toDataURL('image/jpeg', 0.8);
+                watermarkW = canvas.width;
+                watermarkH = canvas.height;
+            };
+            img.src = 'images/spn_flieger.png';
+        })();
 
         // Alle vorhandenen Gutschein-Bilder vorladen
         const uniqueImages = [...new Set(Object.values(gutscheinImageMap))];
@@ -624,7 +639,7 @@
                     const wmX = textRight - wmW;
                     const wmY = h - margin - wmH - 15;
                     doc.setGState(new doc.GState({ opacity: 0.12 }));
-                    doc.addImage(watermarkBase64, 'PNG', wmX, wmY, wmW, wmH);
+                    doc.addImage(watermarkBase64, 'JPEG', wmX, wmY, wmW, wmH);
                     doc.setGState(new doc.GState({ opacity: 1 }));
                 } catch(e) {}
             }
