@@ -415,7 +415,15 @@
             '_default': 'images/Gutschein.jpg'
         };
 
+        let watermarkBase64 = null;
+        let watermarkW = 0;
+        let watermarkH = 0;
         loadImageAsBase64('images/logo.png').then(d => { logoBase64 = d; }).catch(() => {});
+        loadImageAsBase64('images/spn_flieger.png').then(d => {
+            const img = new Image();
+            img.onload = () => { watermarkBase64 = d; watermarkW = img.width; watermarkH = img.height; };
+            img.src = d;
+        }).catch(() => {});
 
         // Alle vorhandenen Gutschein-Bilder vorladen
         const uniqueImages = [...new Set(Object.values(gutscheinImageMap))];
@@ -599,6 +607,21 @@
                 doc.setFont('helvetica', 'bold');
                 doc.setTextColor(60, 60, 60);
                 doc.text(validUntil, infoRight, nextY, { align: 'right' });
+            }
+
+            // --- Wasserzeichen (spn_flieger.png) unten rechts ---
+            if (watermarkBase64 && watermarkW && watermarkH) {
+                try {
+                    const wmMaxH = 70;
+                    const wmAspect = watermarkW / watermarkH;
+                    const wmH = wmMaxH;
+                    const wmW = wmH * wmAspect;
+                    const wmX = w - margin - wmW - 5;
+                    const wmY = h - margin - wmH - 5;
+                    doc.setGState(new doc.GState({ opacity: 0.08 }));
+                    doc.addImage(watermarkBase64, 'PNG', wmX, wmY, wmW, wmH);
+                    doc.setGState(new doc.GState({ opacity: 1 }));
+                } catch(e) {}
             }
 
             // --- Footer ---
