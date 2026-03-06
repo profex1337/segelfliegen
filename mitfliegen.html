@@ -434,10 +434,20 @@
         }
 
         async function generateGreeting() {
+            var nameVal = document.getElementById('gutschein-name').value.trim();
+            var emailVal = document.getElementById('gutschein-email').value.trim();
+            var flugartVal = document.getElementById('gutschein-flugart').value;
+            var empfaengerVal = document.getElementById('gutschein-empfaenger').value.trim();
+
+            if (!nameVal || !emailVal || !flugartVal || !empfaengerVal) {
+                alert('Bitte füllen Sie zuerst alle Pflichtfelder aus (Name, E-Mail, Flugart, Name des Beschenkten).');
+                return;
+            }
+
             var anlass = document.getElementById('ki-anlass').value.trim() || 'ohne bestimmten Anlass';
-            var empfaenger = document.getElementById('gutschein-empfaenger').value.trim() || 'den Beschenkten';
-            var besteller = document.getElementById('gutschein-name').value.trim() || '';
-            var flugart = document.getElementById('gutschein-flugart').value || 'einen Rundflug';
+            var empfaenger = empfaengerVal;
+            var besteller = nameVal;
+            var flugart = flugartVal;
 
             var btn = document.getElementById('ki-toggle-btn');
             var originalText = btn.textContent;
