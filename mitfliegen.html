@@ -322,8 +322,8 @@
                 <div class="form-group" style="margin-top: 20px;">
                     <label for="gutschein-grusstext">Persönlicher Grußtext (optional)</label>
                     <div style="position:relative;">
-                        <textarea id="gutschein-grusstext" name="grusstext" rows="3" maxlength="800" placeholder="z.B. Alles Gute zum Geburtstag! Viel Spaß beim Fliegen!" oninput="document.getElementById('gruss-counter').textContent=this.value.length+' / 800'"></textarea>
-                        <div id="gruss-counter" style="text-align:right; font-size:0.75rem; color:var(--text-light); margin-top:4px;">0 / 800</div>
+                        <textarea id="gutschein-grusstext" name="grusstext" rows="6" maxlength="800" placeholder="z.B. Alles Gute zum Geburtstag! Viel Spaß beim Fliegen!" oninput="var l=this.value.split('\n');if(l.length>10){this.value=l.slice(0,10).join('\n');}document.getElementById('gruss-counter').textContent=this.value.length+' / 800'"></textarea>
+                        <div id="gruss-counter" style="text-align:right; font-size:0.75rem; color:var(--text-light); margin-top:4px;">0 / 800 · max. 10 Zeilen</div>
                         <button type="button" id="ki-toggle-btn" title="KI-Grußtext generieren" onclick="generateGreeting()" class="ki-btn">KI</button>
                     </div>
                     <p style="font-size: 0.75rem; color: var(--text-light); margin-top: 6px;">Bei Nutzung der KI-Funktion werden Ihre Eingaben (Name, Flugart, Anlass) zur Textgenerierung an die Google Gemini API übermittelt. <a href="datenschutz.html" target="_blank" style="color: var(--primary);">Mehr erfahren</a></p>
