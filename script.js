@@ -411,12 +411,18 @@ function initForms() {
 
                 // Bei Gutschein: Auto-Reply an Kunden + Firestore-Speicherung
                 if (formType === 'gutschein') {
+                    // EPC-QR-Code URL für Auto-Reply E-Mail
+                    var replyWert = (fd.get('wert') || '').replace(',', '.');
+                    var replyName = fd.get('name') || '';
+                    var replyEpcData = 'BCD\n002\n1\nSCT\nGENODEF1HSB\nSegelflieger im Post SV Nürnberg\nDE20760614820004555554\nEUR' + replyWert + '\n\n\nGutschein ' + replyName;
+                    var replyQrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + encodeURIComponent(replyEpcData);
                     var replyParams = {
                         name: fd.get('name') || '',
                         email: fd.get('email') || '',
                         flugart: fd.get('flugart') || '',
                         empfaenger: fd.get('empfaenger') || '',
-                        wert: fd.get('wert') || ''
+                        wert: fd.get('wert') || '',
+                        qr_url: replyQrUrl
                     };
                     // wert ohne € für Auto-Reply (Template fügt es selbst hinzu)
                     await emailjs.send('service_cd14twj', 'template_ygdqime', replyParams);
@@ -439,6 +445,10 @@ function initForms() {
                 if (formType === 'gutschein') {
                     var gWert = fd.get('wert') || '';
                     var gName = fd.get('name') || '';
+                    // EPC-QR-Code (SEPA-Standard) für Banking-Apps
+                    var epcBetrag = gWert ? gWert.replace(',', '.') : '';
+                    var epcData = 'BCD\n002\n1\nSCT\nGENODEF1HSB\nSegelflieger im Post SV Nürnberg\nDE20760614820004555554\nEUR' + epcBetrag + '\n\n\nGutschein ' + gName;
+                    var qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + encodeURIComponent(epcData);
                     form.innerHTML = '<div style="text-align:center; padding: 40px 20px;">'
                         + '<div style="font-size: 3rem; margin-bottom: 15px;">🎁</div>'
                         + '<h3 style="color: var(--primary);">Gutschein-Bestellung eingegangen!</h3>'
@@ -451,6 +461,10 @@ function initForms() {
                         + '<p style="margin: 6px 0 0; font-size: 0.85rem; color: var(--text-light);">Raiffeisenbank im Nürnberger Land</p>'
                         + (gWert ? '<p style="margin: 12px 0 0; font-size: 0.95rem;"><strong>Betrag:</strong> ' + gWert + ' €</p>' : '')
                         + '<p style="margin: 6px 0 0; font-size: 0.95rem;"><strong>Verwendungszweck:</strong> Gutschein ' + gName + '</p>'
+                        + '</div>'
+                        + '<div style="margin-top: 20px;">'
+                        + '<img src="' + qrUrl + '" alt="QR-Code für Überweisung" width="200" height="200" style="border-radius: 8px;">'
+                        + '<p style="color: var(--text-light); font-size: 0.85rem; margin-top: 8px;">QR-Code für Ihre Banking-App scannen</p>'
                         + '</div>'
                         + '<p style="color: var(--text-light); margin-top: 25px; font-size: 0.9rem;">Nach Zahlungseingang erhalten Sie Ihren personalisierten Gutschein per E-Mail.</p>'
                         + '<p style="color: var(--text-light); font-size: 0.85rem; font-style: italic;">Sie erhalten in Kürze eine Bestätigung per E-Mail mit den Zahlungsinformationen.</p>'
