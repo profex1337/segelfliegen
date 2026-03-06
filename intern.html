@@ -586,7 +586,8 @@
             // Gutschein-Nr. und Gültigkeits-Box
             nextY = Math.max(nextY, lineY + 50);
 
-            // Minimales Info-Layout
+            // Minimales Info-Layout — maximal bis Footer-Linie (h - 30)
+            nextY = Math.min(nextY, h - 42);
             doc.setFont('helvetica', 'normal');
             doc.setFontSize(8);
             doc.setTextColor(140, 140, 140);
@@ -609,16 +610,16 @@
                 doc.text(validUntil, infoRight, nextY, { align: 'right' });
             }
 
-            // --- Wasserzeichen (spn_flieger.png) unten rechts ---
+            // --- Wasserzeichen (spn_flieger.png) unten rechts im Textbereich ---
             if (watermarkBase64 && watermarkW && watermarkH) {
                 try {
-                    const wmMaxH = 70;
+                    const wmMaxH = 60;
                     const wmAspect = watermarkW / watermarkH;
                     const wmH = wmMaxH;
                     const wmW = wmH * wmAspect;
-                    const wmX = w - margin - wmW - 5;
-                    const wmY = h - margin - wmH - 5;
-                    doc.setGState(new doc.GState({ opacity: 0.08 }));
+                    const wmX = textRight - wmW;
+                    const wmY = h - margin - wmH - 15;
+                    doc.setGState(new doc.GState({ opacity: 0.12 }));
                     doc.addImage(watermarkBase64, 'PNG', wmX, wmY, wmW, wmH);
                     doc.setGState(new doc.GState({ opacity: 1 }));
                 } catch(e) {}
@@ -627,13 +628,13 @@
             // --- Footer ---
             doc.setDrawColor(15, 52, 96);
             doc.setLineWidth(0.2);
-            doc.line(textLeft, h - 22, textRight, h - 22);
+            doc.line(textLeft, h - 26, textRight, h - 26);
 
             doc.setFont('helvetica', 'normal');
             doc.setFontSize(6.5);
             doc.setTextColor(140, 140, 140);
-            doc.text('Segelflugplatz Altdorf-Hagenhausen  \u00B7  Hagenhausener Str. in 92348 St\u00F6ckelsberg (Beschilderung folgen)', textCenterX, h - 17, { align: 'center' });
-            doc.text('+49 9189 310  \u00B7  www.segelfliegenaltdorf.de  \u00B7  info@segelfliegen-altdorf.de', textCenterX, h - 13, { align: 'center' });
+            doc.text('Segelflugplatz Altdorf-Hagenhausen  \u00B7  Hagenhausener Str. in 92348 St\u00F6ckelsberg (Beschilderung folgen)', textCenterX, h - 21, { align: 'center' });
+            doc.text('+49 9189 310  \u00B7  www.segelfliegenaltdorf.de  \u00B7  info@segelfliegen-altdorf.de', textCenterX, h - 17, { align: 'center' });
 
             // PDF speichern
             const filename = voucherNr ? `Gutschein_${voucherNr}.pdf` : 'Gutschein.pdf';
