@@ -463,7 +463,7 @@ function initForms() {
                         + '<p style="margin: 6px 0 0; font-size: 0.95rem;"><strong>Verwendungszweck:</strong> Gutschein ' + gName + '</p>'
                         + '</div>'
                         + '<div style="margin-top: 20px;">'
-                        + '<img src="' + qrUrl + '" alt="QR-Code für Überweisung" width="200" height="200" style="border-radius: 8px;">'
+                        + '<img src="' + qrUrl + '" alt="QR-Code für Überweisung" width="120" height="120" style="border-radius: 8px;">'
                         + '<p style="color: var(--text-light); font-size: 0.85rem; margin-top: 8px;">QR-Code für Ihre Banking-App scannen</p>'
                         + '</div>'
                         + '<p style="color: var(--text-light); margin-top: 25px; font-size: 0.9rem;">Nach Zahlungseingang erhalten Sie Ihren personalisierten Gutschein per E-Mail.</p>'
