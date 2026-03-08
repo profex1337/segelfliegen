@@ -201,7 +201,7 @@ async function startNewsLogic() {
         };
     }
 
-    // Bild-Vorschau beim Datei-Auswählen
+    // Bild-Vorschau beim Datei-Auswählen (mehrere Dateien)
     const fileInputEl = document.getElementById('news-image-file');
     if (fileInputEl) {
         fileInputEl.addEventListener('change', () => {
@@ -212,7 +212,10 @@ async function startNewsLogic() {
                 const f = fileInputEl.files[0];
                 if (preview) preview.src = URL.createObjectURL(f);
                 if (container) container.style.display = 'block';
-                if (statusEl) statusEl.textContent = `Bereit: ${f.name} (${(f.size / 1024).toFixed(0)} KB) – wird beim Speichern komprimiert & hochgeladen`;
+                const count = fileInputEl.files.length;
+                let totalSize = 0;
+                for (let i = 0; i < count; i++) totalSize += fileInputEl.files[i].size;
+                if (statusEl) statusEl.textContent = count + ' Bild(er) ausgewählt (' + (totalSize / 1024).toFixed(0) + ' KB) – werden beim Speichern komprimiert & hochgeladen';
             } else {
                 if (container) container.style.display = 'none';
             }
@@ -248,31 +251,104 @@ async function startNewsLogic() {
 
             const isCardMode = newsContainer.classList.contains('news-card-grid');
 
+            // Hilfsfunktion: Bilder-Array aus imageUrls oder imageUrl erstellen (Abwärtskompatibilität)
+            function getImages(item) {
+                if (item.imageUrls && item.imageUrls.length > 0) return item.imageUrls;
+                if (item.imageUrl) return [item.imageUrl];
+                return [];
+            }
+
+            // Hilfsfunktion: Karussell-HTML für mehrere Bilder erzeugen
+            function buildCarouselHTML(images, alt) {
+                if (images.length === 0) return '';
+                if (images.length === 1) {
+                    return '<div class="news-card-img">'
+                        + '<img src="' + images[0] + '" alt="' + (alt || '') + '" class="zoomable" onerror="this.closest(\'.news-card-img\').remove()">'
+                        + '</div>';
+                }
+                let slides = '';
+                let dots = '';
+                for (let i = 0; i < images.length; i++) {
+                    slides += '<div class="news-carousel-slide"><img src="' + images[i] + '" alt="' + (alt || '') + '" class="zoomable"></div>';
+                    dots += '<button class="news-carousel-dot' + (i === 0 ? ' active' : '') + '" data-index="' + i + '"></button>';
+                }
+                return '<div class="news-card-img">'
+                    + '<div class="news-carousel" data-index="0">'
+                    + '<div class="news-carousel-track">' + slides + '</div>'
+                    + '<button class="news-carousel-btn prev">&#10094;</button>'
+                    + '<button class="news-carousel-btn next">&#10095;</button>'
+                    + '<div class="news-carousel-dots">' + dots + '</div>'
+                    + '</div></div>';
+            }
+
+            // Karussell-Interaktivität initialisieren (Klick + Swipe)
+            function initCarousels(container) {
+                container.querySelectorAll('.news-carousel').forEach(function(carousel) {
+                    const track = carousel.querySelector('.news-carousel-track');
+                    const dots = carousel.querySelectorAll('.news-carousel-dot');
+                    const total = carousel.querySelectorAll('.news-carousel-slide').length;
+                    let current = 0;
+
+                    function goTo(idx) {
+                        if (idx < 0) idx = total - 1;
+                        if (idx >= total) idx = 0;
+                        current = idx;
+                        track.style.transform = 'translateX(-' + (current * 100) + '%)';
+                        dots.forEach(function(d, i) { d.classList.toggle('active', i === current); });
+                    }
+
+                    carousel.querySelector('.news-carousel-btn.prev').addEventListener('click', function(e) { e.stopPropagation(); goTo(current - 1); });
+                    carousel.querySelector('.news-carousel-btn.next').addEventListener('click', function(e) { e.stopPropagation(); goTo(current + 1); });
+                    dots.forEach(function(d) { d.addEventListener('click', function(e) { e.stopPropagation(); goTo(parseInt(d.dataset.index)); }); });
+
+                    // Touch-Swipe
+                    let startX = 0;
+                    let diffX = 0;
+                    carousel.addEventListener('touchstart', function(e) { startX = e.touches[0].clientX; diffX = 0; }, { passive: true });
+                    carousel.addEventListener('touchmove', function(e) { diffX = e.touches[0].clientX - startX; }, { passive: true });
+                    carousel.addEventListener('touchend', function() {
+                        if (Math.abs(diffX) > 40) goTo(diffX > 0 ? current - 1 : current + 1);
+                    });
+                });
+            }
+
             newsContainer.innerHTML = '';
             if (newsItems.length === 0) {
                 newsContainer.innerHTML = '<p style="text-align:center;">Keine Nachrichten gefunden.</p>';
             } else {
-                newsItems.forEach(item => {
+                newsItems.forEach(function(item, index) {
                     const div = document.createElement('div');
                     const adminDisplay = isAdmin ? 'flex' : 'none';
+                    const images = getImages(item);
+                    const isPublicPage = !document.getElementById('intern-content');
+                    const isFeatured = isCardMode && isPublicPage && index === 0 && images.length > 0;
 
                     if (isCardMode) {
-                        // Card-Layout für index.html
-                        div.className = 'news-card';
-                        div.innerHTML = `
-                            ${item.imageUrl ? `<div class="news-card-img">
-                                <img src="${item.imageUrl}" alt="${item.title || ''}" class="zoomable" onerror="this.closest('.news-card-img').remove()">
-                            </div>` : ''}
-                            <div class="news-card-body">
-                                <div class="admin-controls" style="float:right; display:${adminDisplay}; gap: 5px; align-items: center; margin-bottom: 8px;">
-                                    <button class="edit-btn" style="background:#e94560; color:white; border:none; padding:5px 10px; cursor:pointer; border-radius:4px; height: 30px;">Ändern</button>
-                                    <button class="delete-btn" style="background:red; color:white; border:none; padding:5px 10px; cursor:pointer; border-radius:4px; height: 30px;">Löschen</button>
-                                </div>
-                                <span class="news-date">${item.date || ''}</span>
-                                <h3>${item.title || 'Kein Titel'}</h3>
-                                <p style="white-space: pre-wrap;">${item.text || ''}</p>
-                            </div>
-                        `;
+                        // Featured (erstes Item) oder normales Card-Layout
+                        div.className = isFeatured ? 'news-featured' : 'news-card';
+                        div.innerHTML =
+                            (isFeatured
+                                ? '<div class="news-card-body">'
+                                    + '<div class="admin-controls" style="float:right; display:' + adminDisplay + '; gap: 5px; align-items: center; margin-bottom: 8px;">'
+                                        + '<button class="edit-btn" style="background:#e94560; color:white; border:none; padding:5px 10px; cursor:pointer; border-radius:4px; height: 30px;">Ändern</button>'
+                                        + '<button class="delete-btn" style="background:red; color:white; border:none; padding:5px 10px; cursor:pointer; border-radius:4px; height: 30px;">Löschen</button>'
+                                    + '</div>'
+                                    + '<span class="news-date">' + (item.date || '') + '</span>'
+                                    + '<h3>' + (item.title || 'Kein Titel') + '</h3>'
+                                    + '<p style="white-space: pre-wrap;">' + (item.text || '') + '</p>'
+                                + '</div>'
+                                + buildCarouselHTML(images, item.title)
+                                : buildCarouselHTML(images, item.title)
+                                    + '<div class="news-card-body">'
+                                        + '<div class="admin-controls" style="float:right; display:' + adminDisplay + '; gap: 5px; align-items: center; margin-bottom: 8px;">'
+                                            + '<button class="edit-btn" style="background:#e94560; color:white; border:none; padding:5px 10px; cursor:pointer; border-radius:4px; height: 30px;">Ändern</button>'
+                                            + '<button class="delete-btn" style="background:red; color:white; border:none; padding:5px 10px; cursor:pointer; border-radius:4px; height: 30px;">Löschen</button>'
+                                        + '</div>'
+                                        + '<span class="news-date">' + (item.date || '') + '</span>'
+                                        + '<h3>' + (item.title || 'Kein Titel') + '</h3>'
+                                        + '<p style="white-space: pre-wrap;">' + (item.text || '') + '</p>'
+                                    + '</div>'
+                            );
                     } else {
                         // Listen-Layout für intern.html
                         div.className = 'news-item';
@@ -317,7 +393,7 @@ async function startNewsLogic() {
                     const delBtn = div.querySelector('.delete-btn');
                     delBtn.onclick = (e) => {
                         e.stopPropagation();
-                        deleteNewsItem(item.id, item.imageUrl);
+                        deleteNewsItem(item.id, images);
                     }
 
                     const editButton = div.querySelector('.edit-btn');
@@ -328,6 +404,9 @@ async function startNewsLogic() {
 
                     newsContainer.appendChild(div);
                 });
+
+                // Karussell-Interaktivität initialisieren
+                initCarousels(newsContainer);
             }
         });
 
@@ -344,10 +423,14 @@ async function startNewsLogic() {
                 const dateVal = document.getElementById('news-date').value;
                 const textVal = document.getElementById('news-text').value;
 
-                // Bild: Datei hochladen oder vorhandene URL beibehalten
+                // Bilder: Neue Dateien hochladen und zu vorhandenen URLs hinzufügen
                 const fileEl = document.getElementById('news-image-file');
-                const imageUrlHidden = document.getElementById('news-image-url');
-                let imageVal = imageUrlHidden ? imageUrlHidden.value : '';
+                const imageUrlsHidden = document.getElementById('news-image-url');
+                let existingUrls = [];
+                try { existingUrls = JSON.parse(imageUrlsHidden.value || '[]'); } catch(e) {
+                    // Abwärtskompatibilität: einzelne URL
+                    if (imageUrlsHidden.value) existingUrls = [imageUrlsHidden.value];
+                }
 
                 if (fileEl && fileEl.files.length > 0) {
                     const token = localStorage.getItem('gh_pat') || '';
@@ -356,14 +439,17 @@ async function startNewsLogic() {
                         return;
                     }
                     const statusEl = document.getElementById('image-upload-status');
-                    if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Bild wird hochgeladen…'; }
-                    if (statusEl) statusEl.textContent = 'Komprimiere und lade hoch…';
+                    if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Bilder werden hochgeladen…'; }
                     try {
-                        const compressed = await compressImage(fileEl.files[0]);
-                        const safeName = `news_${Date.now()}.webp`;
-                        imageVal = await uploadToGitHub(compressed, safeName, token);
-                        if (imageUrlHidden) imageUrlHidden.value = imageVal;
-                        if (statusEl) statusEl.textContent = `Hochgeladen: ${safeName}`;
+                        for (let i = 0; i < fileEl.files.length; i++) {
+                            if (statusEl) statusEl.textContent = 'Lade Bild ' + (i + 1) + ' von ' + fileEl.files.length + ' hoch…';
+                            const compressed = await compressImage(fileEl.files[i]);
+                            const safeName = 'news_' + Date.now() + '_' + i + '.webp';
+                            const url = await uploadToGitHub(compressed, safeName, token);
+                            existingUrls.push(url);
+                        }
+                        if (imageUrlsHidden) imageUrlsHidden.value = JSON.stringify(existingUrls);
+                        if (statusEl) statusEl.textContent = fileEl.files.length + ' Bild(er) hochgeladen';
                     } catch (uploadErr) {
                         alert('Bild-Upload fehlgeschlagen: ' + uploadErr.message);
                         if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = editingId ? 'Änderungen speichern' : 'Veröffentlichen'; }
@@ -379,7 +465,8 @@ async function startNewsLogic() {
                         title: titleVal,
                         date: dateVal,
                         text: textVal,
-                        imageUrl: imageVal
+                        imageUrl: existingUrls.length > 0 ? existingUrls[0] : '',
+                        imageUrls: existingUrls
                     };
 
                                         if (editingId) {
@@ -432,20 +519,43 @@ async function startNewsLogic() {
                             titleInput.value = item.title;
                             document.getElementById('news-date').value = item.date;
                             document.getElementById('news-text').value = item.text;
-                            document.getElementById('news-image-url').value = item.imageUrl || '';
 
-                            // Datei-Input zurücksetzen, aktuelles Bild anzeigen
+                            // Bilder-URLs als JSON speichern (Abwärtskompatibilität)
+                            const allImages = (item.imageUrls && item.imageUrls.length > 0) ? item.imageUrls : (item.imageUrl ? [item.imageUrl] : []);
+                            document.getElementById('news-image-url').value = JSON.stringify(allImages);
+
+                            // Datei-Input zurücksetzen, aktuelle Bilder anzeigen
                             const fileEl2 = document.getElementById('news-image-file');
                             const previewCont = document.getElementById('image-preview-container');
                             const currentInfo = document.getElementById('current-image-info');
                             const currentLink = document.getElementById('current-image-link');
+                            const thumbContainer = document.getElementById('current-images-thumbs');
                             if (fileEl2) fileEl2.value = '';
                             if (previewCont) previewCont.style.display = 'none';
-                            if (item.imageUrl && currentInfo && currentLink) {
-                                currentLink.href = item.imageUrl;
+
+                            if (allImages.length > 0 && currentInfo) {
+                                if (currentLink) currentLink.href = allImages[0];
                                 currentInfo.style.display = 'block';
+                                // Thumbnail-Vorschau der vorhandenen Bilder
+                                if (thumbContainer) {
+                                    thumbContainer.innerHTML = '';
+                                    allImages.forEach(function(url, idx) {
+                                        const wrapper = document.createElement('span');
+                                        wrapper.style.cssText = 'position:relative; display:inline-block; margin:4px;';
+                                        wrapper.innerHTML = '<img src="' + url + '" alt="Bild ' + (idx+1) + '" style="width:80px; height:60px; object-fit:cover; border-radius:4px; border:1px solid #ddd;">'
+                                            + '<button type="button" data-idx="' + idx + '" style="position:absolute; top:-6px; right:-6px; background:#e94560; color:#fff; border:none; border-radius:50%; width:20px; height:20px; font-size:12px; cursor:pointer; line-height:1;">&times;</button>';
+                                        wrapper.querySelector('button').addEventListener('click', function() {
+                                            allImages.splice(idx, 1);
+                                            document.getElementById('news-image-url').value = JSON.stringify(allImages);
+                                            // Thumbnail-Liste neu rendern
+                                            loadIntoForm(Object.assign({}, item, { imageUrls: allImages, imageUrl: allImages[0] || '' }));
+                                        });
+                                        thumbContainer.appendChild(wrapper);
+                                    });
+                                }
                             } else if (currentInfo) {
                                 currentInfo.style.display = 'none';
+                                if (thumbContainer) thumbContainer.innerHTML = '';
                             }
 
                             if(formHeadline) formHeadline.textContent = "Nachricht bearbeiten";
@@ -464,9 +574,11 @@ async function startNewsLogic() {
                             const imageUrlHidden2 = document.getElementById('news-image-url');
                             const previewCont2 = document.getElementById('image-preview-container');
                             const currentInfo2 = document.getElementById('current-image-info');
+                            const thumbContainer2 = document.getElementById('current-images-thumbs');
                             if (imageUrlHidden2) imageUrlHidden2.value = '';
                             if (previewCont2) previewCont2.style.display = 'none';
                             if (currentInfo2) currentInfo2.style.display = 'none';
+                            if (thumbContainer2) thumbContainer2.innerHTML = '';
 
                             if(formHeadline) formHeadline.textContent = "Neue Nachricht verfassen";
                             if(submitBtn) submitBtn.textContent = "Veröffentlichen";
@@ -610,7 +722,7 @@ async function startNewsLogic() {
                         } catch {}
                     }
 
-                    async function deleteNewsItem(docId, imageUrl) {
+                    async function deleteNewsItem(docId, imageUrls) {
                         if (confirm("Wirklich löschen?")) {
                             try {
                                 if (auth.currentUser?.isAnonymous) {
@@ -626,10 +738,12 @@ async function startNewsLogic() {
                                     await deleteDoc(doc(db, collectionName, docId));
                                 }
 
-                                // Bild aus GitHub löschen wenn vorhanden
+                                // Alle Bilder aus GitHub löschen
                                 const token = localStorage.getItem('gh_pat');
-                                if (token && imageUrl) {
-                                    await deleteFromGitHub(imageUrl, token);
+                                if (token && imageUrls && imageUrls.length > 0) {
+                                    for (const url of imageUrls) {
+                                        await deleteFromGitHub(url, token);
+                                    }
                                 }
                             } catch (e) {
                                 alert("Löschen fehlgeschlagen");

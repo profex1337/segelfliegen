@@ -193,15 +193,16 @@
 
                                 <!-- Bild Upload -->
                                 <div style="margin-bottom: 15px;">
-                                    <label style="display:block; margin-bottom:6px; font-weight:600; font-size:0.9rem;">Bild auswählen (optional)</label>
-                                    <input type="file" id="news-image-file" accept="image/*" style="width:100%; margin-bottom:8px; padding:8px; border:1px solid #ddd; border-radius:4px; background:#fff;">
+                                    <label style="display:block; margin-bottom:6px; font-weight:600; font-size:0.9rem;">Bilder auswählen (optional, mehrere möglich)</label>
+                                    <input type="file" id="news-image-file" accept="image/*" multiple style="width:100%; margin-bottom:8px; padding:8px; border:1px solid #ddd; border-radius:4px; background:#fff;">
                                     <input type="hidden" id="news-image-url">
                                     <div id="image-preview-container" style="display:none; margin-top:8px;">
                                         <img id="image-preview" src="" alt="Vorschau" style="max-width:100%; max-height:180px; border-radius:6px; border:1px solid #ddd; display:block; margin-bottom:6px;">
                                         <small id="image-upload-status" style="color:#666;"></small>
                                     </div>
                                     <div id="current-image-info" style="display:none; margin-top:6px;">
-                                        <small style="color:#666;">Aktuelles Bild: <a id="current-image-link" href="#" target="_blank" rel="noopener noreferrer" style="color:var(--accent);">Ansehen ↗</a> — neues Bild auswählen zum Ersetzen</small>
+                                        <small style="color:#666;">Vorhandene Bilder: <a id="current-image-link" href="#" target="_blank" rel="noopener noreferrer" style="color:var(--accent);">Erstes Bild ansehen ↗</a> — neue Bilder werden hinzugefügt</small>
+                                        <div id="current-images-thumbs" style="margin-top:8px; display:flex; flex-wrap:wrap;"></div>
                                     </div>
                                 </div>
 
