@@ -414,6 +414,7 @@ function initForms() {
                 params.wert = (fd.get('wert') || '') + ' €';
                 params.empfaenger = fd.get('empfaenger') || '';
                 params.anlass = fd.get('anlass') || '';
+                params.zustellung = fd.get('zustellung') || '';
 
             } else if (formType === 'gastflug') {
                 params.subject = 'Neue Gastflug-Anfrage';
@@ -452,7 +453,8 @@ function initForms() {
                             zusatzzeit: fd.get('zusatzzeit') || '0',
                             wert: fd.get('wert') || '',
                             empfaenger: fd.get('empfaenger') || '',
-                            grusstext: fd.get('grusstext') || ''
+                            grusstext: fd.get('grusstext') || '',
+                            zustellung: fd.get('zustellung') || ''
                         });
                     }
                 }
@@ -461,30 +463,47 @@ function initForms() {
                 if (formType === 'gutschein') {
                     var gWert = fd.get('wert') || '';
                     var gName = fd.get('name') || '';
-                    // EPC-QR-Code (SEPA-Standard) für Banking-Apps
-                    var epcBetrag = gWert ? gWert.replace(',', '.') : '';
-                    var epcData = 'BCD\n002\n1\nSCT\nGENODEF1HSB\nSegelflieger im Post SV Nürnberg\nDE20760614820004555554\nEUR' + epcBetrag + '\n\n\nGutschein ' + gName;
-                    var qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=' + encodeURIComponent(epcData);
-                    form.innerHTML = '<div style="text-align:center; padding: 40px 20px;">'
-                        + '<div style="font-size: 3rem; margin-bottom: 15px;">🎁</div>'
-                        + '<h3 style="color: var(--primary);">Gutschein-Bestellung eingegangen!</h3>'
-                        + '<p style="color: var(--text-light); margin-bottom: 25px;">Vielen Dank für Ihre Bestellung!</p>'
-                        + '<div style="background: var(--bg-light); border: 2px solid var(--primary); border-radius: var(--radius); padding: 25px; display: inline-block; text-align: left; max-width: 400px;">'
-                        + '<p style="margin: 0; font-weight: 600; text-align: center;">Bankverbindung</p>'
-                        + '<p style="margin: 12px 0 0; font-size: 0.95rem;"><strong>Empfänger:</strong> Segelflieger im Post SV Nürnberg</p>'
-                        + '<p style="margin: 6px 0 0; font-size: 0.95rem;"><strong>IBAN:</strong> DE20 7606 1482 0004 5555 54</p>'
-                        + '<p style="margin: 6px 0 0; font-size: 0.95rem;"><strong>BIC:</strong> GENODEF1HSB</p>'
-                        + '<p style="margin: 6px 0 0; font-size: 0.85rem; color: var(--text-light);">Raiffeisenbank im Nürnberger Land</p>'
-                        + (gWert ? '<p style="margin: 12px 0 0; font-size: 0.95rem;"><strong>Betrag:</strong> ' + gWert + ' €</p>' : '')
-                        + '<p style="margin: 6px 0 0; font-size: 0.95rem;"><strong>Verwendungszweck:</strong> Gutschein ' + gName + '</p>'
-                        + '</div>'
-                        + '<div style="margin-top: 20px;">'
-                        + '<img src="' + qrUrl + '" alt="QR-Code für Überweisung" width="120" height="120" style="width: 120px; height: 120px; max-width: 120px; border-radius: 6px; display: inline-block;">'
-                        + '<p style="color: var(--text-light); font-size: 0.85rem; margin-top: 8px;">QR-Code für Ihre Banking-App scannen</p>'
-                        + '</div>'
-                        + '<p style="color: var(--text-light); margin-top: 25px; font-size: 0.9rem;">Nach Zahlungseingang erhalten Sie Ihren personalisierten Gutschein per E-Mail.</p>'
-                        + '<p style="color: var(--text-light); font-size: 0.85rem; font-style: italic;">Sie erhalten in Kürze eine Bestätigung per E-Mail mit den Zahlungsinformationen.</p>'
-                        + '</div>';
+                    var gZustellung = fd.get('zustellung') || '';
+                    var istAbholung = gZustellung.indexOf('Abholung') !== -1;
+
+                    if (istAbholung) {
+                        form.innerHTML = '<div style="text-align:center; padding: 40px 20px;">'
+                            + '<div style="font-size: 3rem; margin-bottom: 15px;">🎁</div>'
+                            + '<h3 style="color: var(--primary);">Gutschein-Bestellung eingegangen!</h3>'
+                            + '<p style="color: var(--text-light); margin-bottom: 25px;">Vielen Dank für Ihre Bestellung!</p>'
+                            + '<div style="background: var(--bg-light); border: 2px solid var(--primary); border-radius: var(--radius); padding: 25px; display: inline-block; text-align: left; max-width: 400px;">'
+                            + '<p style="margin: 0; font-weight: 600; text-align: center;">Abholung in 90518 Altdorf</p>'
+                            + (gWert ? '<p style="margin: 12px 0 0; font-size: 0.95rem;"><strong>Betrag:</strong> ' + gWert + ' € (Barzahlung vor Ort)</p>' : '')
+                            + '</div>'
+                            + '<p style="color: var(--text-light); margin-top: 25px; font-size: 0.9rem;">Wir melden uns in Kürze bei Ihnen, um die Abholung zu vereinbaren.</p>'
+                            + '<p style="color: var(--text-light); font-size: 0.85rem; font-style: italic;">Sie erhalten eine Bestätigung per E-Mail.</p>'
+                            + '</div>';
+                    } else {
+                        // EPC-QR-Code (SEPA-Standard) für Banking-Apps
+                        var epcBetrag = gWert ? gWert.replace(',', '.') : '';
+                        var epcData = 'BCD\n002\n1\nSCT\nGENODEF1HSB\nSegelflieger im Post SV Nürnberg\nDE20760614820004555554\nEUR' + epcBetrag + '\n\n\nGutschein ' + gName;
+                        var qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=' + encodeURIComponent(epcData);
+                        form.innerHTML = '<div style="text-align:center; padding: 40px 20px;">'
+                            + '<div style="font-size: 3rem; margin-bottom: 15px;">🎁</div>'
+                            + '<h3 style="color: var(--primary);">Gutschein-Bestellung eingegangen!</h3>'
+                            + '<p style="color: var(--text-light); margin-bottom: 25px;">Vielen Dank für Ihre Bestellung!</p>'
+                            + '<div style="background: var(--bg-light); border: 2px solid var(--primary); border-radius: var(--radius); padding: 25px; display: inline-block; text-align: left; max-width: 400px;">'
+                            + '<p style="margin: 0; font-weight: 600; text-align: center;">Bankverbindung</p>'
+                            + '<p style="margin: 12px 0 0; font-size: 0.95rem;"><strong>Empfänger:</strong> Segelflieger im Post SV Nürnberg</p>'
+                            + '<p style="margin: 6px 0 0; font-size: 0.95rem;"><strong>IBAN:</strong> DE20 7606 1482 0004 5555 54</p>'
+                            + '<p style="margin: 6px 0 0; font-size: 0.95rem;"><strong>BIC:</strong> GENODEF1HSB</p>'
+                            + '<p style="margin: 6px 0 0; font-size: 0.85rem; color: var(--text-light);">Raiffeisenbank im Nürnberger Land</p>'
+                            + (gWert ? '<p style="margin: 12px 0 0; font-size: 0.95rem;"><strong>Betrag:</strong> ' + gWert + ' €</p>' : '')
+                            + '<p style="margin: 6px 0 0; font-size: 0.95rem;"><strong>Verwendungszweck:</strong> Gutschein ' + gName + '</p>'
+                            + '</div>'
+                            + '<div style="margin-top: 20px;">'
+                            + '<img src="' + qrUrl + '" alt="QR-Code für Überweisung" width="120" height="120" style="width: 120px; height: 120px; max-width: 120px; border-radius: 6px; display: inline-block;">'
+                            + '<p style="color: var(--text-light); font-size: 0.85rem; margin-top: 8px;">QR-Code für Ihre Banking-App scannen</p>'
+                            + '</div>'
+                            + '<p style="color: var(--text-light); margin-top: 25px; font-size: 0.9rem;">Nach Zahlungseingang erhalten Sie Ihren personalisierten Gutschein per E-Mail.</p>'
+                            + '<p style="color: var(--text-light); font-size: 0.85rem; font-style: italic;">Sie erhalten in Kürze eine Bestätigung per E-Mail mit den Zahlungsinformationen.</p>'
+                            + '</div>';
+                    }
                 } else {
                     form.innerHTML = '<div style="text-align:center; padding: 40px 20px;">'
                         + '<div style="font-size: 3rem; margin-bottom: 15px;">✅</div>'

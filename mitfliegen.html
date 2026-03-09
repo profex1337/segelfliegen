@@ -398,8 +398,8 @@
                 </div>
                 <div class="form-responsive" style="margin-top: 20px;">
                     <div class="form-group">
-                        <label for="gutschein-telefon">Telefonnummer</label>
-                        <input type="tel" id="gutschein-telefon" name="telefon" placeholder="Für Rückfragen">
+                        <label for="gutschein-telefon">Telefonnummer *</label>
+                        <input type="tel" id="gutschein-telefon" name="telefon" required placeholder="Für Rückfragen">
                     </div>
                     <div class="form-group">
                         <label for="gutschein-flugart">Flugart *</label>
@@ -422,6 +422,20 @@
                         <label>Gutscheinwert</label>
                         <div id="gutschein-wert-display" style="padding:12px 15px; background:var(--bg-light); border:1px solid #ddd; border-radius:8px; font-size:1.1rem; font-weight:700; color:var(--primary); text-align:center;">— €</div>
                         <input type="hidden" id="gutschein-wert-hidden" name="wert" value="">
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-top: 20px;">
+                    <label>Zustellung *</label>
+                    <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 8px;">
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: normal;">
+                            <input type="radio" name="zustellung" value="E-Mail (Zahlung per Überweisung)" required style="width: auto; margin: 0;">
+                            Per E-Mail (Zahlung per Überweisung)
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: normal;">
+                            <input type="radio" name="zustellung" value="Abholung in 90518 Altdorf (Barzahlung vor Ort)" style="width: auto; margin: 0;">
+                            Abholung in 90518 Altdorf (Barzahlung vor Ort)
+                        </label>
                     </div>
                 </div>
 
