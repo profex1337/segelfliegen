@@ -1449,6 +1449,7 @@ function renderOrderRow(order, isClosed) {
     var empfaenger = order.empfaenger || '';
     var wert = order.wert || '';
     var gruss = order.grusstext || '';
+    var zustellung = order.zustellung || '';
 
     var paidBadge = isPaid
         ? '<span style="font-size:0.75rem; padding:3px 8px; border-radius:12px; font-weight:600; background:#e8f5e9; color:#2e7d32; margin-left:8px;">Bezahlt</span>'
@@ -1458,6 +1459,7 @@ function renderOrderRow(order, isClosed) {
         + '<strong style="font-size:1rem;">\u2709 ' + besteller + '</strong>' + paidBadge
         + '<div style="font-size:0.82rem; color:var(--text-light); margin-top:3px;">'
         + flugart + (wert ? ' &middot; ' + wert + ' \u20AC' : '') + ' &middot; F\u00FCr: ' + empfaenger
+        + (zustellung ? ' &middot; <span style="font-weight:600; color:' + (zustellung.indexOf('Abholung') !== -1 ? '#6a1b9a' : '#1565c0') + ';">' + (zustellung.indexOf('Abholung') !== -1 ? '\uD83D\uDCCD Abholung' : '\u2709 \u00DCberweisung') + '</span>' : '')
         + '</div>'
         + '<div style="font-size:0.78rem; color:#888; margin-top:2px;">'
         + email + (telefon ? ' &middot; ' + telefon : '') + ' &middot; ' + orderDate
