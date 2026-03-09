@@ -1516,9 +1516,14 @@ function renderVoucherList(container, items, orders) {
     var openOrders = orders.filter(function(o) { return o.status !== 'abgeschlossen'; });
     var closedOrders = orders.filter(function(o) { return o.status === 'abgeschlossen'; });
 
+    // Suchfeld
+    html += '<div style="margin-bottom:20px;">'
+        + '<input type="text" id="voucher-search" placeholder="Suche nach Name, Empfänger oder Gutscheinnummer..." style="width:100%; padding:12px 16px; border:2px solid #ddd; border-radius:8px; font-size:0.95rem; outline:none; transition:border-color 0.2s;" onfocus="this.style.borderColor=\'var(--primary)\'" onblur="this.style.borderColor=\'#ddd\'">'
+        + '</div>';
+
     // --- Offene Bestellungen ---
     if (openOrders.length > 0) {
-        html += '<h4 style="margin:25px 0 12px; color:#1565c0;">Neue Bestellungen (' + openOrders.length + ')</h4>';
+        html += '<h4 style="margin:25px 0 12px; color:#1565c0;">Neue Bestellungen (<span id="voucher-orders-count">' + openOrders.length + '</span>)</h4>';
         html += '<div id="voucher-orders"></div>';
     }
 
@@ -1526,7 +1531,7 @@ function renderVoucherList(container, items, orders) {
     var openVouchers = items.filter(function(v) { return !v.redeemed; });
     var redeemedVouchers = items.filter(function(v) { return v.redeemed; });
 
-    html += '<h4 style="margin:25px 0 12px; color:var(--primary);">Erstellte Gutscheine (' + openVouchers.length + ')</h4>';
+    html += '<h4 style="margin:25px 0 12px; color:var(--primary);">Erstellte Gutscheine (<span id="voucher-items-count">' + openVouchers.length + '</span>)</h4>';
     html += '<div id="voucher-items"></div>';
 
     // --- Aufklappbare Sektionen ---
@@ -1572,6 +1577,43 @@ function renderVoucherList(container, items, orders) {
     } else {
         openVouchers.forEach(function(item) {
             itemsContainer.appendChild(renderVoucherRow(item));
+        });
+    }
+
+    // Suchlogik
+    var searchInput = container.querySelector('#voucher-search');
+    if (searchInput) {
+        searchInput.addEventListener('input', function() {
+            var q = this.value.toLowerCase().trim();
+            // Bestellungen filtern
+            var ordersContainer = container.querySelector('#voucher-orders');
+            var ordersCountEl = container.querySelector('#voucher-orders-count');
+            if (ordersContainer) {
+                var visibleOrders = 0;
+                Array.from(ordersContainer.children).forEach(function(row, i) {
+                    var o = openOrders[i];
+                    var match = !q || (o.name || '').toLowerCase().indexOf(q) !== -1
+                        || (o.empfaenger || '').toLowerCase().indexOf(q) !== -1
+                        || (o.email || '').toLowerCase().indexOf(q) !== -1;
+                    row.style.display = match ? '' : 'none';
+                    if (match) visibleOrders++;
+                });
+                if (ordersCountEl) ordersCountEl.textContent = visibleOrders;
+            }
+            // Offene Gutscheine filtern
+            var visibleItems = 0;
+            var itemsCountEl = container.querySelector('#voucher-items-count');
+            Array.from(itemsContainer.children).forEach(function(row, i) {
+                var v = openVouchers[i];
+                if (!v) { return; }
+                var match = !q || (v.recipient || '').toLowerCase().indexOf(q) !== -1
+                    || (v.number || '').toLowerCase().indexOf(q) !== -1
+                    || (v.flightType || '').toLowerCase().indexOf(q) !== -1
+                    || (v.ordererName || '').toLowerCase().indexOf(q) !== -1;
+                row.style.display = match ? '' : 'none';
+                if (match) visibleItems++;
+            });
+            if (itemsCountEl) itemsCountEl.textContent = visibleItems;
         });
     }
 }
