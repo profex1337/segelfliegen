@@ -72,8 +72,9 @@ const footerHTML = `
     </div>
 
     <div class="footer-bottom">
-        <a href="impressum.html" style="margin:0 10px; color: #b0b0b0;">Impressum</a> | 
-        <a href="datenschutz.html" style="margin:0 10px; color: #b0b0b0;">Datenschutz</a> | 
+        <a href="impressum.html" style="margin:0 10px; color: #b0b0b0;">Impressum</a> |
+        <a href="datenschutz.html" style="margin:0 10px; color: #b0b0b0;">Datenschutz</a> |
+        <a href="#" id="cookie-settings-link" style="margin:0 10px; color: #b0b0b0; cursor:pointer;">Cookies verwalten</a> |
         <a href="intern.html" id="nav-intern" style="margin:0 10px; color: #b0b0b0;">Intern</a>
         <br><br>
         &copy; 2026 Segelflugplatz Altdorf-Hagenhausen
@@ -193,6 +194,20 @@ document.addEventListener('DOMContentLoaded', () => {
             embedConsentContent();
         }
     });
+
+    // Cookie-Einstellungen im Footer
+    const cookieSettingsLink = document.getElementById('cookie-settings-link');
+    if (cookieSettingsLink) {
+        cookieSettingsLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            localStorage.removeItem('dsgvo-consent');
+            // Bestehenden Banner entfernen falls vorhanden
+            const existingBanner = document.getElementById('cookie-banner');
+            if (existingBanner) existingBanner.remove();
+            // Cookie-Consent-Banner erneut anzeigen
+            initCookieConsent();
+        });
+    }
 });
 
 function initDatepickers() {
