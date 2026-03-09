@@ -42,6 +42,7 @@ segelfliegen/
 ├── images/               # Static image assets (logos, aircraft, team photos, news images)
 ├── videos/               # Hero section .mp4 videos
 │
+├── favicon.ico           # Favicon (generated from logo.png, 16/32/48px)
 ├── CNAME                 # GitHub Pages custom domain: www.segelfliegenaltdorf.de
 ├── robots.txt            # Search engine directives
 └── sitemap.xml           # XML sitemap (update lastmod when pages change)
@@ -58,7 +59,7 @@ There is **no server-side runtime** and **no build pipeline**. Every file is ser
 | Concern | Solution |
 |---|---|
 | Dynamic content (news, prices, aircraft fleet) | Firebase Firestore + real-time `onSnapshot` listener |
-| Form submissions | Formspree (third-party service, no backend needed) — AJAX via `fetch` |
+| Form submissions | EmailJS (third-party service, no backend needed) — AJAX via EmailJS SDK |
 | Authentication (admin) | Firebase Authentication (email/password) |
 | News image hosting | GitHub repository (`images/` folder) via GitHub Contents API |
 | Date picker | Flatpickr self-hosted in `lib/flatpickr/` (DSGVO-compliant, no CDN) |
@@ -98,7 +99,8 @@ aircraft/  — top-level collection, documents sorted ascending by order field
   title:     string,           // News headline
   date:      string,           // Display date, format "DD.MM.YYYY"
   text:      string,           // Body text (newlines preserved via white-space: pre-wrap)
-  imageUrl:  string | null,    // GitHub raw URL or null
+  imageUrl:  string | null,    // First image URL (backward compat) or null
+  imageUrls: string[],         // Array of GitHub raw URLs (multiple images per post)
   timestamp: number            // Unix ms — used for sort order (only set on create, not update)
 }
 ```
@@ -130,9 +132,11 @@ Images for news posts and aircraft are **not** stored on a third-party service. 
 
 ### News Layout
 
-On `index.html`, news posts are rendered as a **card-grid** (`.news-card-grid`): 3 columns on desktop, 2 on tablet, 1 on mobile. Each card shows the post image (if available) as a header with `object-fit: cover`, then date, title, and text below. Clicking a card image opens the built-in lightbox (`.zoomable` class).
+On `index.html`, news posts are rendered as a **card-grid** (`.news-card-grid`): 3 columns on desktop, 2 on tablet, 1 on mobile. The **newest post** is displayed as a **featured card** (`.news-featured`) spanning the full grid width, with text on the left and image(s) on the right. Remaining posts use the standard card layout.
 
-On `intern.html`, the same news items are rendered in the same card-grid layout with admin controls (Ändern / Löschen) visible in the top-right of each card.
+**Multiple images**: News posts support multiple images stored as `imageUrls` array (backward compatible with single `imageUrl`). When a post has multiple images, they are rendered as a **carousel** (`.news-carousel`) with prev/next buttons, dot indicators, and touch-swipe support on mobile. Clicking any image opens the lightbox.
+
+On `intern.html`, all news items are rendered in the same card-grid layout (no featured card) with admin controls (Ändern / Löschen) visible in the top-right of each card. The admin form supports **multiple file uploads** — new images are added to existing ones. Thumbnails of existing images are shown with individual delete buttons.
 
 The rendering mode is detected by the CSS class on the container: `news-card-grid` → card layout; otherwise → list layout (legacy, not currently used).
 
@@ -181,8 +185,11 @@ There is no test suite and no linter/formatter configuration. Validate changes b
   `script.js` does not use ES module syntax (`import`/`export`) and must not be loaded as a module.
 - **Pages with dynamic Firestore content** (news, prices, aircraft) also include `news-db.js` as `type="module"`. Currently: `index.html`, `mitfliegen.html`, `intern.html`, `flugzeugpark.html`.
 - **External links** (`target="_blank"`) must always have `rel="noopener noreferrer"`.
-- **Inline JSON-LD** schema.org markup is present on content pages for SEO — keep it accurate.
-- **Open Graph** meta tags are on every page — update them when adding new pages.
+- **Favicon**: `<link rel="icon" href="favicon.ico" type="image/x-icon">` on every page.
+- **Canonical URL**: `<link rel="canonical" href="https://www.segelfliegenaltdorf.de/...">` on every public page. Always use `www.` prefix.
+- **Inline JSON-LD** schema.org markup is present on content pages for SEO — keep it accurate. All URLs must use `www.` prefix.
+- **Open Graph** meta tags are on every page — update them when adding new pages. All URLs must use `www.` prefix.
+- **Video poster**: All `<video>` hero elements must have a `poster` attribute pointing to a static image for faster visual load.
 - **Language attribute**: `<html lang="de">` on all pages.
 - **Embedded iframes** (Google Maps, YouTube) must use the consent overlay pattern: wrap in a `<div class="consent-overlay" data-src="..." data-title="...">`. On cookie accept, `embedConsentContent()` in `script.js` replaces these with real `<iframe>` elements.
 
@@ -206,6 +213,8 @@ There is no test suite and no linter/formatter configuration. Validate changes b
 - All new rules go into `style.css` — do not create additional CSS files.
 - **`.badge-highlight`** is defined globally in `style.css` (used by dynamically rendered aircraft cards).
 - **`.news-card-grid`** — card layout for news (3 col / 2 col / 1 col).
+- **`.news-featured`** — full-width featured card for newest news (text left, image right; column-reverse on mobile).
+- **`.news-carousel`** — image carousel with prev/next buttons, dots, and touch-swipe.
 - **`.aircraft-card-grid`** — card layout for aircraft fleet (3 col / 2 col / 1 col).
 
 ### JavaScript
@@ -215,7 +224,7 @@ There is no test suite and no linter/formatter configuration. Validate changes b
 - **camelCase** for variables and functions; **PascalCase** is not used for functions.
 - **Comments** in the source are written in German.
 - Firebase SDK (`v11.6.1`) is imported directly from the Google CDN (gstatic) using ES module URLs — do **not** switch to npm imports.
-- Never store sensitive logic client-side; secrets must remain in Firebase security rules or the Formspree config.
+- Never store sensitive logic client-side; secrets must remain in Firebase security rules or the EmailJS config.
 
 ### `script.js` Feature Inventory
 
@@ -230,7 +239,7 @@ There is no test suite and no linter/formatter configuration. Validate changes b
 | `embedConsentContent()` | Replaces `.consent-overlay` divs with real `<iframe>` elements |
 | `initReviews()` | Renders a static snapshot of Google reviews in the sidebar; opened via `#review-trigger-btn` |
 | `initDatepickers()` | Applies Flatpickr to `#wunschtermin` input (weekends only, German locale) |
-| `initForms()` | Intercepts all `form[action*="formspree"]` submit events and sends via `fetch` (AJAX) |
+| `initForms()` | Intercepts all `form[data-emailjs]` submit events and sends via EmailJS SDK |
 | `getAvatarColor()` | Returns a random brand colour for review avatar backgrounds |
 
 ### `news-db.js` Function & Constant Inventory
@@ -246,7 +255,7 @@ There is no test suite and no linter/formatter configuration. Validate changes b
 | `handleInternPageVisibility(isAdmin)` | Shows admin dashboard or login prompt on `intern.html` based on auth state |
 | `loadIntoForm(item)` | Populates the news edit form with an existing document's data |
 | `resetForm()` | Clears the news form and resets it to "new post" mode |
-| `deleteNewsItem(docId, imageUrl)` | Deletes a Firestore document and removes its associated GitHub image file |
+| `deleteNewsItem(docId, imageUrls)` | Deletes a Firestore document and removes all associated GitHub image files |
 | `renderAircraftPublic(container, items)` | Renders aircraft cards grouped by category (`.aircraft-card-grid`, 3-col) into a public container; adds section IDs for anchor links |
 | `renderAircraftAdmin(container, items, isAdmin)` | Renders aircraft admin list grouped by category; supports drag & drop reordering within categories; shows import button when collection is empty; auto-migrates legacy category names |
 | `handleLogin()` | Authenticates admin with `info@segelfliegen-altdorf.de` and entered password |
@@ -262,7 +271,7 @@ There is no test suite and no linter/formatter configuration. Validate changes b
 2. Update `<title>`, Open Graph tags, and JSON-LD.
 3. Add a `<nav>` link in the `headerHTML` template in `script.js`.
 4. Add the URL to `sitemap.xml`.
-5. If the page needs forms, point `action` to the correct Formspree endpoint.
+5. If the page needs forms, add `data-emailjs="formtype"` attribute. See existing forms for the pattern.
 
 ---
 
@@ -272,7 +281,7 @@ There is no test suite and no linter/formatter configuration. Validate changes b
 |---|---|---|
 | **Firebase** | `news-db.js` lines 5–13 | Project ID: `segelfliegen`. SDK version: `11.6.1`. API key is public (restricted via Firebase console). |
 | **GitHub API** | `news-db.js` `uploadToGitHub()` / `deleteFromGitHub()` | Used for news & aircraft image storage. Requires admin to supply a PAT with `contents: write`; stored in `localStorage`. |
-| **Formspree** | `action` attributes in HTML forms | Both forms share the same endpoint (`f/meekadza`); present in `mitfliegen.html` and `kontakt.html` only. |
+| **EmailJS** | `data-emailjs` attributes on HTML forms | Service ID `service_cd14twj`, template `template_eakr6dl`; forms on `mitfliegen.html` and `kontakt.html`. Gutschein auto-reply uses `template_ygdqime`. |
 | **Google Maps** | Embed `<iframe>` in `kontakt.html` | Uses consent overlay pattern; iframe only loads after cookie accept. |
 | **Flatpickr** | Self-hosted in `lib/flatpickr/` | Loaded locally in `mitfliegen.html` and `kontakt.html`. No CDN requests. |
 | **Fonts** | Self-hosted in `fonts/` | Montserrat, Open Sans, Tangerine as WOFF2. `@font-face` in `style.css`. No Google server contact. |
@@ -357,11 +366,10 @@ Edit the `headerHTML` template literal in `script.js`. The change applies to all
 
 ### Add/Update a Booking Form
 
-1. Create a Formspree form at formspree.io and copy the endpoint URL.
-2. Set the `action` attribute of the HTML `<form>` to that URL.
-3. Ensure `method="POST"` and the hidden input `<input type="hidden" name="_subject" ...>` is present.
-4. Add Flatpickr to date inputs if needed (see `mitfliegen.html` for the pattern).
-5. Form submission is handled automatically via AJAX by `initForms()` in `script.js` — no extra JS needed.
+1. Add `data-emailjs="formtype"` to the `<form>` element (e.g., `data-emailjs="kontakt"`, `data-emailjs="gutschein"`, `data-emailjs="gastflug"`).
+2. Add the form type handling in `initForms()` in `script.js` to map form fields to EmailJS template parameters.
+3. Add Flatpickr to date inputs if needed (see `mitfliegen.html` for the pattern).
+4. Form submission is handled automatically via AJAX by `initForms()` in `script.js` — no extra JS needed.
 
 ### Embed Google Maps or YouTube
 

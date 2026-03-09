@@ -463,7 +463,7 @@ function initForms() {
                     // EPC-QR-Code (SEPA-Standard) für Banking-Apps
                     var epcBetrag = gWert ? gWert.replace(',', '.') : '';
                     var epcData = 'BCD\n002\n1\nSCT\nGENODEF1HSB\nSegelflieger im Post SV Nürnberg\nDE20760614820004555554\nEUR' + epcBetrag + '\n\n\nGutschein ' + gName;
-                    var qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + encodeURIComponent(epcData);
+                    var qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=' + encodeURIComponent(epcData);
                     form.innerHTML = '<div style="text-align:center; padding: 40px 20px;">'
                         + '<div style="font-size: 3rem; margin-bottom: 15px;">🎁</div>'
                         + '<h3 style="color: var(--primary);">Gutschein-Bestellung eingegangen!</h3>'
@@ -478,7 +478,7 @@ function initForms() {
                         + '<p style="margin: 6px 0 0; font-size: 0.95rem;"><strong>Verwendungszweck:</strong> Gutschein ' + gName + '</p>'
                         + '</div>'
                         + '<div style="margin-top: 20px;">'
-                        + '<img src="' + qrUrl + '" alt="QR-Code für Überweisung" width="120" height="120" style="border-radius: 8px;">'
+                        + '<img src="' + qrUrl + '" alt="QR-Code für Überweisung" width="80" height="80" style="border-radius: 6px;">'
                         + '<p style="color: var(--text-light); font-size: 0.85rem; margin-top: 8px;">QR-Code für Ihre Banking-App scannen</p>'
                         + '</div>'
                         + '<p style="color: var(--text-light); margin-top: 25px; font-size: 0.9rem;">Nach Zahlungseingang erhalten Sie Ihren personalisierten Gutschein per E-Mail.</p>'
