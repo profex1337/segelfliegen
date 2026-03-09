@@ -474,8 +474,8 @@ function initForms() {
                             + '<p style="color: var(--text-light); margin-bottom: 25px;">Vielen Dank für Ihre Bestellung!</p>'
                             + '<div style="background: var(--bg-light); border: 2px solid var(--primary); border-radius: var(--radius); padding: 25px; display: inline-block; text-align: left; max-width: 400px;">'
                             + '<p style="margin: 0; font-weight: 600; text-align: center;">Abholung in 90518 Altdorf</p>'
-                            + '<p style="margin: 12px 0 0; font-size: 0.95rem;"><strong>Adresse:</strong> Jörg Sperber, Schulstraße 16, 90518 Altdorf</p>'
-                            + '<p style="margin: 6px 0 0; font-size: 0.95rem;"><strong>Standort:</strong> <a href="https://maps.app.goo.gl/o6wj4eudVJoS5ocBA" target="_blank" rel="noopener noreferrer" style="color: var(--primary);">In Google Maps öffnen</a></p>'
+                            + '<p style="margin: 12px 0 0; font-size: 0.95rem;"><strong>Adresse:</strong> Jörg Sperber, Schulstraße 18, 90518 Altdorf</p>'
+                            + '<p style="margin: 6px 0 0; font-size: 0.95rem;"><strong>Standort:</strong> <a href="https://maps.app.goo.gl/p4YEwmERAwFkmy479" target="_blank" rel="noopener noreferrer" style="color: var(--primary);">In Google Maps öffnen</a></p>'
                             + '<p style="margin: 6px 0 0; font-size: 0.95rem;"><strong>Telefon:</strong> <a href="tel:+4915117250329" style="color: var(--primary);">+49 1511 7250329</a></p>'
                             + (gWert ? '<p style="margin: 12px 0 0; font-size: 0.95rem;"><strong>Betrag:</strong> ' + gWert + ' € (Barzahlung vor Ort)</p>' : '')
                             + '</div>'
