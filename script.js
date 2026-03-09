@@ -482,6 +482,7 @@ function initForms() {
                             + '<p style="color: var(--text-light); margin-top: 25px; font-size: 0.9rem;">Bitte rufen Sie vorher an, um einen Abholtermin zu vereinbaren.</p>'
                             + '<p style="color: var(--text-light); font-size: 0.85rem; font-style: italic;">Sie erhalten eine Bestätigung per E-Mail.</p>'
                             + '</div>';
+                        form.scrollIntoView({ behavior: 'smooth', block: 'center' });
                     } else {
                         // EPC-QR-Code (SEPA-Standard) für Banking-Apps
                         var epcBetrag = gWert ? gWert.replace(',', '.') : '';
@@ -507,6 +508,7 @@ function initForms() {
                             + '<p style="color: var(--text-light); margin-top: 25px; font-size: 0.9rem;">Nach Zahlungseingang erhalten Sie Ihren personalisierten Gutschein per E-Mail.</p>'
                             + '<p style="color: var(--text-light); font-size: 0.85rem; font-style: italic;">Sie erhalten in Kürze eine Bestätigung per E-Mail mit den Zahlungsinformationen.</p>'
                             + '</div>';
+                        form.scrollIntoView({ behavior: 'smooth', block: 'center' });
                     }
                 } else {
                     form.innerHTML = '<div style="text-align:center; padding: 40px 20px;">'
