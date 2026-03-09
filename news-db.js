@@ -16,6 +16,12 @@ let app, auth, db;
 let collectionPath = null; 
 let editingId = null;
 
+// === XSS-Schutz: HTML-Sonderzeichen escapen ===
+function escapeHTML(str) {
+    if (!str) return '';
+    return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
 // === Bild-Upload: Komprimierung & GitHub ===
 
 async function compressImage(file, maxWidth = 1200, quality = 0.80) {
@@ -333,20 +339,20 @@ async function startNewsLogic() {
                                         + '<button class="edit-btn" style="background:#e94560; color:white; border:none; padding:5px 10px; cursor:pointer; border-radius:4px; height: 30px;">Ändern</button>'
                                         + '<button class="delete-btn" style="background:red; color:white; border:none; padding:5px 10px; cursor:pointer; border-radius:4px; height: 30px;">Löschen</button>'
                                     + '</div>'
-                                    + '<span class="news-date">' + (item.date || '') + '</span>'
-                                    + '<h3>' + (item.title || 'Kein Titel') + '</h3>'
-                                    + '<p style="white-space: pre-wrap;">' + (item.text || '') + '</p>'
+                                    + '<span class="news-date">' + escapeHTML(item.date) + '</span>'
+                                    + '<h3>' + escapeHTML(item.title || 'Kein Titel') + '</h3>'
+                                    + '<p style="white-space: pre-wrap;">' + escapeHTML(item.text) + '</p>'
                                 + '</div>'
-                                + buildCarouselHTML(images, item.title)
-                                : buildCarouselHTML(images, item.title)
+                                + buildCarouselHTML(images, escapeHTML(item.title))
+                                : buildCarouselHTML(images, escapeHTML(item.title))
                                     + '<div class="news-card-body">'
                                         + '<div class="admin-controls" style="float:right; display:' + adminDisplay + '; gap: 5px; align-items: center; margin-bottom: 8px;">'
                                             + '<button class="edit-btn" style="background:#e94560; color:white; border:none; padding:5px 10px; cursor:pointer; border-radius:4px; height: 30px;">Ändern</button>'
                                             + '<button class="delete-btn" style="background:red; color:white; border:none; padding:5px 10px; cursor:pointer; border-radius:4px; height: 30px;">Löschen</button>'
                                         + '</div>'
-                                        + '<span class="news-date">' + (item.date || '') + '</span>'
-                                        + '<h3>' + (item.title || 'Kein Titel') + '</h3>'
-                                        + '<p style="white-space: pre-wrap;">' + (item.text || '') + '</p>'
+                                        + '<span class="news-date">' + escapeHTML(item.date) + '</span>'
+                                        + '<h3>' + escapeHTML(item.title || 'Kein Titel') + '</h3>'
+                                        + '<p style="white-space: pre-wrap;">' + escapeHTML(item.text) + '</p>'
                                     + '</div>'
                             );
                     } else {
@@ -361,9 +367,9 @@ async function startNewsLogic() {
                                 <button class="edit-btn" style="background:#e94560; color:white; border:none; padding:5px 10px; cursor:pointer; border-radius:4px; height: 30px;">Ändern</button>
                                 <button class="delete-btn" style="background:red; color:white; border:none; padding:5px 10px; cursor:pointer; border-radius:4px; height: 30px;">Löschen</button>
                             </div>
-                            <span class="news-date">${item.date || ''}</span>
-                            <h3>${item.title || 'Kein Titel'}</h3>
-                            <p style="white-space: pre-wrap;">${item.text || ''}</p>
+                            <span class="news-date">${escapeHTML(item.date) || ''}</span>
+                            <h3>${escapeHTML(item.title) || 'Kein Titel'}</h3>
+                            <p style="white-space: pre-wrap;">${escapeHTML(item.text) || ''}</p>
                         `;
 
                         if (item.imageUrl && displayImage) {
@@ -469,28 +475,28 @@ async function startNewsLogic() {
                         imageUrls: existingUrls
                     };
 
-                                        if (editingId) {
-                                            let collectionName = firebaseConfig && Object.keys(firebaseConfig).length > 0 ? 'news' : null;
-                                            let docRef;
-                                            if(!collectionName) {
-                                                const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-                                                docRef = doc(db, 'artifacts', appId, 'public', 'data', 'news', editingId);
-                                            } else {
-                                                docRef = doc(db, collectionName, editingId);
-                                            }
-                                            await updateDoc(docRef, dataToSave);
-                                            alert("Änderungen gespeichert!");
-                                        } else {
-                                            dataToSave.timestamp = Date.now();
-                                            await addDoc(newsCollection, dataToSave);
-                                        }
-                                        resetForm();
-                    
-                                    } catch (err) {
-                                        alert("Fehler: " + err.message);
-                                    }
-                                };
-                            }
+                    if (editingId) {
+                        let collectionName = firebaseConfig && Object.keys(firebaseConfig).length > 0 ? 'news' : null;
+                        let docRef;
+                        if(!collectionName) {
+                            const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+                            docRef = doc(db, 'artifacts', appId, 'public', 'data', 'news', editingId);
+                        } else {
+                            docRef = doc(db, collectionName, editingId);
+                        }
+                        await updateDoc(docRef, dataToSave);
+                        alert("Änderungen gespeichert!");
+                    } else {
+                        dataToSave.timestamp = Date.now();
+                        await addDoc(newsCollection, dataToSave);
+                    }
+                    resetForm();
+
+                } catch (err) {
+                    alert("Fehler: " + err.message);
+                }
+                };
+            }
                         });
                     
                         function toggleAdminUI(isAdmin) {

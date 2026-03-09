@@ -65,6 +65,22 @@
 
 * { box-sizing: border-box; }
 
+/* Skip-Navigation (Barrierefreiheit) */
+.skip-link {
+    position: absolute;
+    top: -100%;
+    left: 0;
+    background: var(--primary);
+    color: #fff;
+    padding: 10px 20px;
+    z-index: 1000;
+    font-weight: bold;
+    text-decoration: none;
+}
+.skip-link:focus {
+    top: 0;
+}
+
 body {
     margin: 0;
     padding: 0;

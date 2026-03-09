@@ -1,4 +1,5 @@
 const headerHTML = `
+<a href="#main-content" class="skip-link">Zum Inhalt springen</a>
 <div class="container header-inner">
     <div class="logo">
         <a href="index.html">
@@ -243,31 +244,31 @@ function initReviews() {
         { 
             name: "Michael Dittrich", 
             rating: 5, 
-            date: "vor 11 Monaten", 
-            text: "War heute mit meinem Enkel am Flugplatz. Ganz liebe Leute!!!! Uns wurde alles gezeigt und Milo durfte sich sogar in ein Segelflugzeug setzen.<br>Werden im Sommer gerne nochmal kommen.<br>VG Michael" 
+            date: "vor einem Jahr",
+            text: "War heute mit meinem Enkel am Flugplatz. Ganz liebe Leute!!!! Uns wurde alles gezeigt und Milo durfte sich sogar in ein Segelflugzeug setzen.<br>Werden im Sommer gerne nochmal kommen.<br>VG Michael"
         },
-        { 
-            name: "A. Delino", 
-            rating: 5, 
-            date: "vor einem Jahr", 
-            text: "Tolle zuvorkommende freundliche Mannschaft, die mit Begeisterung ihren Gästen das Segelfliegen zeigen. Kaffee und Kuchen gibt's am Wochenende noch oben drauf. Einfach herrlich und genial." 
+        {
+            name: "A. Delino",
+            rating: 5,
+            date: "vor 2 Jahren",
+            text: "Tolle zuvorkommende freundliche Mannschaft, die mit Begeisterung ihren Gästen das Segelfliegen zeigen. Kaffee und Kuchen gibt's am Wochenende noch oben drauf. Einfach herrlich und genial."
         },
-        { 
-            name: "Gizi Silberhorn", 
-            rating: 5, 
-            date: "vor 3 Jahren", 
-            text: "War nur zur Geburtstagsfeier dort. Hab gleich ne Einladung von nem Mitglied zum Flugtag Anfang August bekommen, finde ich echt nett" 
+        {
+            name: "Gizi Silberhorn",
+            rating: 5,
+            date: "vor 4 Jahren",
+            text: "War nur zur Geburtstagsfeier dort. Hab gleich ne Einladung von nem Mitglied zum Flugtag Anfang August bekommen, finde ich echt nett"
         },
-        { 
-            name: "Kevin Fritsch", 
-            rating: 5, 
-            date: "vor 6 Jahren", 
-            text: "Super Flugplatz und ganz liebe Flieger!<br>Man fühlt sich \"wie daheim\", man wird - egal ob per Flugzeug oder zu Fuß - sehr herzlich aufgenommen!<br><br>Auf jeden Fall einen Besuch wert! ;-)" 
+        {
+            name: "Kevin Fritsch",
+            rating: 5,
+            date: "vor 7 Jahren",
+            text: "Super Flugplatz und ganz liebe Flieger!<br>Man fühlt sich \"wie daheim\", man wird - egal ob per Flugzeug oder zu Fuß - sehr herzlich aufgenommen!<br><br>Auf jeden Fall einen Besuch wert! ;-)"
         },
-        { 
-            name: "Smolto van der Bruggenkötter", 
-            rating: 5, 
-            date: "vor 6 Jahren", 
+        {
+            name: "Smolto van der Bruggenkötter",
+            rating: 5,
+            date: "vor 7 Jahren", 
             text: "Sehr zu empfehlen! Coole Menschen sehr lockere Atmosphäre, sehr freundlich und hilfsbereit.<br>Ein Erlebnis für jung und alt. Hier könnt ihr spontan mitfliegen und einen unvergesslichen tag erleben!<br>Ich komme wieder! Danke für den sehr schönen tag" 
         }
     ];
@@ -585,6 +586,18 @@ function initSlideshows() {
 
         if(prevBtn) prevBtn.addEventListener('click', () => { slideIndex--; showSlides(slideIndex); resetTimer(); });
         if(nextBtn) nextBtn.addEventListener('click', () => { slideIndex++; showSlides(slideIndex); resetTimer(); });
+
+        // Touch-Swipe Support
+        let touchStartX = 0;
+        slideshow.addEventListener('touchstart', (e) => { touchStartX = e.changedTouches[0].screenX; }, { passive: true });
+        slideshow.addEventListener('touchend', (e) => {
+            const diff = e.changedTouches[0].screenX - touchStartX;
+            if (Math.abs(diff) > 50) {
+                if (diff < 0) { slideIndex++; } else { slideIndex--; }
+                showSlides(slideIndex);
+                resetTimer();
+            }
+        }, { passive: true });
 
         showSlides(slideIndex);
         startAutoPlay();
