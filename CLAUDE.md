@@ -11,6 +11,7 @@ A static website for **Segelflugplatz Altdorf-Hagenhausen / Post-SV Nürnberg e.
 - **Live URL**: https://www.segelfliegenaltdorf.de
 - **Hosting**: GitHub Pages (configured via `CNAME`)
 - **Language**: German (all user-facing content is in German)
+- **Address form**: Informal "Du" on all public pages. Exception: `datenschutz.html` and `impressum.html` use formal "Sie" (legal requirement).
 - **Stack**: Vanilla HTML5 / CSS3 / ES6+ JavaScript — no build step, no package manager
 
 ---
