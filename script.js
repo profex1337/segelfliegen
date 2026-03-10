@@ -523,7 +523,7 @@ function initForms() {
                     form.innerHTML = '<div style="text-align:center; padding: 40px 20px;">'
                         + '<div style="font-size: 3rem; margin-bottom: 15px;">✅</div>'
                         + '<h3 style="color: var(--primary);">Nachricht gesendet!</h3>'
-                        + '<p style="color: var(--text-light);">Vielen Dank! Wir melden uns so schnell wie möglich bei Ihnen.</p>'
+                        + '<p style="color: var(--text-light);">Vielen Dank! Wir melden uns so schnell wie möglich bei dir.</p>'
                         + '</div>';
                 }
             } catch (err) {
