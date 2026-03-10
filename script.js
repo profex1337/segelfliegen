@@ -586,8 +586,15 @@ function initLightbox() {
 function initBackToTop() {
     const btn = document.getElementById("btn-back-to-top");
     if (btn) {
+        let ticking = false;
         window.addEventListener('scroll', () => {
-            btn.style.display = (document.body.scrollTop > 300 || document.documentElement.scrollTop > 300) ? "block" : "none";
+            if (!ticking) {
+                window.requestAnimationFrame(() => {
+                    btn.style.display = (window.scrollY > 300) ? "block" : "none";
+                    ticking = false;
+                });
+                ticking = true;
+            }
         });
         btn.addEventListener("click", () => {
             window.scrollTo({ top: 0, behavior: "smooth" });
