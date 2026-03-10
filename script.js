@@ -23,10 +23,10 @@ const headerHTML = `
         <a href="kontakt.html">Kontakt</a>
         
         <div class="header-socials">
-            <a href="https://www.facebook.com/Segelflieger.PostSV/?locale=de_DE" target="_blank" rel="noopener noreferrer" title="Facebook" class="header-social-link" aria-label="Besuchen Sie uns auf Facebook">
+            <a href="https://www.facebook.com/Segelflieger.PostSV/?locale=de_DE" target="_blank" rel="noopener noreferrer" title="Facebook" class="header-social-link" aria-label="Besuche uns auf Facebook">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg>
             </a>
-            <a href="https://www.instagram.com/segelflieger.psv/?hl=de" target="_blank" rel="noopener noreferrer" title="Instagram" class="header-social-link" aria-label="Folgen Sie uns auf Instagram">
+            <a href="https://www.instagram.com/segelflieger.psv/?hl=de" target="_blank" rel="noopener noreferrer" title="Instagram" class="header-social-link" aria-label="Folge uns auf Instagram">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
             </a>
             <a href="https://www.youtube.com/channel/UCPiG85TTftKcU4jr4Vjuhvg" target="_blank" rel="noopener noreferrer" title="YouTube" class="header-social-link" aria-label="Unser YouTube Kanal">
@@ -54,13 +54,13 @@ const footerHTML = `
             </div>
             
             <div class="footer-socials">
-                <a href="https://www.facebook.com/Segelflieger.PostSV/?locale=de_DE" target="_blank" rel="noopener noreferrer" title="Facebook" aria-label="Folgen Sie uns auf Facebook">
+                <a href="https://www.facebook.com/Segelflieger.PostSV/?locale=de_DE" target="_blank" rel="noopener noreferrer" title="Facebook" aria-label="Folge uns auf Facebook">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg>
                 </a>
-                <a href="https://www.instagram.com/segelflieger.psv/?hl=de" target="_blank" rel="noopener noreferrer" title="Instagram" aria-label="Folgen Sie uns auf Instagram">
+                <a href="https://www.instagram.com/segelflieger.psv/?hl=de" target="_blank" rel="noopener noreferrer" title="Instagram" aria-label="Folge uns auf Instagram">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
                 </a>
-                <a href="https://www.youtube.com/channel/UCPiG85TTftKcU4jr4Vjuhvg" target="_blank" rel="noopener noreferrer" title="YouTube" aria-label="Besuchen Sie unseren YouTube Kanal">
+                <a href="https://www.youtube.com/channel/UCPiG85TTftKcU4jr4Vjuhvg" target="_blank" rel="noopener noreferrer" title="YouTube" aria-label="Besuche unseren YouTube Kanal">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33z"></path><polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02"></polygon></svg>
                 </a>
             </div>
@@ -93,7 +93,7 @@ const loginModalHTML = `
     <div class="modal-content admin-login-card">
         <span class="modal-close" id="login-close">&times;</span>
         <h3>Mitarbeiter & Mitglieder Login</h3>
-        <p>Bitte geben Sie Ihr Passwort ein:</p>
+        <p>Bitte gib dein Passwort ein:</p>
         <form id="admin-login-form">
             <input type="password" id="admin-password-input" placeholder="Passwort" autocomplete="current-password">
             <p id="login-error" style="color: red; font-size: 0.8rem; display: none;">Falsches Passwort!</p>
@@ -343,7 +343,7 @@ function initCookieConsent() {
             <h3>Datenschutzeinstellungen</h3>
             <p>
                 Diese Website nutzt essenzielle Dienste (Firebase) für die Anzeige von Inhalten.
-                Zusätzlich können optionale Inhalte (Google Maps, YouTube) eingebettet werden, die erst nach Ihrer Zustimmung geladen werden.
+                Zusätzlich können optionale Inhalte (Google Maps, YouTube) eingebettet werden, die erst nach deiner Zustimmung geladen werden.
                 <a href="datenschutz.html" style="text-decoration: underline;">Mehr erfahren</a>.
             </p>
             <div class="cookie-buttons">
@@ -480,7 +480,7 @@ function initForms() {
                         form.innerHTML = '<div style="text-align:center; padding: 40px 20px;">'
                             + '<div style="font-size: 3rem; margin-bottom: 15px;">🎁</div>'
                             + '<h3 style="color: var(--primary);">Gutschein-Bestellung eingegangen!</h3>'
-                            + '<p style="color: var(--text-light); margin-bottom: 25px;">Vielen Dank für Ihre Bestellung!</p>'
+                            + '<p style="color: var(--text-light); margin-bottom: 25px;">Vielen Dank für deine Bestellung!</p>'
                             + '<div style="background: var(--bg-light); border: 2px solid var(--primary); border-radius: var(--radius); padding: 25px; display: inline-block; text-align: left; max-width: 400px;">'
                             + '<p style="margin: 0; font-weight: 600; text-align: center;">Abholung in 90518 Altdorf</p>'
                             + '<p style="margin: 12px 0 0; font-size: 0.95rem;"><strong>Adresse:</strong> Jörg Sperber, Schulstraße 18, 90518 Altdorf</p>'
@@ -488,8 +488,8 @@ function initForms() {
                             + '<p style="margin: 6px 0 0; font-size: 0.95rem;"><strong>Telefon:</strong> <a href="tel:+4915117250329" style="color: var(--primary);">+49 1511 7250329</a></p>'
                             + (gWert ? '<p style="margin: 12px 0 0; font-size: 0.95rem;"><strong>Betrag:</strong> ' + gWert + ' € (Barzahlung vor Ort)</p>' : '')
                             + '</div>'
-                            + '<p style="color: var(--text-light); margin-top: 25px; font-size: 0.9rem;">Bitte rufen Sie vorher an, um einen Abholtermin zu vereinbaren.</p>'
-                            + '<p style="color: var(--text-light); font-size: 0.85rem; font-style: italic;">Sie erhalten eine Bestätigung per E-Mail.</p>'
+                            + '<p style="color: var(--text-light); margin-top: 25px; font-size: 0.9rem;">Bitte ruf vorher an, um einen Abholtermin zu vereinbaren.</p>'
+                            + '<p style="color: var(--text-light); font-size: 0.85rem; font-style: italic;">Du erhältst eine Bestätigung per E-Mail.</p>'
                             + '</div>';
                         form.scrollIntoView({ behavior: 'smooth', block: 'center' });
                     } else {
@@ -500,7 +500,7 @@ function initForms() {
                         form.innerHTML = '<div style="text-align:center; padding: 40px 20px;">'
                             + '<div style="font-size: 3rem; margin-bottom: 15px;">🎁</div>'
                             + '<h3 style="color: var(--primary);">Gutschein-Bestellung eingegangen!</h3>'
-                            + '<p style="color: var(--text-light); margin-bottom: 25px;">Vielen Dank für Ihre Bestellung!</p>'
+                            + '<p style="color: var(--text-light); margin-bottom: 25px;">Vielen Dank für deine Bestellung!</p>'
                             + '<div style="background: var(--bg-light); border: 2px solid var(--primary); border-radius: var(--radius); padding: 25px; display: inline-block; text-align: left; max-width: 400px;">'
                             + '<p style="margin: 0; font-weight: 600; text-align: center;">Bankverbindung</p>'
                             + '<p style="margin: 12px 0 0; font-size: 0.95rem;"><strong>Empfänger:</strong> Segelflieger im Post SV Nürnberg</p>'
@@ -512,10 +512,10 @@ function initForms() {
                             + '</div>'
                             + '<div style="margin-top: 20px;">'
                             + '<img src="' + qrUrl + '" alt="QR-Code für Überweisung" width="120" height="120" style="width: 120px; height: 120px; max-width: 120px; border-radius: 6px; display: inline-block;">'
-                            + '<p style="color: var(--text-light); font-size: 0.85rem; margin-top: 8px;">QR-Code für Ihre Banking-App scannen</p>'
+                            + '<p style="color: var(--text-light); font-size: 0.85rem; margin-top: 8px;">QR-Code für deine Banking-App scannen</p>'
                             + '</div>'
-                            + '<p style="color: var(--text-light); margin-top: 25px; font-size: 0.9rem;">Nach Zahlungseingang erhalten Sie Ihren personalisierten Gutschein per E-Mail.</p>'
-                            + '<p style="color: var(--text-light); font-size: 0.85rem; font-style: italic;">Sie erhalten in Kürze eine Bestätigung per E-Mail mit den Zahlungsinformationen.</p>'
+                            + '<p style="color: var(--text-light); margin-top: 25px; font-size: 0.9rem;">Nach Zahlungseingang erhältst du deinen personalisierten Gutschein per E-Mail.</p>'
+                            + '<p style="color: var(--text-light); font-size: 0.85rem; font-style: italic;">Du erhältst in Kürze eine Bestätigung per E-Mail mit den Zahlungsinformationen.</p>'
                             + '</div>';
                         form.scrollIntoView({ behavior: 'smooth', block: 'center' });
                     }
@@ -532,7 +532,7 @@ function initForms() {
                 const errorDiv = document.createElement('div');
                 errorDiv.className = 'form-error';
                 errorDiv.style.cssText = 'color:#d63030; background:#fff5f5; border:1px solid #fed7d7; padding:12px 15px; border-radius:8px; margin-top:15px; text-align:center; font-size:0.9rem;';
-                errorDiv.textContent = 'Es gab einen Fehler beim Senden. Bitte versuchen Sie es später erneut oder schreiben Sie uns per E-Mail.';
+                errorDiv.textContent = 'Es gab einen Fehler beim Senden. Bitte versuche es später erneut oder schreib uns per E-Mail.';
                 form.appendChild(errorDiv);
             }
         });
