@@ -540,15 +540,21 @@ function initForms() {
 }
 
 function initFavicon() {
-    const faviconPath = 'images/logo.png';
-    let link = document.querySelector("link[rel~='icon']");
-    if (!link) {
-        link = document.createElement('link');
+    // Favicon nur setzen wenn keiner im HTML definiert ist
+    if (!document.querySelector("link[rel='icon']")) {
+        const link = document.createElement('link');
         link.rel = 'icon';
+        link.href = 'favicon.ico';
+        link.type = 'image/x-icon';
         document.head.appendChild(link);
     }
-    link.href = faviconPath;
-    link.type = 'image/png';
+    // Apple Touch Icon nur setzen wenn keiner im HTML definiert ist
+    if (!document.querySelector("link[rel='apple-touch-icon']")) {
+        const appleLink = document.createElement('link');
+        appleLink.rel = 'apple-touch-icon';
+        appleLink.href = 'apple-touch-icon.png';
+        document.head.appendChild(appleLink);
+    }
 }
 
 function initLightbox() {
