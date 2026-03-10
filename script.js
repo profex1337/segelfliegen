@@ -402,9 +402,15 @@ function initForms() {
                 wunschtermin: ''
             };
 
+            // CC-Empfänger: immer Dan, plus je nach Formular/Betreff weitere
+            var ccList = ['dan@segelfliegen-altdorf.de'];
+
             if (formType === 'kontakt') {
                 params.subject = 'Kontaktanfrage: ' + (fd.get('betreff') || 'Allgemein');
                 params.betreff = fd.get('betreff') || 'Allgemein';
+                if (params.betreff === 'Ausbildung') {
+                    ccList.push('Jeremy.Wolfsteiner@gmail.com');
+                }
 
             } else if (formType === 'gutschein') {
                 params.subject = 'Neue Gutschein-Bestellung';
@@ -415,12 +421,15 @@ function initForms() {
                 params.empfaenger = fd.get('empfaenger') || '';
                 params.anlass = fd.get('anlass') || '';
                 params.zustellung = fd.get('zustellung') || '';
+                ccList.push('joergsperber@arcor.de');
 
             } else if (formType === 'gastflug') {
                 params.subject = 'Neue Gastflug-Anfrage';
                 params.interesse = fd.get('interest') || '';
                 params.wunschtermin = fd.get('date') || '';
             }
+
+            params.cc_email = ccList.join(',');
 
             try {
                 // Benachrichtigung an den Verein senden
