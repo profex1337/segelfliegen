@@ -357,7 +357,10 @@
                                     <input type="text" id="voucher-valid-until" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:6px;">
                                 </div>
                             </div>
-                            <button type="button" id="gutschein-generate-btn" class="btn" style="min-width: 280px;">PDF generieren & herunterladen</button>
+                            <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                                <button type="button" id="gutschein-generate-btn" class="btn" style="min-width: 280px;">PDF generieren & herunterladen</button>
+                                <button type="button" class="btn btn-secondary" style="min-width: 280px;" onclick="fillUnpersonalized()">Nicht personalisierten Text erstellen</button>
+                            </div>
                         </form>
                     </div>
 
@@ -461,6 +464,12 @@
                 img.src = d;
             }).catch(() => {});
         });
+
+        // Nicht personalisierten Text einfügen
+        window.fillUnpersonalized = function() {
+            document.getElementById('voucher-recipient').value = 'Jemand Besonderes';
+            document.getElementById('voucher-greeting').value = 'Mit diesem Gutschein f\u00FCr einen Flug am Flugplatz\nAltdorf-Hagenhausen gleitest Du der Freiheit entgegen.\nErlebe die Welt aus der Vogelperspektive und lass\nden Alltag einfach am Boden zur\u00FCck.\nM\u00F6ge dieser Ausflug in die L\u00FCfte ein\nunvergessliches Abenteuer voller neuer H\u00F6hen werden.\n\nLass Dich tragen und genie\u00DFe das Leben \u00FCber den Wolken!';
+        };
 
         // PDF-Generator
         document.getElementById('gutschein-generate-btn')?.addEventListener('click', () => {
