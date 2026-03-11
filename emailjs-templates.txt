@@ -82,6 +82,7 @@ Variablen die vom Code gesendet werden:
   {{flugart}}     — gewählte Flugart
   {{empfaenger}}  — Name des Beschenkten
   {{wert}}        — Gutscheinwert OHNE € (z.B. "160,00"), Template fügt € hinzu
+  {{flugdauer}}   — Berechnete Flugdauer (z.B. "bis 20 Min.", "bis 30 Min.", "pauschal")
   {{zustellung}}  — Zustellungsart
   {{{payment_info}}} — DREIFACHE Klammern! Dynamischer HTML-Block:
                      Bei Überweisung: Bankdaten + QR-Code
@@ -117,6 +118,10 @@ Wird genutzt von:
         <tr>
           <td style="padding: 6px 0; color: #666;">Gutscheinwert:</td>
           <td style="padding: 6px 0; font-weight: bold; color: #e94560; font-size: 18px;">{{wert}} &euro;</td>
+        </tr>
+        <tr>
+          <td style="padding: 6px 0; color: #666;">Flugdauer:</td>
+          <td style="padding: 6px 0; font-weight: bold;">{{flugdauer}}</td>
         </tr>
         <tr>
           <td style="padding: 6px 0; color: #666;">Zustellung:</td>

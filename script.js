@@ -402,6 +402,15 @@ function buildPaymentInfoHtml(name, wert, zustellung, qrUrl) {
         + '<div style="font-size: 14px; line-height: 1.7; color: #555; margin-bottom: 25px;">Nach Zahlungseingang erstellen wir deinen personalisierten Gutschein und senden ihn dir per E-Mail zu.</div>';
 }
 
+// Flugdauer berechnen: Basisdauer je Flugart + Zusatzzeit
+function getFlugdauer(flugart, zusatzMin) {
+    var basis = { 'Segelflug (Windenstart)': 20, 'Segelflug (F-Schlepp)': 20, 'Motorsegler': 15 };
+    var base = basis[flugart];
+    if (!base) return 'pauschal';
+    var total = base + (zusatzMin || 0);
+    return 'bis ' + total + ' Min.';
+}
+
 function initForms() {
     document.querySelectorAll('form[data-emailjs]').forEach(form => {
         form.addEventListener('submit', async (e) => {
@@ -480,8 +489,14 @@ function initForms() {
                     var replyWert = (fd.get('wert') || '').replace(',', '.');
                     var replyName = fd.get('name') || '';
                     var replyZustellung = fd.get('zustellung') || '';
+                    var replyFlugart = fd.get('flugart') || '';
+                    var replyZusatz = parseInt(fd.get('zusatzzeit') || '0', 10);
                     var replyEpcData = 'BCD\n002\n1\nSCT\nGENODEF1HSB\nSegelflieger im Post SV Nürnberg\nDE20760614820004555554\nEUR' + replyWert + '\n\n\nGutschein ' + replyName;
                     var replyQrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + encodeURIComponent(replyEpcData);
+
+                    // Flugdauer berechnen (Basis + Zusatzzeit)
+                    var replyFlugdauer = getFlugdauer(replyFlugart, replyZusatz);
+
                     var replyParams = {
                         subject: 'Deine Gutschein-Bestellung beim Segelflugplatz Altdorf',
                         title: 'Vielen Dank!',
@@ -489,9 +504,10 @@ function initForms() {
                         intro: 'Hallo <strong>' + replyName + '</strong>,<br><br>vielen Dank f\u00FCr deine Bestellung eines Flug-Gutscheins beim Segelflugplatz Altdorf-Hagenhausen!',
                         name: replyName,
                         email: fd.get('email') || '',
-                        flugart: fd.get('flugart') || '',
+                        flugart: replyFlugart,
                         empfaenger: fd.get('empfaenger') || '',
                         wert: fd.get('wert') || '',
+                        flugdauer: replyFlugdauer,
                         zustellung: replyZustellung,
                         payment_info: buildPaymentInfoHtml(replyName, fd.get('wert') || '', replyZustellung, replyQrUrl)
                     };

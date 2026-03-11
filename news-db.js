@@ -1452,6 +1452,7 @@ async function startVoucherLogic() {
             flugart: order.flugart || '',
             empfaenger: order.empfaenger || '',
             wert: order.wert || '',
+            flugdauer: getFlugdauer(order.flugart || '', parseInt(order.zusatzzeit || '0', 10)),
             zustellung: order.zustellung || '',
             payment_info: buildPaymentInfoHtml(order.name || '', order.wert || '', order.zustellung || '', qrUrl)
         };
