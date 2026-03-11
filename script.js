@@ -452,6 +452,7 @@ function initForms() {
                 if (fd.get('anlass')) detailRows.push({label: 'Anlass', value: fd.get('anlass')});
                 if (fd.get('zustellung')) detailRows.push({label: 'Zustellung', value: fd.get('zustellung'), style: 'font-weight: bold; color: #6a1b9a;'});
                 ccList.push('joergsperber@arcor.de');
+                ccList.push('r.dachauer-kassier@web.de');
 
             } else if (formType === 'gastflug') {
                 subject = 'Neue Gastflug-Anfrage';
