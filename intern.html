@@ -347,6 +347,7 @@
                                 <div>
                                     <label style="display:block; margin-bottom:6px; font-weight:600; font-size:0.9rem;">Wert (€)</label>
                                     <input type="text" id="voucher-value" placeholder="z.B. 80,00" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:6px;">
+                                    <input type="hidden" id="voucher-zusatzzeit" value="0">
                                 </div>
                                 <div>
                                     <label style="display:block; margin-bottom:6px; font-weight:600; font-size:0.9rem;">Gültig bis</label>
@@ -568,15 +569,25 @@
             doc.text(flightType, textCenterX, 71, { align: 'center' });
 
             // Wert prominent
+            var hasWert = false;
             if (voucherValue) {
+                hasWert = true;
                 doc.setFont('helvetica', 'bold');
                 doc.setFontSize(18);
                 doc.setTextColor(15, 52, 96);
                 doc.text('Wert: ' + voucherValue + ' \u20AC', textCenterX, 82, { align: 'center' });
+
+                // Flugdauer unter Wert
+                var zusatzzeit = parseInt(document.getElementById('voucher-zusatzzeit').value || '0', 10);
+                var flugdauer = getFlugdauer(flightType, zusatzzeit);
+                doc.setFont('helvetica', 'normal');
+                doc.setFontSize(8);
+                doc.setTextColor(140, 140, 140);
+                doc.text('Flugdauer: ' + flugdauer, textCenterX, 87, { align: 'center' });
             }
 
             // Dezente Trennlinie
-            const lineY = voucherValue ? 87 : 77;
+            const lineY = hasWert ? 91 : 77;
             doc.setDrawColor(220, 220, 220);
             doc.setLineWidth(0.3);
             doc.line(textCenterX - 25, lineY, textCenterX + 25, lineY);
