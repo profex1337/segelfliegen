@@ -1439,11 +1439,14 @@ async function startVoucherLogic() {
         var epcData = 'BCD\n002\n1\nSCT\nGENODEF1HSB\nSegelflieger im Post SV N\u00FCrnberg\nDE20760614820004555554\nEUR' + wert + '\n\n\nGutschein ' + (order.name || '');
         var qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + encodeURIComponent(epcData);
 
+        var istAbholung = (order.zustellung || '').indexOf('Abholung') !== -1;
         var params = {
-            subject: 'Zahlungserinnerung \u2014 Gutschein-Bestellung',
-            title: 'Zahlungserinnerung',
-            subtitle: 'Deine Zahlung steht noch aus',
-            intro: 'Hallo <strong>' + (order.name || '') + '</strong>,<br><br>wir m\u00F6chten dich freundlich daran erinnern, dass die Zahlung f\u00FCr deinen Flug-Gutschein beim Segelflugplatz Altdorf-Hagenhausen noch aussteht.',
+            subject: istAbholung ? 'Erinnerung \u2014 Gutschein-Abholung' : 'Zahlungserinnerung \u2014 Gutschein-Bestellung',
+            title: 'Erinnerung',
+            subtitle: istAbholung ? 'Dein Gutschein wartet auf Abholung' : 'Deine Zahlung steht noch aus',
+            intro: istAbholung
+                ? 'Hallo <strong>' + (order.name || '') + '</strong>,<br><br>wir m\u00F6chten dich freundlich daran erinnern, dass dein Flug-Gutschein beim Segelflugplatz Altdorf-Hagenhausen noch auf Abholung wartet.'
+                : 'Hallo <strong>' + (order.name || '') + '</strong>,<br><br>wir m\u00F6chten dich freundlich daran erinnern, dass die Zahlung f\u00FCr deinen Flug-Gutschein beim Segelflugplatz Altdorf-Hagenhausen noch aussteht.',
             name: order.name || '',
             email: order.email || '',
             flugart: order.flugart || '',
