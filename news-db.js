@@ -1495,7 +1495,7 @@ function renderOrderRow(order, isClosed) {
         ? '<span style="font-size:0.75rem; padding:3px 8px; border-radius:12px; font-weight:600; background:#e8f5e9; color:#2e7d32; margin-left:8px;">Bezahlt</span>'
         : '<span style="font-size:0.75rem; padding:3px 8px; border-radius:12px; font-weight:600; background:#fff3e0; color:#e65100; margin-left:8px;">Unbezahlt</span>';
 
-    var infoHtml = '<div style="flex:1; min-width:200px;"' + (isClosed ? '' : ' onclick="loadVoucherOrder(' + JSON.stringify(order).replace(/"/g, '&quot;') + ')"') + '>'
+    var infoHtml = '<div style="flex:1; min-width:200px;"' + (!isClosed && isPaid ? ' onclick="loadVoucherOrder(' + JSON.stringify(order).replace(/"/g, '&quot;') + ')" style="cursor:pointer;"' : '') + '>'
         + '<strong style="font-size:1rem;">\u2709 ' + besteller + '</strong>' + paidBadge
         + '<div style="font-size:0.82rem; color:var(--text-light); margin-top:3px;">'
         + flugart + (wert ? ' &middot; ' + wert + ' \u20AC' : '') + ' &middot; F\u00FCr: ' + empfaenger
@@ -1519,7 +1519,7 @@ function renderOrderRow(order, isClosed) {
         var paidBtnText = isPaid ? 'Unbezahlt' : 'Bezahlt';
 
         buttonsHtml += '<button onclick="event.stopPropagation(); toggleOrderPaid(\'' + order.id + '\', ' + isPaid + ')" class="btn btn-secondary" style="' + paidBtnStyle + '">' + paidBtnText + '</button>'
-            + '<button onclick="event.stopPropagation(); loadVoucherOrder(' + JSON.stringify(order).replace(/"/g, '&quot;') + ')" class="btn" style="padding:6px 14px; font-size:0.78rem;">\u00DCbernehmen</button>'
+            + (isPaid ? '<button onclick="event.stopPropagation(); loadVoucherOrder(' + JSON.stringify(order).replace(/"/g, '&quot;') + ')" class="btn" style="padding:6px 14px; font-size:0.78rem;">\u00DCbernehmen</button>' : '')
             + (!isPaid ? '<button onclick="event.stopPropagation(); sendPaymentReminder(' + JSON.stringify(order).replace(/"/g, '&quot;') + ')" class="btn btn-secondary" style="padding:6px 12px; font-size:0.78rem; background:#e65100; color:#fff; border-color:#e65100;">Reminder</button>' : '')
             + (isPaid ? '<button onclick="event.stopPropagation(); completeVoucherOrder(\'' + order.id + '\')" class="btn btn-secondary" style="padding:6px 12px; font-size:0.78rem; background:#6a1b9a; color:#fff; border-color:#6a1b9a;">Abschlie\u00DFen</button>' : '')
             + '<button onclick="event.stopPropagation(); deleteVoucherOrder(\'' + order.id + '\')" class="btn btn-secondary" style="padding:6px 12px; font-size:0.78rem; background:#c0392b; color:#fff; border-color:#c0392b;">L\u00F6schen</button>';
