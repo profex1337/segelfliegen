@@ -364,11 +364,14 @@
                                 <button type="button" class="btn btn-secondary" style="min-width: 280px; background: #1565c0; color: #fff; border-color: #1565c0;" onclick="generateEmailTemplate()">E-Mail-Vorlage kopieren</button>
                             </div>
                             <div id="email-template-box" style="display:none; margin-top:16px; background:#f4f6f8; border:1px solid #ddd; border-radius:8px; padding:16px; position:relative;">
-                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
                                     <strong style="color:#0f3460; font-size:0.9rem;">E-Mail-Vorlage</strong>
-                                    <button type="button" onclick="copyEmailTemplate()" class="btn btn-secondary" style="padding:4px 14px; font-size:0.78rem;">Kopieren</button>
+                                    <div style="display:flex; gap:6px;">
+                                        <button type="button" onclick="copyEmailFormatted()" class="btn" style="padding:4px 14px; font-size:0.78rem;">Formatiert kopieren</button>
+                                        <button type="button" onclick="copyEmailPlain()" class="btn btn-secondary" style="padding:4px 14px; font-size:0.78rem;">Als Text kopieren</button>
+                                    </div>
                                 </div>
-                                <pre id="email-template-text" style="white-space:pre-wrap; font-family:system-ui,sans-serif; font-size:0.85rem; line-height:1.6; margin:0; color:#333;"></pre>
+                                <div id="email-template-html" style="background:#fff; border-radius:8px; overflow:hidden; border:1px solid #e0e0e0;"></div>
                                 <div id="email-copy-feedback" style="display:none; color:#2e7d32; font-size:0.8rem; margin-top:6px; font-weight:600;"></div>
                             </div>
                         </form>
@@ -477,46 +480,106 @@
 
         // E-Mail-Vorlage generieren
         window.generateEmailTemplate = function() {
-            var recipient = document.getElementById('voucher-recipient').value.trim() || 'Empfänger';
+            var recipient = document.getElementById('voucher-recipient').value.trim() || 'Empf\u00E4nger';
             var flightType = document.getElementById('voucher-flight-type').value || 'Flugart';
-            var value = document.getElementById('voucher-value').value.trim() || '—';
+            var value = document.getElementById('voucher-value').value.trim() || '\u2014';
             var zusatz = parseInt(document.getElementById('voucher-zusatzzeit').value || '0', 10);
             var validUntil = document.getElementById('voucher-valid-until').value.trim();
             var flugdauer = typeof getFlugdauer === 'function' ? getFlugdauer(flightType, zusatz) : '';
-
             var besteller = document.getElementById('voucher-besteller').value.trim();
-            var anrede = besteller ? 'Hallo ' + besteller + ',' : 'Hallo,';
+            var anrede = besteller ? 'Hallo <strong>' + besteller + '</strong>,' : 'Hallo,';
 
-            var text = anrede + '\n\n'
-                + 'anbei erhältst du den bestellten Flug-Gutschein für den Segelflugplatz Altdorf-Hagenhausen.\n\n'
+            var detailRows = ''
+                + '<tr><td style="padding:8px 12px; color:#666; width:120px;">Empf\u00E4nger:</td><td style="padding:8px 12px; font-weight:bold;">' + recipient + '</td></tr>'
+                + '<tr><td style="padding:8px 12px; color:#666;">Flugart:</td><td style="padding:8px 12px; font-weight:bold;">' + flightType + '</td></tr>'
+                + '<tr><td style="padding:8px 12px; color:#666;">Gutscheinwert:</td><td style="padding:8px 12px; font-weight:bold; color:#e94560; font-size:16px;">' + value + ' \u20AC</td></tr>';
+            if (flugdauer) detailRows += '<tr><td style="padding:8px 12px; color:#666;">Flugdauer:</td><td style="padding:8px 12px; font-weight:bold;">' + flugdauer + '</td></tr>';
+            if (validUntil) detailRows += '<tr><td style="padding:8px 12px; color:#666;">G\u00FCltig bis:</td><td style="padding:8px 12px; font-weight:bold;">' + validUntil + '</td></tr>';
+
+            var html = '<div style="font-family:system-ui,sans-serif,Arial; font-size:14px; color:#333; max-width:600px; margin:0 auto;">'
+                + '<div style="background:linear-gradient(135deg,#0f3460,#1a4a8a); padding:25px; border-radius:12px 12px 0 0; text-align:center;">'
+                + '<img src="https://raw.githubusercontent.com/profex1337/segelfliegen/main/images/LOGO%20SPN.png" alt="Logo" width="60" height="60" style="border-radius:50%; margin-bottom:10px;">'
+                + '<div style="font-size:22px; color:#fff; font-weight:bold;">Dein Flug-Gutschein</div>'
+                + '<div style="font-size:13px; color:#a8c8f0; margin-top:5px;">Segelflugplatz Altdorf-Hagenhausen</div>'
+                + '</div>'
+                + '<div style="background:#fff; padding:25px; border:1px solid #e0e0e0; border-top:none;">'
+                + '<div style="font-size:15px; line-height:1.7; margin-bottom:20px;">'
+                + anrede + '<br><br>anbei erh\u00E4ltst du den bestellten Flug-Gutschein f\u00FCr den Segelflugplatz Altdorf-Hagenhausen.'
+                + '</div>'
+                + '<div style="background:#f4f6f8; border-radius:8px; padding:16px; margin-bottom:20px;">'
+                + '<div style="font-weight:bold; color:#0f3460; font-size:14px; margin-bottom:10px;">Gutschein-Details</div>'
+                + '<table role="presentation" style="width:100%; border-collapse:collapse;">' + detailRows + '</table>'
+                + '</div>'
+                + '<div style="font-size:14px; line-height:1.7; margin-bottom:20px; color:#555;">'
+                + 'Der Wunschtermin ist jeweils am Wochenende ab 9 Uhr unter <a href="tel:+499189310" style="color:#0f3460; font-weight:600;">09189/310</a> zu vereinbaren. '
+                + 'Wir fliegen zwischen April und Oktober an Wochenenden und Feiertagen.'
+                + '</div>'
+                + '<div style="font-size:15px; font-weight:600; color:#0f3460;">Wir freuen uns auf den Besuch!</div>'
+                + '<hr style="border:none; border-top:1px solid #eee; margin:20px 0;">'
+                + '<div style="font-size:13px; color:#888; line-height:1.6;">'
+                + 'Viele Gr\u00FC\u00DFe<br>'
+                + '<strong style="color:#333;">Segelflieger im Post-SV N\u00FCrnberg e.V.</strong><br>'
+                + 'Segelflugplatz Altdorf-Hagenhausen<br>'
+                + 'Tel: <a href="tel:+499189310" style="color:#0f3460;">09189/310</a> <span style="font-size:12px;">(Wochenende)</span><br>'
+                + 'E-Mail: <a href="mailto:info@segelfliegen-altdorf.de" style="color:#0f3460;">info@segelfliegen-altdorf.de</a><br>'
+                + 'Web: <a href="https://www.segelfliegenaltdorf.de" style="color:#0f3460;">www.segelfliegenaltdorf.de</a>'
+                + '</div>'
+                + '</div>'
+                + '<div style="background:#0f3460; padding:15px; border-radius:0 0 12px 12px; text-align:center;">'
+                + '<div style="color:#fff; font-size:12px; font-weight:bold;">Segelflieger im Post-SV N\u00FCrnberg e.V.</div>'
+                + '<div style="color:#a8c8f0; font-size:11px; margin-top:4px;">Segelflugplatz Altdorf-Hagenhausen &middot; segelfliegenaltdorf.de</div>'
+                + '</div>'
+                + '</div>';
+
+            document.getElementById('email-template-html').innerHTML = html;
+            document.getElementById('email-template-box').style.display = 'block';
+
+            // Plaintext-Version intern speichern
+            document.getElementById('email-template-html').dataset.plain = (besteller ? 'Hallo ' + besteller + ',' : 'Hallo,') + '\n\n'
+                + 'anbei erh\u00E4ltst du den bestellten Flug-Gutschein f\u00FCr den Segelflugplatz Altdorf-Hagenhausen.\n\n'
                 + 'Gutschein-Details:\n'
-                + '  Empfänger: ' + recipient + '\n'
+                + '  Empf\u00E4nger: ' + recipient + '\n'
                 + '  Flugart: ' + flightType + '\n'
-                + '  Wert: ' + value + ' \u20AC\n';
-            if (flugdauer) text += '  Flugdauer: ' + flugdauer + '\n';
-            if (validUntil) text += '  Gültig bis: ' + validUntil + '\n';
-            text += '\nDer Wunschtermin ist jeweils am Wochenende ab 9 Uhr unter 09189/310 zu vereinbaren. '
+                + '  Wert: ' + value + ' \u20AC\n'
+                + (flugdauer ? '  Flugdauer: ' + flugdauer + '\n' : '')
+                + (validUntil ? '  G\u00FCltig bis: ' + validUntil + '\n' : '')
+                + '\nDer Wunschtermin ist jeweils am Wochenende ab 9 Uhr unter 09189/310 zu vereinbaren. '
                 + 'Wir fliegen zwischen April und Oktober an Wochenenden und Feiertagen.\n\n'
                 + 'Wir freuen uns auf den Besuch!\n\n'
-                + 'Viele Grüße\nSegelflieger im Post-SV Nürnberg e.V.\n'
+                + 'Viele Gr\u00FC\u00DFe\nSegelflieger im Post-SV N\u00FCrnberg e.V.\n'
                 + 'Segelflugplatz Altdorf-Hagenhausen\n'
                 + 'Tel: 09189/310 (Wochenende)\n'
                 + 'E-Mail: info@segelfliegen-altdorf.de\n'
                 + 'Web: www.segelfliegenaltdorf.de';
-
-            document.getElementById('email-template-text').textContent = text;
-            document.getElementById('email-template-box').style.display = 'block';
         };
 
-        window.copyEmailTemplate = function() {
-            var text = document.getElementById('email-template-text').textContent;
+        // Formatiert kopieren (HTML — beh\u00E4lt Formatierung in E-Mail-Programmen)
+        window.copyEmailFormatted = function() {
+            var el = document.getElementById('email-template-html');
+            var range = document.createRange();
+            range.selectNodeContents(el);
+            var sel = window.getSelection();
+            sel.removeAllRanges();
+            sel.addRange(range);
+            document.execCommand('copy');
+            sel.removeAllRanges();
+            showCopyFeedback('Formatierte Vorlage kopiert!');
+        };
+
+        // Als Plaintext kopieren
+        window.copyEmailPlain = function() {
+            var text = document.getElementById('email-template-html').dataset.plain || '';
             navigator.clipboard.writeText(text).then(function() {
-                var fb = document.getElementById('email-copy-feedback');
-                fb.textContent = 'In die Zwischenablage kopiert!';
-                fb.style.display = 'block';
-                setTimeout(function() { fb.style.display = 'none'; }, 3000);
+                showCopyFeedback('Text-Vorlage kopiert!');
             });
         };
+
+        function showCopyFeedback(msg) {
+            var fb = document.getElementById('email-copy-feedback');
+            fb.textContent = msg;
+            fb.style.display = 'block';
+            setTimeout(function() { fb.style.display = 'none'; }, 3000);
+        }
 
         // Nicht personalisierten Text einfügen
         window.fillUnpersonalized = function() {
