@@ -223,6 +223,7 @@ There is no test suite and no linter/formatter configuration. Validate changes b
 - **ES6+ syntax** — arrow functions, `const`/`let`, template literals, destructuring.
 - **No framework** — vanilla DOM APIs only.
 - **camelCase** for variables and functions; **PascalCase** is not used for functions.
+- **Flight types** in forms and emails use: "Segelflug (Windenstart)", "Segelflug (F-Schlepp)", "Kunstflug", "Motorsegler" (NOT "Motorflug"). The voucher image file is still named `Gutschein_Motorflug.jpg`.
 - **Comments** in the source are written in German.
 - Firebase SDK (`v11.6.1`) is imported directly from the Google CDN (gstatic) using ES module URLs — do **not** switch to npm imports.
 - Never store sensitive logic client-side; secrets must remain in Firebase security rules or the EmailJS config.
@@ -240,6 +241,8 @@ There is no test suite and no linter/formatter configuration. Validate changes b
 | `embedConsentContent()` | Replaces `.consent-overlay` divs with real `<iframe>` elements |
 | `initReviews()` | Renders a static snapshot of Google reviews in the sidebar; opened via `#review-trigger-btn` |
 | `initDatepickers()` | Applies Flatpickr to `#wunschtermin` input (weekends only, German locale) |
+| `buildPaymentInfoHtml()` | Builds payment/pickup HTML block for customer emails (bank details + QR or pickup address) |
+| `getFlugdauer()` | Calculates flight duration string from flight type + extra time (e.g., "bis zu 20 Min. + 10 Min. zusätzlich") |
 | `initForms()` | Intercepts all `form[data-emailjs]` submit events and sends via EmailJS SDK |
 | `getAvatarColor()` | Returns a random brand colour for review avatar backgrounds |
 
@@ -263,6 +266,9 @@ There is no test suite and no linter/formatter configuration. Validate changes b
 | `compressImage(file, maxWidth, quality)` | Resizes image to max 1200 px, encodes as WebP at 80% quality; returns a Blob |
 | `uploadToGitHub(blob, filename, token)` | Uploads WebP blob to `images/<filename>` via GitHub Contents API; returns raw URL |
 | `deleteFromGitHub(imageUrl, token)` | Deletes `images/news_*.webp` or `images/aircraft_*.webp` from the repository |
+| `sendPaymentReminder(order)` | Sends payment/pickup reminder email to customer via EmailJS (with confirm dialog) |
+| `loadVoucherOrder(order)` | Populates the voucher PDF form with order data (only available after order is marked as paid) |
+| `fillUnpersonalized()` | Fills voucher form with generic recipient ("Jemand Besonderes") and standard greeting text |
 
 **Anonymous auth**: Non-admin visitors are signed in anonymously via `signInAnonymously()` so the `onSnapshot` listener can read Firestore data without a password.
 
@@ -282,7 +288,7 @@ There is no test suite and no linter/formatter configuration. Validate changes b
 |---|---|---|
 | **Firebase** | `news-db.js` lines 5–13 | Project ID: `segelfliegen`. SDK version: `11.6.1`. API key is public (restricted via Firebase console). |
 | **GitHub API** | `news-db.js` `uploadToGitHub()` / `deleteFromGitHub()` | Used for news & aircraft image storage. Requires admin to supply a PAT with `contents: write`; stored in `localStorage`. |
-| **EmailJS** | `data-emailjs` attributes on HTML forms | Service ID `service_cd14twj`, template `template_eakr6dl`; forms on `mitfliegen.html` and `kontakt.html`. Gutschein auto-reply uses `template_ygdqime`. |
+| **EmailJS** | `data-emailjs` attributes on HTML forms, `script.js`, `news-db.js` | Free plan (2 templates). Service ID `service_cd14twj`. Template 1 `template_eakr6dl` (notifications to club, uses `{{{details}}}`). Template 2 `template_ygdqime` (auto-reply + payment reminders to customers, uses `{{{intro}}}`, `{{{payment_info}}}`). All customer emails use "Du" form. |
 | **Google Maps** | Embed `<iframe>` in `kontakt.html` | Uses consent overlay pattern; iframe only loads after cookie accept. |
 | **Flatpickr** | Self-hosted in `lib/flatpickr/` | Loaded locally in `mitfliegen.html` and `kontakt.html`. No CDN requests. |
 | **Fonts** | Self-hosted in `fonts/` | Montserrat, Open Sans, Tangerine as WOFF2. `@font-face` in `style.css`. No Google server contact. |
@@ -319,6 +325,17 @@ The panel is organised in **three tabs**:
 - **Auto-migration**: on admin load, any documents with the legacy category `'Motorsegler'` are automatically updated to `'Motorflugzeuge'`.
 - Changes are immediately visible on `flugzeugpark.html` (real-time `onSnapshot` listener).
 - When an aircraft with an image is deleted, the image is also removed from the repository automatically.
+
+### Voucher Orders & PDF Generation (within Tab 1 — News)
+
+- Incoming voucher orders from `mitfliegen.html` are stored in Firestore (`voucherOrders` collection) and displayed as a list below the news admin.
+- Order workflow: **Neu** → mark as **Bezahlt** → **Übernehmen** (loads into PDF form) → **PDF generieren** → manually send PDF to customer → **Abschließen**.
+- The "Übernehmen" button and click-to-load only appear **after** the order is marked as paid.
+- **Payment Reminder**: Unpaid orders show a "Reminder" button that sends a reminder email to the customer via EmailJS (Template 2). The reminder dynamically adapts to the payment method (bank transfer vs. pickup).
+- **PDF generation** via jsPDF (self-hosted in `lib/jspdf/`). PDF includes: flight type, value, flight duration (calculated from base + extra time), recipient name, greeting text, voucher number, validity date, club address, and flight time info.
+- **Gutschein-Versand is intentionally manual** — no automated email delivery of PDFs.
+- "Nicht personalisierten Text erstellen" button fills the form with generic text ("Jemand Besonderes" + standard greeting).
+- Voucher images per flight type are mapped in `gutscheinImageMap` (e.g., `'Motorsegler': 'images/Gutschein_Motorflug.jpg'`).
 
 **GitHub PAT**: A PAT with `contents: write` must be entered once in the News tab; it is shared by both the news and aircraft image upload pipelines (stored in `localStorage` under `gh_pat`).
 
