@@ -357,6 +357,7 @@
                                     <input type="text" id="voucher-valid-until" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:6px;">
                                 </div>
                             </div>
+                            <input type="hidden" id="voucher-besteller" value="">
                             <div style="display:flex; gap:10px; flex-wrap:wrap;">
                                 <button type="button" id="gutschein-generate-btn" class="btn" style="min-width: 280px;">PDF generieren & herunterladen</button>
                                 <button type="button" class="btn btn-secondary" style="min-width: 280px;" onclick="fillUnpersonalized()">Nicht personalisierten Text erstellen</button>
@@ -483,7 +484,10 @@
             var validUntil = document.getElementById('voucher-valid-until').value.trim();
             var flugdauer = typeof getFlugdauer === 'function' ? getFlugdauer(flightType, zusatz) : '';
 
-            var text = 'Hallo,\n\n'
+            var besteller = document.getElementById('voucher-besteller').value.trim();
+            var anrede = besteller ? 'Hallo ' + besteller + ',' : 'Hallo,';
+
+            var text = anrede + '\n\n'
                 + 'anbei erhältst du den bestellten Flug-Gutschein für den Segelflugplatz Altdorf-Hagenhausen.\n\n'
                 + 'Gutschein-Details:\n'
                 + '  Empfänger: ' + recipient + '\n'

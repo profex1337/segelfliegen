@@ -1382,6 +1382,8 @@ async function startVoucherLogic() {
         if (flightType) flightType.value = order.flugart || '';
         if (greeting) greeting.value = order.grusstext || '';
         if (value) value.value = order.wert || '';
+        var bestellerField = document.getElementById('voucher-besteller');
+        if (bestellerField) bestellerField.value = order.name || '';
         // Zusatzzeit merken für Flugdauer auf dem PDF
         var zusatzField = document.getElementById('voucher-zusatzzeit');
         if (zusatzField) zusatzField.value = order.zusatzzeit || '0';
