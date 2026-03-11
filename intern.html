@@ -318,11 +318,8 @@
                         <h3>Gutschein erstellen</h3>
                         <p style="color: var(--text-light); margin-bottom: 20px;">Erstelle einen personalisierten Gutschein als PDF zum Versand per E-Mail.</p>
                         <form id="gutschein-form">
-                            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-bottom:10px;">
-                                <div>
-                                    <label style="display:block; margin-bottom:6px; font-weight:600; font-size:0.9rem;">Besteller-Name</label>
-                                    <input type="text" id="voucher-besteller" placeholder="Name des Bestellers" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:6px;">
-                                </div>
+                            <input type="hidden" id="voucher-besteller" value="">
+                            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px;">
                                 <div>
                                     <label style="display:block; margin-bottom:6px; font-weight:600; font-size:0.9rem;">Empfänger-Name *</label>
                                     <input type="text" id="voucher-recipient" placeholder="Name des Beschenkten" required style="width:100%; padding:10px; border:1px solid #ddd; border-radius:6px;">
@@ -501,7 +498,7 @@
 
             var html = '<div style="font-family:system-ui,sans-serif,Arial; font-size:14px; color:#333; max-width:600px; margin:0 auto;">'
                 + '<div style="background:linear-gradient(135deg,#0f3460,#1a4a8a); padding:25px; border-radius:12px 12px 0 0; text-align:center;">'
-                + '<img src="https://raw.githubusercontent.com/profex1337/segelfliegen/main/images/LOGO%20SPN.png" alt="Logo" width="36" height="36" style="width:36px; max-width:36px; border-radius:50%; margin-bottom:8px;">'
+                + '<img src="https://raw.githubusercontent.com/profex1337/segelfliegen/main/images/LOGO%20SPN.png" alt="Logo" width="50" height="50" style="width:50px; max-width:50px; border-radius:50%; margin:0 auto 10px; display:block;">'
                 + '<div style="font-size:22px; color:#fff; font-weight:bold;">Dein Flug-Gutschein</div>'
                 + '<div style="font-size:13px; color:#a8c8f0; margin-top:5px;">Segelflugplatz Altdorf-Hagenhausen</div>'
                 + '</div>'
