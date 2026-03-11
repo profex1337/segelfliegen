@@ -125,9 +125,6 @@ Wird genutzt von:
       </table>
     </div>
     {{{payment_info}}}
-    <div style="font-size: 14px; line-height: 1.7; color: #555;">
-      Nach Zahlungseingang erstellen wir deinen personalisierten Gutschein und senden ihn dir per E-Mail zu.
-    </div>
     <hr style="border: none; border-top: 1px solid #eee; margin: 25px 0;">
     <div style="font-size: 13px; color: #888; line-height: 1.6;">
       Bei Fragen erreichst du uns unter:<br>

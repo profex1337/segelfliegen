@@ -379,7 +379,7 @@ function buildPaymentInfoHtml(name, wert, zustellung, qrUrl) {
             + 'Bitte hole deinen Gutschein ab bei:<br>'
             + '<strong>J\u00F6rg Sperber, Schulstra\u00DFe 18, 90518 Altdorf</strong><br>'
             + '<a href="https://maps.app.goo.gl/p4YEwmERAwFkmy479" style="color: #6a1b9a;">In Google Maps \u00F6ffnen</a><br>'
-            + 'Bitte vorher anrufen: <a href="tel:+4915117250329" style="color: #6a1b9a; font-weight: bold;">+49 1511 7250329</a>'
+            + 'Bitte vorher anrufen:<br><a href="tel:+4915117250329" style="color: #6a1b9a; font-weight: bold;">+49 1511 7250329</a>'
             + (wert ? '<br><br><strong>Betrag:</strong> ' + wert + ' \u20AC (Barzahlung vor Ort)' : '')
             + '</div></div>';
     }
@@ -398,7 +398,8 @@ function buildPaymentInfoHtml(name, wert, zustellung, qrUrl) {
         + '<div style="font-weight: bold; color: #e94560; font-size: 15px; margin-top: 2px;">Gutschein ' + (name || '') + '</div></div></div>'
         + '<div style="text-align: center; margin-bottom: 25px;">'
         + '<img src="' + (qrUrl || '') + '" alt="QR-Code f\u00FCr \u00DCberweisung" width="200" height="200" style="border-radius: 8px;">'
-        + '<div style="font-size: 12px; color: #888; margin-top: 8px;">QR-Code f\u00FCr deine Banking-App scannen</div></div>';
+        + '<div style="font-size: 12px; color: #888; margin-top: 8px;">QR-Code f\u00FCr deine Banking-App scannen</div></div>'
+        + '<div style="font-size: 14px; line-height: 1.7; color: #555; margin-bottom: 25px;">Nach Zahlungseingang erstellen wir deinen personalisierten Gutschein und senden ihn dir per E-Mail zu.</div>';
 }
 
 function initForms() {
