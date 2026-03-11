@@ -368,7 +368,6 @@
                                     <strong style="color:#0f3460; font-size:0.9rem;">E-Mail-Vorlage</strong>
                                     <div style="display:flex; gap:6px; flex-wrap:wrap;">
                                         <button type="button" onclick="copyEmailFormatted()" class="btn" style="padding:4px 14px; font-size:0.78rem;">Formatiert kopieren</button>
-                                        <button type="button" onclick="copyEmailHtml()" class="btn btn-secondary" style="padding:4px 14px; font-size:0.78rem; background:#e65100; color:#fff; border-color:#e65100;">HTML-Code kopieren</button>
                                         <button type="button" onclick="copyEmailPlain()" class="btn btn-secondary" style="padding:4px 14px; font-size:0.78rem;">Als Text kopieren</button>
                                     </div>
                                 </div>
@@ -593,14 +592,6 @@
                 sel.removeAllRanges();
                 showCopyFeedback('Formatierte Vorlage kopiert!');
             }
-        };
-
-        // HTML-Quellcode kopieren (f\u00FCr Strato und andere Webmailer mit Quellcode-Editor)
-        window.copyEmailHtml = function() {
-            var htmlContent = document.getElementById('email-template-html').innerHTML;
-            navigator.clipboard.writeText(htmlContent).then(function() {
-                showCopyFeedback('HTML-Code kopiert! In Strato: Quellcode-Editor \u00F6ffnen und einf\u00FCgen.');
-            });
         };
 
         // Als Plaintext kopieren
