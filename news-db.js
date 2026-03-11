@@ -1428,6 +1428,39 @@ async function startVoucherLogic() {
             console.error('Bestellung löschen fehlgeschlagen:', e);
         }
     };
+
+    // Zahlungserinnerung an Kunden senden
+    window.sendPaymentReminder = async (order) => {
+        if (!auth.currentUser || auth.currentUser.isAnonymous) return;
+        if (!confirm('Zahlungserinnerung an ' + order.email + ' senden?')) return;
+
+        // EPC-QR-Code URL
+        var wert = (order.wert || '').replace(',', '.');
+        var epcData = 'BCD\n002\n1\nSCT\nGENODEF1HSB\nSegelflieger im Post SV N\u00FCrnberg\nDE20760614820004555554\nEUR' + wert + '\n\n\nGutschein ' + (order.name || '');
+        var qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + encodeURIComponent(epcData);
+
+        var params = {
+            subject: 'Zahlungserinnerung \u2014 Gutschein-Bestellung',
+            title: 'Zahlungserinnerung',
+            subtitle: 'Deine Zahlung steht noch aus',
+            intro: 'Hallo <strong>' + (order.name || '') + '</strong>,<br><br>wir m\u00F6chten dich freundlich daran erinnern, dass die Zahlung f\u00FCr deinen Flug-Gutschein beim Segelflugplatz Altdorf-Hagenhausen noch aussteht.',
+            name: order.name || '',
+            email: order.email || '',
+            flugart: order.flugart || '',
+            empfaenger: order.empfaenger || '',
+            wert: order.wert || '',
+            zustellung: order.zustellung || '',
+            payment_info: buildPaymentInfoHtml(order.name || '', order.wert || '', order.zustellung || '', qrUrl)
+        };
+
+        try {
+            await emailjs.send('service_cd14twj', 'template_ygdqime', params);
+            alert('Zahlungserinnerung wurde an ' + order.email + ' gesendet.');
+        } catch (e) {
+            console.error('Reminder senden fehlgeschlagen:', e);
+            alert('Fehler beim Senden: ' + (e.text || e.message || e));
+        }
+    };
 }
 
 function renderOrderRow(order, isClosed) {
@@ -1480,6 +1513,7 @@ function renderOrderRow(order, isClosed) {
 
         buttonsHtml += '<button onclick="event.stopPropagation(); toggleOrderPaid(\'' + order.id + '\', ' + isPaid + ')" class="btn btn-secondary" style="' + paidBtnStyle + '">' + paidBtnText + '</button>'
             + '<button onclick="event.stopPropagation(); loadVoucherOrder(' + JSON.stringify(order).replace(/"/g, '&quot;') + ')" class="btn" style="padding:6px 14px; font-size:0.78rem;">\u00DCbernehmen</button>'
+            + (!isPaid ? '<button onclick="event.stopPropagation(); sendPaymentReminder(' + JSON.stringify(order).replace(/"/g, '&quot;') + ')" class="btn btn-secondary" style="padding:6px 12px; font-size:0.78rem; background:#e65100; color:#fff; border-color:#e65100;">Reminder</button>' : '')
             + (isPaid ? '<button onclick="event.stopPropagation(); completeVoucherOrder(\'' + order.id + '\')" class="btn btn-secondary" style="padding:6px 12px; font-size:0.78rem; background:#6a1b9a; color:#fff; border-color:#6a1b9a;">Abschlie\u00DFen</button>' : '')
             + '<button onclick="event.stopPropagation(); deleteVoucherOrder(\'' + order.id + '\')" class="btn btn-secondary" style="padding:6px 12px; font-size:0.78rem; background:#c0392b; color:#fff; border-color:#c0392b;">L\u00F6schen</button>';
     }

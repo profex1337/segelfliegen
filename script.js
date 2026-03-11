@@ -369,6 +369,38 @@ function initCookieConsent() {
     };
 }
 
+// Zahlungsinfo-HTML für Auto-Reply/Reminder E-Mail (Überweisung oder Abholung)
+function buildPaymentInfoHtml(name, wert, zustellung, qrUrl) {
+    var istAbholung = (zustellung || '').indexOf('Abholung') !== -1;
+    if (istAbholung) {
+        return '<div style="background: #f3e5f5; border: 1px solid #ce93d8; border-radius: 8px; padding: 20px; margin-bottom: 25px;">'
+            + '<div style="font-weight: bold; color: #6a1b9a; font-size: 15px; margin-bottom: 10px;">Abholung &amp; Barzahlung</div>'
+            + '<div style="font-size: 14px; line-height: 1.6; color: #555;">'
+            + 'Bitte hole deinen Gutschein ab bei:<br>'
+            + '<strong>J\u00F6rg Sperber, Schulstra\u00DFe 18, 90518 Altdorf</strong><br>'
+            + '<a href="https://maps.app.goo.gl/p4YEwmERAwFkmy479" style="color: #6a1b9a;">In Google Maps \u00F6ffnen</a><br>'
+            + 'Bitte vorher anrufen: <a href="tel:+4915117250329" style="color: #6a1b9a; font-weight: bold;">+49 1511 7250329</a>'
+            + (wert ? '<br><br><strong>Betrag:</strong> ' + wert + ' \u20AC (Barzahlung vor Ort)' : '')
+            + '</div></div>';
+    }
+    // Überweisung
+    return '<div style="background: #fff8e1; border: 1px solid #ffd54f; border-radius: 8px; padding: 20px; margin-bottom: 25px;">'
+        + '<div style="font-weight: bold; color: #f57f17; font-size: 15px; margin-bottom: 15px;">Bitte \u00FCberweise den Betrag auf folgendes Konto:</div>'
+        + '<div style="margin-bottom: 10px;"><div style="font-size: 12px; color: #666; text-transform: uppercase; letter-spacing: 0.5px;">Kontoinhaber</div>'
+        + '<div style="font-weight: bold; font-size: 15px; margin-top: 2px;">Segelflieger im Post SV N\u00FCrnberg</div></div>'
+        + '<div style="margin-bottom: 10px;"><div style="font-size: 12px; color: #666; text-transform: uppercase; letter-spacing: 0.5px;">IBAN</div>'
+        + '<div style="font-weight: bold; font-family: monospace; font-size: 16px; margin-top: 2px;">DE20 7606 1482 0004 5555 54</div></div>'
+        + '<div style="margin-bottom: 10px;"><div style="font-size: 12px; color: #666; text-transform: uppercase; letter-spacing: 0.5px;">BIC</div>'
+        + '<div style="font-weight: bold; font-size: 15px; margin-top: 2px;">GENODEF1HSB</div></div>'
+        + '<div style="margin-bottom: 10px;"><div style="font-size: 12px; color: #666; text-transform: uppercase; letter-spacing: 0.5px;">Bank</div>'
+        + '<div style="font-size: 15px; margin-top: 2px;">Raiffeisenbank im N\u00FCrnberger Land</div></div>'
+        + '<div><div style="font-size: 12px; color: #666; text-transform: uppercase; letter-spacing: 0.5px;">Verwendungszweck</div>'
+        + '<div style="font-weight: bold; color: #e94560; font-size: 15px; margin-top: 2px;">Gutschein ' + (name || '') + '</div></div></div>'
+        + '<div style="text-align: center; margin-bottom: 25px;">'
+        + '<img src="' + (qrUrl || '') + '" alt="QR-Code f\u00FCr \u00DCberweisung" width="200" height="200" style="border-radius: 8px;">'
+        + '<div style="font-size: 12px; color: #888; margin-top: 8px;">QR-Code f\u00FCr deine Banking-App scannen</div></div>';
+}
+
 function initForms() {
     document.querySelectorAll('form[data-emailjs]').forEach(form => {
         form.addEventListener('submit', async (e) => {
@@ -446,18 +478,22 @@ function initForms() {
                     // EPC-QR-Code URL für Auto-Reply E-Mail
                     var replyWert = (fd.get('wert') || '').replace(',', '.');
                     var replyName = fd.get('name') || '';
+                    var replyZustellung = fd.get('zustellung') || '';
                     var replyEpcData = 'BCD\n002\n1\nSCT\nGENODEF1HSB\nSegelflieger im Post SV Nürnberg\nDE20760614820004555554\nEUR' + replyWert + '\n\n\nGutschein ' + replyName;
                     var replyQrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + encodeURIComponent(replyEpcData);
                     var replyParams = {
-                        name: fd.get('name') || '',
+                        subject: 'Deine Gutschein-Bestellung beim Segelflugplatz Altdorf',
+                        title: 'Vielen Dank!',
+                        subtitle: 'Deine Gutschein-Bestellung ist bei uns eingegangen',
+                        intro: 'Hallo <strong>' + replyName + '</strong>,<br><br>vielen Dank f\u00FCr deine Bestellung eines Flug-Gutscheins beim Segelflugplatz Altdorf-Hagenhausen!',
+                        name: replyName,
                         email: fd.get('email') || '',
                         flugart: fd.get('flugart') || '',
                         empfaenger: fd.get('empfaenger') || '',
                         wert: fd.get('wert') || '',
-                        zustellung: fd.get('zustellung') || '',
-                        qr_url: replyQrUrl
+                        zustellung: replyZustellung,
+                        payment_info: buildPaymentInfoHtml(replyName, fd.get('wert') || '', replyZustellung, replyQrUrl)
                     };
-                    // wert ohne € für Auto-Reply (Template fügt es selbst hinzu)
                     await emailjs.send('service_cd14twj', 'template_ygdqime', replyParams);
 
                     if (typeof window.saveVoucherOrder === 'function') {
