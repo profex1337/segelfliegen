@@ -360,6 +360,15 @@
                             <div style="display:flex; gap:10px; flex-wrap:wrap;">
                                 <button type="button" id="gutschein-generate-btn" class="btn" style="min-width: 280px;">PDF generieren & herunterladen</button>
                                 <button type="button" class="btn btn-secondary" style="min-width: 280px;" onclick="fillUnpersonalized()">Nicht personalisierten Text erstellen</button>
+                                <button type="button" class="btn btn-secondary" style="min-width: 280px; background: #1565c0; color: #fff; border-color: #1565c0;" onclick="generateEmailTemplate()">E-Mail-Vorlage kopieren</button>
+                            </div>
+                            <div id="email-template-box" style="display:none; margin-top:16px; background:#f4f6f8; border:1px solid #ddd; border-radius:8px; padding:16px; position:relative;">
+                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                                    <strong style="color:#0f3460; font-size:0.9rem;">E-Mail-Vorlage</strong>
+                                    <button type="button" onclick="copyEmailTemplate()" class="btn btn-secondary" style="padding:4px 14px; font-size:0.78rem;">Kopieren</button>
+                                </div>
+                                <pre id="email-template-text" style="white-space:pre-wrap; font-family:system-ui,sans-serif; font-size:0.85rem; line-height:1.6; margin:0; color:#333;"></pre>
+                                <div id="email-copy-feedback" style="display:none; color:#2e7d32; font-size:0.8rem; margin-top:6px; font-weight:600;"></div>
                             </div>
                         </form>
                     </div>
@@ -464,6 +473,46 @@
                 img.src = d;
             }).catch(() => {});
         });
+
+        // E-Mail-Vorlage generieren
+        window.generateEmailTemplate = function() {
+            var recipient = document.getElementById('voucher-recipient').value.trim() || 'Empfänger';
+            var flightType = document.getElementById('voucher-flight-type').value || 'Flugart';
+            var value = document.getElementById('voucher-value').value.trim() || '—';
+            var zusatz = parseInt(document.getElementById('voucher-zusatzzeit').value || '0', 10);
+            var validUntil = document.getElementById('voucher-valid-until').value.trim();
+            var flugdauer = typeof getFlugdauer === 'function' ? getFlugdauer(flightType, zusatz) : '';
+
+            var text = 'Hallo,\n\n'
+                + 'anbei erhältst du deinen Flug-Gutschein für den Segelflugplatz Altdorf-Hagenhausen.\n\n'
+                + 'Gutschein-Details:\n'
+                + '  Empfänger: ' + recipient + '\n'
+                + '  Flugart: ' + flightType + '\n'
+                + '  Wert: ' + value + ' \u20AC\n';
+            if (flugdauer) text += '  Flugdauer: ' + flugdauer + '\n';
+            if (validUntil) text += '  Gültig bis: ' + validUntil + '\n';
+            text += '\nBitte denke daran, deinen Wunschtermin am Wochenende ab 9 Uhr unter 09189/310 zu vereinbaren. '
+                + 'Wir fliegen zwischen April und Oktober an Wochenenden und Feiertagen.\n\n'
+                + 'Wir freuen uns auf deinen Besuch!\n\n'
+                + 'Viele Grüße\nSegelflieger im Post-SV Nürnberg e.V.\n'
+                + 'Segelflugplatz Altdorf-Hagenhausen\n'
+                + 'Tel: 09189/310 (Wochenende)\n'
+                + 'E-Mail: info@segelfliegen-altdorf.de\n'
+                + 'Web: www.segelfliegenaltdorf.de';
+
+            document.getElementById('email-template-text').textContent = text;
+            document.getElementById('email-template-box').style.display = 'block';
+        };
+
+        window.copyEmailTemplate = function() {
+            var text = document.getElementById('email-template-text').textContent;
+            navigator.clipboard.writeText(text).then(function() {
+                var fb = document.getElementById('email-copy-feedback');
+                fb.textContent = 'In die Zwischenablage kopiert!';
+                fb.style.display = 'block';
+                setTimeout(function() { fb.style.display = 'none'; }, 3000);
+            });
+        };
 
         // Nicht personalisierten Text einfügen
         window.fillUnpersonalized = function() {
