@@ -407,8 +407,9 @@ function getFlugdauer(flugart, zusatzMin) {
     var basis = { 'Segelflug (Windenstart)': 20, 'Segelflug (F-Schlepp)': 20, 'Motorsegler': 15 };
     var base = basis[flugart];
     if (!base) return 'pauschal';
-    var total = base + (zusatzMin || 0);
-    return 'bis ' + total + ' Min.';
+    var text = 'bis zu ' + base + ' Min.';
+    if (zusatzMin > 0) text += ' + ' + zusatzMin + ' Min. zus\u00E4tzlich';
+    return text;
 }
 
 function initForms() {
