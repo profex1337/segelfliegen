@@ -339,7 +339,7 @@
                                 <textarea id="voucher-greeting" rows="6" maxlength="800" placeholder="z.B. Alles Gute zum Geburtstag! (max. 10 Zeilen)" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:6px;"></textarea>
                                 <div style="font-size: 0.8rem; color: #888; margin-top: 4px;">Maximal 10 Zeilen — längere Texte werden im PDF abgeschnitten.</div>
                             </div>
-                            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-bottom:20px;">
+                            <div style="display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:10px; margin-bottom:20px;">
                                 <div>
                                     <label style="display:block; margin-bottom:6px; font-weight:600; font-size:0.9rem;">Gutschein-Nummer</label>
                                     <input type="text" id="voucher-number" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:6px;">
@@ -347,7 +347,10 @@
                                 <div>
                                     <label style="display:block; margin-bottom:6px; font-weight:600; font-size:0.9rem;">Wert (€)</label>
                                     <input type="text" id="voucher-value" placeholder="z.B. 80,00" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:6px;">
-                                    <input type="hidden" id="voucher-zusatzzeit" value="0">
+                                </div>
+                                <div>
+                                    <label style="display:block; margin-bottom:6px; font-weight:600; font-size:0.9rem;">Zusatzzeit (Min.)</label>
+                                    <input type="number" id="voucher-zusatzzeit" value="0" min="0" step="5" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:6px;">
                                 </div>
                                 <div>
                                     <label style="display:block; margin-bottom:6px; font-weight:600; font-size:0.9rem;">Gültig bis</label>
