@@ -12,85 +12,45 @@ Variablen die vom Code gesendet werden:
   {{name}}         — Name des Absenders
   {{email}}        — E-Mail des Absenders
   {{telefon}}      — Telefonnummer (optional)
+  {{{details}}}    — DREIFACHE Klammern! Vorformatierte HTML-Tabellenzeilen (<tr>...</tr>),
+                     nur für Felder die tatsächlich Daten haben. Wird im JS dynamisch gebaut.
+                     Enthält je nach Formulartyp: Betreff, Flugart, Zusatzzeit, Gutscheinwert,
+                     Empfänger, Anlass, Zustellung, Interesse, Wunschtermin.
   {{message}}      — Nachrichtentext bzw. Grußtext bei Gutschein
-  {{betreff}}      — nur Kontakt: Betreff-Auswahl
-  {{flugart}}      — nur Gutschein: gewählte Flugart
-  {{zusatzzeit}}   — nur Gutschein: z.B. "10 Min."
-  {{wert}}         — nur Gutschein: z.B. "160,00 €"
-  {{empfaenger}}   — nur Gutschein: Name des Beschenkten
-  {{anlass}}       — nur Gutschein: Anlass (optional)
-  {{zustellung}}   — nur Gutschein: "E-Mail (Zahlung per Überweisung)" oder "Abholung in 90518 Altdorf (Barzahlung vor Ort)"
-  {{interesse}}    — nur Gastflug: Interesse an (Segelflug, Kunstflug etc.)
-  {{wunschtermin}} — nur Gastflug: gewähltes Datum (optional)
 
-Nicht genutzte Variablen sind leer ("").
+Keine leeren Zeilen mehr — nur gefüllte Felder werden angezeigt.
 
 --------------------------------------------------------------------------------
 
 <div style="font-family: system-ui, sans-serif, Arial; font-size: 14px; color: #333; max-width: 600px; margin: 0 auto;">
-  <div style="background: linear-gradient(135deg, #0f3460, #1a4a8a); padding: 25px; border-radius: 12px 12px 0 0; text-align: center;">
-    <div style="font-size: 24px; color: #ffffff; font-weight: bold;">Segelflugplatz Altdorf</div>
-    <div style="font-size: 13px; color: #a8c8f0; margin-top: 5px;">{{subject}}</div>
-  </div>
-  <div style="background: #ffffff; padding: 25px; border: 1px solid #e0e0e0; border-top: none;">
-    <table role="presentation" style="width: 100%; border-collapse: collapse;">
-      <tr>
-        <td style="padding: 10px 12px; background: #f4f6f8; border-bottom: 1px solid #e8e8e8; width: 130px; font-weight: bold; color: #0f3460;">Name</td>
-        <td style="padding: 10px 12px; background: #f4f6f8; border-bottom: 1px solid #e8e8e8;">{{name}}</td>
-      </tr>
-      <tr>
-        <td style="padding: 10px 12px; border-bottom: 1px solid #e8e8e8; width: 130px; font-weight: bold; color: #0f3460;">E-Mail</td>
-        <td style="padding: 10px 12px; border-bottom: 1px solid #e8e8e8;"><a href="mailto:{{email}}" style="color: #e94560;">{{email}}</a></td>
-      </tr>
-      <tr>
-        <td style="padding: 10px 12px; background: #f4f6f8; border-bottom: 1px solid #e8e8e8; width: 130px; font-weight: bold; color: #0f3460;">Telefon</td>
-        <td style="padding: 10px 12px; background: #f4f6f8; border-bottom: 1px solid #e8e8e8;">{{telefon}}</td>
-      </tr>
-      <tr>
-        <td style="padding: 10px 12px; border-bottom: 1px solid #e8e8e8; width: 130px; font-weight: bold; color: #0f3460;">Betreff</td>
-        <td style="padding: 10px 12px; border-bottom: 1px solid #e8e8e8;">{{betreff}}</td>
-      </tr>
-      <tr>
-        <td style="padding: 10px 12px; background: #f4f6f8; border-bottom: 1px solid #e8e8e8; width: 130px; font-weight: bold; color: #0f3460;">Flugart</td>
-        <td style="padding: 10px 12px; background: #f4f6f8; border-bottom: 1px solid #e8e8e8;">{{flugart}}</td>
-      </tr>
-      <tr>
-        <td style="padding: 10px 12px; border-bottom: 1px solid #e8e8e8; width: 130px; font-weight: bold; color: #0f3460;">Zusatzzeit</td>
-        <td style="padding: 10px 12px; border-bottom: 1px solid #e8e8e8;">{{zusatzzeit}}</td>
-      </tr>
-      <tr>
-        <td style="padding: 10px 12px; background: #f4f6f8; border-bottom: 1px solid #e8e8e8; width: 130px; font-weight: bold; color: #0f3460;">Gutscheinwert</td>
-        <td style="padding: 10px 12px; background: #f4f6f8; border-bottom: 1px solid #e8e8e8; font-weight: bold; color: #e94560;">{{wert}}</td>
-      </tr>
-      <tr>
-        <td style="padding: 10px 12px; border-bottom: 1px solid #e8e8e8; width: 130px; font-weight: bold; color: #0f3460;">Empfänger</td>
-        <td style="padding: 10px 12px; border-bottom: 1px solid #e8e8e8;">{{empfaenger}}</td>
-      </tr>
-      <tr>
-        <td style="padding: 10px 12px; background: #f4f6f8; border-bottom: 1px solid #e8e8e8; width: 130px; font-weight: bold; color: #0f3460;">Anlass</td>
-        <td style="padding: 10px 12px; background: #f4f6f8; border-bottom: 1px solid #e8e8e8;">{{anlass}}</td>
-      </tr>
-      <tr>
-        <td style="padding: 10px 12px; border-bottom: 1px solid #e8e8e8; width: 130px; font-weight: bold; color: #0f3460;">Zustellung</td>
-        <td style="padding: 10px 12px; border-bottom: 1px solid #e8e8e8; font-weight: bold; color: #6a1b9a;">{{zustellung}}</td>
-      </tr>
-      <tr>
-        <td style="padding: 10px 12px; background: #f4f6f8; border-bottom: 1px solid #e8e8e8; width: 130px; font-weight: bold; color: #0f3460;">Interesse an</td>
-        <td style="padding: 10px 12px; border-bottom: 1px solid #e8e8e8;">{{interesse}}</td>
-      </tr>
-      <tr>
-        <td style="padding: 10px 12px; background: #f4f6f8; border-bottom: 1px solid #e8e8e8; width: 130px; font-weight: bold; color: #0f3460;">Wunschtermin</td>
-        <td style="padding: 10px 12px; background: #f4f6f8; border-bottom: 1px solid #e8e8e8;">{{wunschtermin}}</td>
-      </tr>
-    </table>
-    <div style="margin-top: 20px; padding: 15px; background: #f9f9f9; border-left: 4px solid #0f3460; border-radius: 0 8px 8px 0;">
-      <div style="font-weight: bold; color: #0f3460; margin-bottom: 8px;">Nachricht / Grußtext:</div>
-      <div style="white-space: pre-wrap; line-height: 1.6;">{{message}}</div>
-    </div>
-  </div>
-  <div style="background: #f4f6f8; padding: 15px; border-radius: 0 0 12px 12px; text-align: center; font-size: 12px; color: #999; border: 1px solid #e0e0e0; border-top: none;">
-    Segelflieger im Post-SV Nürnberg e.V. · segelfliegenaltdorf.de
-  </div>
+<div style="background: linear-gradient(135deg, #0f3460, #1a4a8a); padding: 25px; border-radius: 12px 12px 0 0; text-align: center;">
+<div style="font-size: 24px; color: #ffffff; font-weight: bold;">Anfrage von segelfliegenaltdorf.de</div>
+<div style="font-size: 13px; color: #a8c8f0; margin-top: 5px;">{{subject}}</div>
+</div>
+<div style="background: #ffffff; padding: 25px; border: 1px solid #e0e0e0; border-top: none;">
+<table style="width: 100%; border-collapse: collapse;" role="presentation">
+<tbody>
+<tr>
+<td style="padding: 10px 12px; background: #f4f6f8; border-bottom: 1px solid #e8e8e8; width: 130px; font-weight: bold; color: #0f3460;">Name</td>
+<td style="padding: 10px 12px; background: #f4f6f8; border-bottom: 1px solid #e8e8e8;">{{name}}</td>
+</tr>
+<tr>
+<td style="padding: 10px 12px; border-bottom: 1px solid #e8e8e8; width: 130px; font-weight: bold; color: #0f3460;">E-Mail</td>
+<td style="padding: 10px 12px; border-bottom: 1px solid #e8e8e8;"><a style="color: #e94560;" href="mailto:{{email}}">{{email}}</a></td>
+</tr>
+<tr>
+<td style="padding: 10px 12px; background: #f4f6f8; border-bottom: 1px solid #e8e8e8; width: 130px; font-weight: bold; color: #0f3460;">Telefon</td>
+<td style="padding: 10px 12px; background: #f4f6f8; border-bottom: 1px solid #e8e8e8;">{{telefon}}</td>
+</tr>
+{{{details}}}
+</tbody>
+</table>
+<div style="margin-top: 20px; padding: 15px; background: #f9f9f9; border-left: 4px solid #0f3460; border-radius: 0 8px 8px 0;">
+<div style="font-weight: bold; color: #0f3460; margin-bottom: 8px;">Nachricht / Gru&szlig;text:</div>
+<div style="white-space: pre-wrap; line-height: 1.6;">{{message}}</div>
+</div>
+</div>
+<div style="background: #f4f6f8; padding: 15px; border-radius: 0 0 12px 12px; text-align: center; font-size: 12px; color: #999; border: 1px solid #e0e0e0; border-top: none;">Segelflieger im Post-SV N&uuml;rnberg e.V. &middot; segelfliegenaltdorf.de</div>
 </div>
 
 

@@ -385,51 +385,57 @@ function initForms() {
             const formType = form.getAttribute('data-emailjs');
             const fd = new FormData(form);
 
-            // Parameter für EmailJS zusammenbauen — alle Felder einzeln (kein HTML)
-            var params = {
-                subject: '',
-                name: fd.get('name') || '',
-                email: fd.get('email') || '',
-                telefon: fd.get('telefon') || '',
-                message: fd.get('message') || '',
-                betreff: '',
-                flugart: '',
-                zusatzzeit: '',
-                wert: '',
-                empfaenger: '',
-                anlass: '',
-                interesse: '',
-                wunschtermin: ''
-            };
-
-            // CC-Empfänger: immer Dan, plus je nach Formular/Betreff weitere
+            // Details-Zeilen je nach Formulartyp zusammenbauen (nur gefüllte Felder)
+            var subject = '';
+            var message = fd.get('message') || '';
+            var detailRows = [];
             var ccList = ['dan@segelfliegen-altdorf.de'];
 
             if (formType === 'kontakt') {
-                params.subject = 'Kontaktanfrage: ' + (fd.get('betreff') || 'Allgemein');
-                params.betreff = fd.get('betreff') || 'Allgemein';
-                if (params.betreff === 'Ausbildung') {
+                var betreff = fd.get('betreff') || 'Allgemein';
+                subject = 'Kontaktanfrage: ' + betreff;
+                detailRows.push({label: 'Betreff', value: betreff});
+                if (betreff === 'Ausbildung') {
                     ccList.push('Jeremy.Wolfsteiner@gmail.com');
                 }
 
             } else if (formType === 'gutschein') {
-                params.subject = 'Neue Gutschein-Bestellung';
-                params.message = fd.get('grusstext') || '(kein Grußtext)';
-                params.flugart = fd.get('flugart') || '';
-                params.zusatzzeit = (fd.get('zusatzzeit') || '0') + ' Min.';
-                params.wert = (fd.get('wert') || '') + ' €';
-                params.empfaenger = fd.get('empfaenger') || '';
-                params.anlass = fd.get('anlass') || '';
-                params.zustellung = fd.get('zustellung') || '';
+                subject = 'Neue Gutschein-Bestellung';
+                message = fd.get('grusstext') || '(kein Grußtext)';
+                if (fd.get('flugart')) detailRows.push({label: 'Flugart', value: fd.get('flugart')});
+                detailRows.push({label: 'Zusatzzeit', value: (fd.get('zusatzzeit') || '0') + ' Min.'});
+                detailRows.push({label: 'Gutscheinwert', value: (fd.get('wert') || '') + ' \u20AC', style: 'font-weight: bold; color: #e94560;'});
+                if (fd.get('empfaenger')) detailRows.push({label: 'Empf\u00E4nger', value: fd.get('empfaenger')});
+                if (fd.get('anlass')) detailRows.push({label: 'Anlass', value: fd.get('anlass')});
+                if (fd.get('zustellung')) detailRows.push({label: 'Zustellung', value: fd.get('zustellung'), style: 'font-weight: bold; color: #6a1b9a;'});
                 ccList.push('joergsperber@arcor.de');
 
             } else if (formType === 'gastflug') {
-                params.subject = 'Neue Gastflug-Anfrage';
-                params.interesse = fd.get('interest') || '';
-                params.wunschtermin = fd.get('date') || '';
+                subject = 'Neue Gastflug-Anfrage';
+                if (fd.get('interest')) detailRows.push({label: 'Interesse an', value: fd.get('interest')});
+                if (fd.get('date')) detailRows.push({label: 'Wunschtermin', value: fd.get('date')});
             }
 
-            params.cc_email = ccList.join(',');
+            // HTML-Tabellenzeilen nur für vorhandene Felder generieren
+            var detailsHtml = '';
+            detailRows.forEach(function(row, i) {
+                var bg = i % 2 === 0 ? '' : ' background: #f4f6f8;';
+                var valStyle = row.style ? ' ' + row.style : '';
+                detailsHtml += '<tr>'
+                    + '<td style="padding: 10px 12px;' + bg + ' border-bottom: 1px solid #e8e8e8; width: 130px; font-weight: bold; color: #0f3460;">' + row.label + '</td>'
+                    + '<td style="padding: 10px 12px;' + bg + ' border-bottom: 1px solid #e8e8e8;' + valStyle + '">' + row.value + '</td>'
+                    + '</tr>';
+            });
+
+            var params = {
+                subject: subject,
+                name: fd.get('name') || '',
+                email: fd.get('email') || '',
+                telefon: fd.get('telefon') || '',
+                message: message,
+                details: detailsHtml,
+                cc_email: ccList.join(',')
+            };
 
             try {
                 // Benachrichtigung an den Verein senden
