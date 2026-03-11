@@ -712,16 +712,27 @@
         });
 
         // Tab-Steuerung
+        function switchTab(tabId) {
+            document.querySelectorAll('.intern-tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.intern-tab-panel').forEach(p => p.classList.remove('active'));
+            const btn = document.querySelector('.intern-tab-btn[data-tab="' + tabId + '"]');
+            const panel = document.getElementById(tabId);
+            if (btn) btn.classList.add('active');
+            if (panel) panel.classList.add('active');
+        }
         document.querySelectorAll('.intern-tab-btn').forEach(btn => {
             btn.addEventListener('click', () => {
-                document.querySelectorAll('.intern-tab-btn').forEach(b => b.classList.remove('active'));
-                document.querySelectorAll('.intern-tab-panel').forEach(p => p.classList.remove('active'));
-                btn.classList.add('active');
                 const target = btn.getAttribute('data-tab');
-                const panel = document.getElementById(target);
-                if (panel) panel.classList.add('active');
+                switchTab(target);
+                history.replaceState(null, '', '#' + target.replace('tab-', ''));
             });
         });
+        // Deep-Link: Hash in URL → passenden Tab öffnen
+        if (location.hash) {
+            const tabId = 'tab-' + location.hash.slice(1);
+            const panel = document.getElementById(tabId);
+            if (panel) switchTab(tabId);
+        }
     </script>
 </body>
 </html>
