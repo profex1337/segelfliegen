@@ -660,6 +660,10 @@
             doc.text('Segelflugplatz Altdorf-Hagenhausen  \u00B7  Hagenhausener Str. in 92348 St\u00F6ckelsberg (Beschilderung folgen)', textCenterX, h - 21, { align: 'center' });
             doc.text('+49 9189 310  \u00B7  www.segelfliegenaltdorf.de  \u00B7  info@segelfliegen-altdorf.de', textCenterX, h - 17, { align: 'center' });
 
+            doc.setFontSize(5.5);
+            doc.setTextColor(160, 160, 160);
+            doc.text('Wir fliegen zwischen April und Oktober an Wochenenden und Feiertagen. Deinen Wunschtermin bitte am Wochenende ab 9 Uhr unter 09189/310 vereinbaren.', textCenterX, h - 13, { align: 'center' });
+
             // PDF speichern
             const filename = voucherNr ? `Gutschein_${voucherNr}.pdf` : 'Gutschein.pdf';
             doc.save(filename);
