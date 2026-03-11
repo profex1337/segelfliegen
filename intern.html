@@ -366,8 +366,9 @@
                             <div id="email-template-box" style="display:none; margin-top:16px; background:#f4f6f8; border:1px solid #ddd; border-radius:8px; padding:16px; position:relative;">
                                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
                                     <strong style="color:#0f3460; font-size:0.9rem;">E-Mail-Vorlage</strong>
-                                    <div style="display:flex; gap:6px;">
+                                    <div style="display:flex; gap:6px; flex-wrap:wrap;">
                                         <button type="button" onclick="copyEmailFormatted()" class="btn" style="padding:4px 14px; font-size:0.78rem;">Formatiert kopieren</button>
+                                        <button type="button" onclick="copyEmailHtml()" class="btn btn-secondary" style="padding:4px 14px; font-size:0.78rem; background:#e65100; color:#fff; border-color:#e65100;">HTML-Code kopieren</button>
                                         <button type="button" onclick="copyEmailPlain()" class="btn btn-secondary" style="padding:4px 14px; font-size:0.78rem;">Als Text kopieren</button>
                                     </div>
                                 </div>
@@ -563,14 +564,43 @@
         // Formatiert kopieren (HTML — beh\u00E4lt Formatierung in E-Mail-Programmen)
         window.copyEmailFormatted = function() {
             var el = document.getElementById('email-template-html');
-            var range = document.createRange();
-            range.selectNodeContents(el);
-            var sel = window.getSelection();
-            sel.removeAllRanges();
-            sel.addRange(range);
-            document.execCommand('copy');
-            sel.removeAllRanges();
-            showCopyFeedback('Formatierte Vorlage kopiert!');
+            var htmlContent = el.innerHTML;
+            var plainText = document.getElementById('email-template-html').dataset.plain || '';
+            // Clipboard API mit explizitem HTML-MIME-Type
+            if (navigator.clipboard && navigator.clipboard.write) {
+                var htmlBlob = new Blob([htmlContent], { type: 'text/html' });
+                var textBlob = new Blob([plainText], { type: 'text/plain' });
+                navigator.clipboard.write([new ClipboardItem({ 'text/html': htmlBlob, 'text/plain': textBlob })]).then(function() {
+                    showCopyFeedback('Formatierte Vorlage kopiert!');
+                }).catch(function() {
+                    // Fallback auf execCommand
+                    var range = document.createRange();
+                    range.selectNodeContents(el);
+                    var sel = window.getSelection();
+                    sel.removeAllRanges();
+                    sel.addRange(range);
+                    document.execCommand('copy');
+                    sel.removeAllRanges();
+                    showCopyFeedback('Formatierte Vorlage kopiert!');
+                });
+            } else {
+                var range = document.createRange();
+                range.selectNodeContents(el);
+                var sel = window.getSelection();
+                sel.removeAllRanges();
+                sel.addRange(range);
+                document.execCommand('copy');
+                sel.removeAllRanges();
+                showCopyFeedback('Formatierte Vorlage kopiert!');
+            }
+        };
+
+        // HTML-Quellcode kopieren (f\u00FCr Strato und andere Webmailer mit Quellcode-Editor)
+        window.copyEmailHtml = function() {
+            var htmlContent = document.getElementById('email-template-html').innerHTML;
+            navigator.clipboard.writeText(htmlContent).then(function() {
+                showCopyFeedback('HTML-Code kopiert! In Strato: Quellcode-Editor \u00F6ffnen und einf\u00FCgen.');
+            });
         };
 
         // Als Plaintext kopieren
