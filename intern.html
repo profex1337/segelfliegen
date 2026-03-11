@@ -318,7 +318,11 @@
                         <h3>Gutschein erstellen</h3>
                         <p style="color: var(--text-light); margin-bottom: 20px;">Erstelle einen personalisierten Gutschein als PDF zum Versand per E-Mail.</p>
                         <form id="gutschein-form">
-                            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px;">
+                            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-bottom:10px;">
+                                <div>
+                                    <label style="display:block; margin-bottom:6px; font-weight:600; font-size:0.9rem;">Besteller-Name</label>
+                                    <input type="text" id="voucher-besteller" placeholder="Name des Bestellers" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:6px;">
+                                </div>
                                 <div>
                                     <label style="display:block; margin-bottom:6px; font-weight:600; font-size:0.9rem;">Empfänger-Name *</label>
                                     <input type="text" id="voucher-recipient" placeholder="Name des Beschenkten" required style="width:100%; padding:10px; border:1px solid #ddd; border-radius:6px;">
@@ -357,7 +361,6 @@
                                     <input type="text" id="voucher-valid-until" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:6px;">
                                 </div>
                             </div>
-                            <input type="hidden" id="voucher-besteller" value="">
                             <div style="display:flex; gap:10px; flex-wrap:wrap;">
                                 <button type="button" id="gutschein-generate-btn" class="btn" style="min-width: 280px;">PDF generieren & herunterladen</button>
                                 <button type="button" class="btn btn-secondary" style="min-width: 280px;" onclick="fillUnpersonalized()">Nicht personalisierten Text erstellen</button>
