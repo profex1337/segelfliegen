@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gutschein-Status</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: system-ui, -apple-system, sans-serif; background: #f4f6f8; color: #333; padding: 16px; font-size: 14px; }
+        .login-box { max-width: 360px; margin: 60px auto; background: #fff; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); text-align: center; }
+        .login-box h2 { color: #0f3460; margin-bottom: 6px; font-size: 1.3rem; }
+        .login-box p { color: #666; font-size: 0.85rem; margin-bottom: 20px; }
+        .login-box input { width: 100%; padding: 10px 14px; border: 2px solid #ddd; border-radius: 8px; font-size: 14px; margin-bottom: 12px; }
+        .login-box input:focus { border-color: #0f3460; outline: none; }
+        .login-box button { width: 100%; padding: 10px; background: #0f3460; color: #fff; border: none; border-radius: 8px; font-size: 14px; cursor: pointer; font-weight: 600; }
+        .login-box button:hover { background: #1a4a8a; }
+        .login-error { color: #c62828; font-size: 0.82rem; margin-top: 8px; display: none; }
+
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px; }
+        .header h1 { font-size: 1.2rem; color: #0f3460; }
+        .stats { display: flex; gap: 12px; flex-wrap: wrap; }
+        .stat { background: #fff; padding: 8px 16px; border-radius: 8px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+        .stat-num { font-size: 1.4rem; font-weight: 700; }
+        .stat-label { font-size: 0.7rem; color: #888; text-transform: uppercase; }
+        .stat-open .stat-num { color: #2e7d32; }
+        .stat-redeemed .stat-num { color: #e65100; }
+
+        .search { width: 100%; padding: 9px 14px; border: 2px solid #ddd; border-radius: 8px; font-size: 13px; margin-bottom: 16px; }
+        .search:focus { border-color: #0f3460; outline: none; }
+
+        .section-title { font-size: 0.9rem; font-weight: 700; color: #0f3460; margin: 18px 0 8px; padding-bottom: 4px; border-bottom: 2px solid #e0e0e0; }
+
+        .voucher-row { display: flex; align-items: center; gap: 12px; padding: 10px 14px; margin-bottom: 6px; border-radius: 8px; flex-wrap: wrap; transition: opacity 0.2s; }
+        .voucher-row.open { background: #fff; border-left: 3px solid #2e7d32; }
+        .voucher-row.redeemed { background: #fff8e1; border-left: 3px solid #ffa000; opacity: 0.75; }
+        .voucher-info { flex: 1; min-width: 180px; }
+        .voucher-name { font-weight: 600; font-size: 0.95rem; }
+        .voucher-name.redeemed { text-decoration: line-through; color: #999; }
+        .voucher-meta { font-size: 0.78rem; color: #888; margin-top: 2px; }
+        .voucher-valid { font-size: 0.75rem; color: #999; }
+        .badge { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 0.72rem; font-weight: 600; }
+        .badge-open { background: #e8f5e9; color: #2e7d32; }
+        .badge-redeemed { background: #fff3e0; color: #e65100; }
+        .btn-toggle { padding: 5px 12px; border: 1px solid #ddd; border-radius: 6px; background: #fff; cursor: pointer; font-size: 0.78rem; font-weight: 500; }
+        .btn-toggle:hover { background: #f4f6f8; }
+        .btn-logout { padding: 6px 14px; border: none; border-radius: 6px; background: #eee; color: #666; cursor: pointer; font-size: 0.78rem; }
+        .btn-logout:hover { background: #ddd; }
+        .empty { text-align: center; color: #999; padding: 30px; font-size: 0.9rem; }
+        details summary { cursor: pointer; }
+    </style>
+</head>
+<body>
+
+<div id="login-view" class="login-box">
+    <h2>Gutschein-Verwaltung</h2>
+    <p>Segelflugplatz Altdorf-Hagenhausen</p>
+    <input type="password" id="login-pw" placeholder="Passwort" autocomplete="current-password">
+    <button onclick="doLogin()">Anmelden</button>
+    <div id="login-error" class="login-error"></div>
+</div>
+
+<div id="app-view" style="display:none;">
+    <div class="header">
+        <h1>Gutscheine</h1>
+        <div class="stats">
+            <div class="stat stat-open"><div class="stat-num" id="count-open">0</div><div class="stat-label">Offen</div></div>
+            <div class="stat stat-redeemed"><div class="stat-num" id="count-redeemed">0</div><div class="stat-label">Eingelöst</div></div>
+        </div>
+        <button class="btn-logout" onclick="doLogout()">Abmelden</button>
+    </div>
+    <input type="text" class="search" id="search" placeholder="Suche nach Name, Nummer, Flugart...">
+    <div id="voucher-content"></div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script>
+    firebase.initializeApp({
+        apiKey: "AIzaSyB1X5H3LOGKOSrq59_am4YnkISyOyEUAg4",
+        authDomain: "segelfliegen.firebaseapp.com",
+        projectId: "segelfliegen",
+        storageBucket: "segelfliegen.firebasestorage.app",
+        messagingSenderId: "288557586639",
+        appId: "1:288557586639:web:984329930e12601b04bfba"
+    });
+
+    var auth = firebase.auth();
+    var db = firebase.firestore();
+    var vouchers = [];
+    var unsubscribeFn = null;
+
+    function doLogin() {
+        var pw = document.getElementById('login-pw').value.trim();
+        var err = document.getElementById('login-error');
+        if (!pw) { err.textContent = 'Bitte Passwort eingeben'; err.style.display = 'block'; return; }
+        auth.signInWithEmailAndPassword('info@segelfliegen-altdorf.de', pw)
+            .then(function() { err.style.display = 'none'; })
+            .catch(function(e) {
+                err.textContent = e.code === 'auth/wrong-password' || e.code === 'auth/invalid-credential'
+                    ? 'Falsches Passwort' : 'Fehler: ' + e.message;
+                err.style.display = 'block';
+            });
+    }
+
+    document.getElementById('login-pw').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') doLogin();
+    });
+
+    function doLogout() {
+        if (unsubscribeFn) { unsubscribeFn(); unsubscribeFn = null; }
+        auth.signOut();
+    }
+
+    function toggleRedeemed(docId, current) {
+        db.collection('vouchers').doc(docId).update({ redeemed: !current })
+            .catch(function(e) { console.error('Fehler:', e); });
+    }
+
+    auth.onAuthStateChanged(function(user) {
+        if (user && !user.isAnonymous) {
+            document.getElementById('login-view').style.display = 'none';
+            document.getElementById('app-view').style.display = '';
+            startListening();
+        } else {
+            document.getElementById('login-view').style.display = '';
+            document.getElementById('app-view').style.display = 'none';
+            if (unsubscribeFn) { unsubscribeFn(); unsubscribeFn = null; }
+        }
+    });
+
+    function startListening() {
+        if (unsubscribeFn) return;
+        unsubscribeFn = db.collection('vouchers').onSnapshot(function(snapshot) {
+            vouchers = [];
+            snapshot.forEach(function(d) { vouchers.push({ id: d.id, ...d.data() }); });
+            vouchers.sort(function(a, b) { return (b.timestamp || 0) - (a.timestamp || 0); });
+            renderList();
+        });
+    }
+
+    function renderList() {
+        var open = vouchers.filter(function(v) { return !v.redeemed; });
+        var redeemed = vouchers.filter(function(v) { return v.redeemed; });
+        document.getElementById('count-open').textContent = open.length;
+        document.getElementById('count-redeemed').textContent = redeemed.length;
+
+        var html = '';
+        if (open.length > 0) {
+            html += '<div class="section-title">Offene Gutscheine (' + open.length + ')</div>';
+            open.forEach(function(v) { html += renderRow(v); });
+        }
+        if (redeemed.length > 0) {
+            html += '<details style="margin-top:12px;"' + (redeemed.length <= 5 ? ' open' : '') + '>';
+            html += '<summary class="section-title" style="cursor:pointer;">Eingelöste Gutscheine (' + redeemed.length + ')</summary>';
+            redeemed.forEach(function(v) { html += renderRow(v); });
+            html += '</details>';
+        }
+        if (vouchers.length === 0) {
+            html = '<div class="empty">Keine Gutscheine vorhanden</div>';
+        }
+        document.getElementById('voucher-content').innerHTML = html;
+    }
+
+    function renderRow(v) {
+        var isR = !!v.redeemed;
+        var date = v.timestamp ? new Date(v.timestamp).toLocaleDateString('de-DE') : '\u2014';
+        var valid = v.validUntil ? '<div class="voucher-valid">G\u00FCltig bis: ' + v.validUntil + '</div>' : '';
+        var nameClass = isR ? 'voucher-name redeemed' : 'voucher-name';
+        var rowClass = isR ? 'voucher-row redeemed' : 'voucher-row open';
+        var badgeClass = isR ? 'badge badge-redeemed' : 'badge badge-open';
+        var badgeText = isR ? 'Eingel\u00F6st' : 'Offen';
+        var btnText = isR ? 'Wieder \u00F6ffnen' : 'Eingel\u00F6st';
+        var searchText = ((v.recipient || '') + ' ' + (v.number || '') + ' ' + (v.flightType || '') + ' ' + (v.ordererName || '')).toLowerCase();
+
+        return '<div class="' + rowClass + '" data-search="' + searchText + '">'
+            + '<div class="voucher-info">'
+            + '<span class="' + nameClass + '">' + (v.recipient || '\u2014') + '</span>'
+            + '<div class="voucher-meta">'
+            + (v.flightType || '') + (v.value ? ' &middot; ' + v.value + ' \u20AC' : '') + (v.number ? ' &middot; ' + v.number : '') + ' &middot; ' + date
+            + '</div>' + valid + '</div>'
+            + '<span class="' + badgeClass + '">' + badgeText + '</span> '
+            + '<button class="btn-toggle" onclick="toggleRedeemed(\'' + v.id + '\', ' + isR + ')">' + btnText + '</button>'
+            + '</div>';
+    }
+
+    document.getElementById('search').addEventListener('input', function() {
+        var q = this.value.toLowerCase().trim();
+        document.querySelectorAll('.voucher-row').forEach(function(row) {
+            var text = row.getAttribute('data-search') || '';
+            row.style.display = (!q || text.indexOf(q) !== -1) ? '' : 'none';
+        });
+    });
+</script>
+</body>
+</html>
