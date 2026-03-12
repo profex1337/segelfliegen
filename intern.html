@@ -319,6 +319,7 @@
                         <p style="color: var(--text-light); margin-bottom: 20px;">Erstelle einen personalisierten Gutschein als PDF zum Versand per E-Mail.</p>
                         <form id="gutschein-form">
                             <input type="hidden" id="voucher-besteller" value="">
+                            <input type="hidden" id="voucher-order-email" value="">
                             <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px;">
                                 <div>
                                     <label style="display:block; margin-bottom:6px; font-weight:600; font-size:0.9rem;">Empfänger-Name *</label>
@@ -369,6 +370,8 @@
                                     <div style="display:flex; gap:6px; flex-wrap:wrap;">
                                         <button type="button" onclick="copyEmailFormatted()" class="btn" style="padding:4px 14px; font-size:0.78rem;">Formatiert kopieren</button>
                                         <button type="button" onclick="copyEmailPlain()" class="btn btn-secondary" style="padding:4px 14px; font-size:0.78rem;">Als Text kopieren</button>
+                                        <button type="button" onclick="copyOrderEmail()" class="btn btn-secondary" style="padding:4px 14px; font-size:0.78rem;">E-Mail kopieren</button>
+                                        <button type="button" onclick="copyEmailSubject()" class="btn btn-secondary" style="padding:4px 14px; font-size:0.78rem;">Betreff kopieren</button>
                                     </div>
                                 </div>
                                 <div id="email-template-html" style="background:#fff; border-radius:8px; overflow:hidden; border:1px solid #e0e0e0;"></div>
@@ -599,6 +602,28 @@
             var text = document.getElementById('email-template-html').dataset.plain || '';
             navigator.clipboard.writeText(text).then(function() {
                 showCopyFeedback('Text-Vorlage kopiert!');
+            });
+        };
+
+        // E-Mail-Adresse des Bestellers kopieren
+        window.copyOrderEmail = function() {
+            var email = document.getElementById('voucher-order-email').value.trim();
+            if (!email) {
+                showCopyFeedback('Keine E-Mail-Adresse vorhanden!');
+                return;
+            }
+            navigator.clipboard.writeText(email).then(function() {
+                showCopyFeedback('E-Mail-Adresse kopiert!');
+            });
+        };
+
+        // Betreff für Gutschein-Mail kopieren
+        window.copyEmailSubject = function() {
+            var recipient = document.getElementById('voucher-recipient').value.trim() || 'Empfänger';
+            var flightType = document.getElementById('voucher-flight-type').value || '';
+            var subject = 'Dein Flug-Gutschein' + (flightType ? ' (' + flightType + ')' : '') + ' für ' + recipient;
+            navigator.clipboard.writeText(subject).then(function() {
+                showCopyFeedback('Betreff kopiert!');
             });
         };
 
