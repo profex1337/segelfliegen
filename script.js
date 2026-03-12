@@ -183,7 +183,6 @@ document.addEventListener('DOMContentLoaded', () => {
     initSlideshows();
     initCookieConsent();
     initReviews();
-    initDatepickers();
     initForms();
 
     // Einzelner Consent-Button (pro Einbettung)
@@ -211,22 +210,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-function initDatepickers() {
-    if (typeof flatpickr !== 'undefined') {
-        flatpickr("#wunschtermin", {
-            locale: "de",
-            dateFormat: "d.m.Y",
-            minDate: "today",
-            disableMobile: "true",
-            "enable": [
-                function(date) {
-                    // 0 = Sonntag, 6 = Samstag
-                    return (date.getDay() === 0 || date.getDay() === 6);
-                }
-            ]
-        });
-    }
-}
 
 // 3. UI HELFER FUNKTIONEN & REVIEWS
 
@@ -457,7 +440,6 @@ function initForms() {
             } else if (formType === 'gastflug') {
                 subject = 'Neue Gastflug-Anfrage';
                 if (fd.get('interest')) detailRows.push({label: 'Interesse an', value: fd.get('interest')});
-                if (fd.get('date')) detailRows.push({label: 'Wunschtermin', value: fd.get('date')});
             }
 
             // HTML-Tabellenzeilen nur für vorhandene Felder generieren

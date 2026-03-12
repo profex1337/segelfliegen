@@ -165,8 +165,6 @@
     <link rel="apple-touch-icon" href="apple-touch-icon.png">
     <link rel="canonical" href="https://www.segelfliegenaltdorf.de/mitfliegen.html">
     <link rel="stylesheet" href="style.css">
-    <!-- Flatpickr for Date Selection -->
-    <link rel="stylesheet" href="lib/flatpickr/flatpickr.min.css">
     <style>
         @media (max-width: 600px) {
             .btn-cat { padding: 8px 12px; font-size: 0.8rem; flex-grow: 1; text-align: center; }
@@ -444,7 +442,7 @@
 
         <div class="content-block" id="anfrage-formular" style="border-top: 5px solid var(--accent); margin-top: 40px;">
             <h2 style="text-align: center; margin-bottom: 10px;">Flug- oder Gutschein-Anfrage</h2>
-            <p style="text-align: center; margin-bottom: 40px; color: var(--text-light);">Sende uns unverbindlich deinen Wunschtermin.</p>
+            <p style="text-align: center; margin-bottom: 40px; color: var(--text-light);">Sende uns unverbindlich deine Anfrage.</p>
             
             <form data-emailjs="gastflug" style="max-width: 700px; margin: 0 auto;">
                 
@@ -477,16 +475,9 @@
                     </div>
                 </div>
 
-                <div class="form-responsive" style="margin-top: 20px;">
-                    <div class="form-group">
-                        <label for="wunschtermin">Wunschtermin</label>
-                        <input type="text" id="wunschtermin" name="date" placeholder="Datum auswählen...">
-                    </div>
-                </div>
-
                 <div class="form-group" style="margin-top: 20px;">
                     <label for="nachricht">Zusätzliche Wünsche / Nachricht</label>
-                    <textarea id="nachricht" name="message" rows="5" placeholder="Hast du einen Wunschtermin oder spezielle Fragen?"></textarea>
+                    <textarea id="nachricht" name="message" rows="5" placeholder="Hast du besondere Wünsche oder Fragen?"></textarea>
                 </div>
 
                 
@@ -547,8 +538,6 @@
 
     <footer id="main-footer"></footer>
     <button id="btn-back-to-top" title="Nach oben" aria-label="Zurück nach oben">↑</button>
-    <script src="lib/flatpickr/flatpickr.min.js"></script>
-    <script src="lib/flatpickr/de.js"></script>
     <script src="script.js"></script>
     <script type="module" src="news-db.js"></script>
     <script>
