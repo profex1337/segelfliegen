@@ -1591,8 +1591,10 @@ function renderVoucherList(container, items, orders) {
     var openVouchers = items.filter(function(v) { return !v.redeemed; });
     var redeemedVouchers = items.filter(function(v) { return v.redeemed; });
 
-    html += '<h4 style="margin:25px 0 12px; color:var(--primary);">Erstellte Gutscheine (<span id="voucher-items-count">' + openVouchers.length + '</span>)</h4>';
-    html += '<div id="voucher-items"></div>';
+    if (openVouchers.length > 0) {
+        html += '<details style="margin-top:25px;"><summary style="cursor:pointer; font-weight:600; color:var(--primary); font-size:0.95rem; padding:8px 0;">Offene Gutscheine (' + openVouchers.length + ')</summary>';
+        html += '<div id="voucher-items" style="margin-top:10px;"></div></details>';
+    }
 
     // --- Aufklappbare Sektionen ---
     if (redeemedVouchers.length > 0) {
@@ -1632,9 +1634,7 @@ function renderVoucherList(container, items, orders) {
 
     // Offene Gutscheine rendern
     var itemsContainer = container.querySelector('#voucher-items');
-    if (openVouchers.length === 0) {
-        itemsContainer.innerHTML = '<p style="color:#999; text-align:center; padding:20px;">Noch keine offenen Gutscheine.</p>';
-    } else {
+    if (itemsContainer && openVouchers.length > 0) {
         openVouchers.forEach(function(item) {
             itemsContainer.appendChild(renderVoucherRow(item));
         });
@@ -1661,19 +1661,17 @@ function renderVoucherList(container, items, orders) {
                 if (ordersCountEl) ordersCountEl.textContent = visibleOrders;
             }
             // Offene Gutscheine filtern
-            var visibleItems = 0;
-            var itemsCountEl = container.querySelector('#voucher-items-count');
-            Array.from(itemsContainer.children).forEach(function(row, i) {
-                var v = openVouchers[i];
-                if (!v) { return; }
-                var match = !q || (v.recipient || '').toLowerCase().indexOf(q) !== -1
-                    || (v.number || '').toLowerCase().indexOf(q) !== -1
-                    || (v.flightType || '').toLowerCase().indexOf(q) !== -1
-                    || (v.ordererName || '').toLowerCase().indexOf(q) !== -1;
-                row.style.display = match ? '' : 'none';
-                if (match) visibleItems++;
-            });
-            if (itemsCountEl) itemsCountEl.textContent = visibleItems;
+            if (itemsContainer) {
+                Array.from(itemsContainer.children).forEach(function(row, i) {
+                    var v = openVouchers[i];
+                    if (!v) { return; }
+                    var match = !q || (v.recipient || '').toLowerCase().indexOf(q) !== -1
+                        || (v.number || '').toLowerCase().indexOf(q) !== -1
+                        || (v.flightType || '').toLowerCase().indexOf(q) !== -1
+                        || (v.ordererName || '').toLowerCase().indexOf(q) !== -1;
+                    row.style.display = match ? '' : 'none';
+                });
+            }
         });
     }
 }

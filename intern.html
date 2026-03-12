@@ -369,7 +369,6 @@
                                     <strong style="color:#0f3460; font-size:0.9rem;">E-Mail-Vorlage</strong>
                                     <div style="display:flex; gap:6px; flex-wrap:wrap;">
                                         <button type="button" onclick="copyEmailFormatted()" class="btn" style="padding:4px 14px; font-size:0.78rem;">Formatiert kopieren</button>
-                                        <button type="button" onclick="copyEmailPlain()" class="btn btn-secondary" style="padding:4px 14px; font-size:0.78rem;">Als Text kopieren</button>
                                         <button type="button" onclick="copyOrderEmail()" class="btn btn-secondary" style="padding:4px 14px; font-size:0.78rem;">E-Mail kopieren</button>
                                         <button type="button" onclick="copyEmailSubject()" class="btn btn-secondary" style="padding:4px 14px; font-size:0.78rem;">Betreff kopieren</button>
                                     </div>
@@ -381,7 +380,7 @@
                     </div>
 
                     <div class="dashboard-card" style="border-top-color: var(--primary);">
-                        <h3>Erstellte Gutscheine</h3>
+                        <h3>Gutschein-Bestellungen</h3>
                         <div id="voucher-list">
                             <p style="color:#999;">Lade Gutscheine...</p>
                         </div>
@@ -595,14 +594,6 @@
                 sel.removeAllRanges();
                 showCopyFeedback('Formatierte Vorlage kopiert!');
             }
-        };
-
-        // Als Plaintext kopieren
-        window.copyEmailPlain = function() {
-            var text = document.getElementById('email-template-html').dataset.plain || '';
-            navigator.clipboard.writeText(text).then(function() {
-                showCopyFeedback('Text-Vorlage kopiert!');
-            });
         };
 
         // E-Mail-Adresse des Bestellers kopieren
