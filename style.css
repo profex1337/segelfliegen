@@ -102,7 +102,7 @@ h1, h2, h3, h4 {
     margin-top: 0;
 }
 
-a { text-decoration: none; color: inherit; transition: all 0.3s ease; }
+a { text-decoration: none; color: inherit; transition: color 0.3s ease; }
 img { width: 100%; height: auto; display: block; }
 html { scroll-padding-top: 120px; scroll-behavior: smooth; }
 
@@ -151,10 +151,10 @@ header {
     box-shadow: 0 15px 35px rgba(15, 52, 96, 0.15);
     overflow: hidden; 
     transform-origin: top center;
-    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.4s ease;
 }
 
-.logo img { 
+.logo img {
     height: 110px;
     width: auto; 
     display: block;
@@ -299,7 +299,7 @@ header {
     opacity: 1;
     left: 0;
     transform: rotate(0deg);
-    transition: all 0.3s ease-in-out;
+    transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out, top 0.3s ease-in-out;
 }
 
 .hamburger span:nth-child(1) { top: 0px; }
@@ -425,7 +425,7 @@ header {
     margin-top: 15px;
     cursor: pointer;
     border: 1px solid rgba(255,255,255,0.2);
-    transition: all 0.3s ease;
+    transition: background 0.3s ease, transform 0.3s ease;
     box-shadow: 0 5px 15px rgba(0,0,0,0.1);
 }
 
@@ -908,7 +908,7 @@ select { height: auto; min-height: 48px; line-height: 1.4; background-image: url
     border-left: none;
     border-bottom: 1px solid #e0e0e0;
     margin-bottom: 0;
-    transition: all 0.4s ease;
+    transition: transform 0.4s ease;
     position: relative;
 }
 
@@ -1334,7 +1334,7 @@ footer {
 }
 .footer-socials a {
     color: #b0b0b0;
-    transition: all 0.3s;
+    transition: color 0.3s, transform 0.3s;
     padding: 5px;
 }
 .footer-socials a:hover {
@@ -1376,7 +1376,7 @@ footer {
     font-weight: 700;
     font-size: 0.9rem;
     text-transform: uppercase;
-    transition: all 0.3s ease;
+    transition: background-color 0.3s ease, color 0.3s ease, transform 0.3s ease;
     box-shadow: 0 4px 6px rgba(0,0,0,0.05);
 }
 .btn-cat:hover {
@@ -1452,7 +1452,7 @@ footer {
     cursor: pointer;
     box-shadow: 0 4px 10px rgba(0,0,0,0.3);
     z-index: 9999;
-    transition: all 0.3s ease;
+    transition: background-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
     padding: 0;
     line-height: 50px;
     text-align: center;
@@ -1869,7 +1869,7 @@ body.admin-mode .delete-btn { display: inline-block; }
 .header-social-link {
     color: var(--primary);
     padding: 0;
-    transition: all 0.3s ease;
+    transition: color 0.3s ease, transform 0.3s ease;
     display: flex; 
     align-items: center;
 }
@@ -1901,7 +1901,7 @@ body.admin-mode .delete-btn { display: inline-block; }
     cursor: pointer;
     font-weight: 600;
     opacity: 0.85;
-    transition: all 0.3s ease;
+    transition: opacity 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
     box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
     overflow: hidden;
 }
