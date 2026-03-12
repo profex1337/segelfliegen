@@ -94,7 +94,7 @@
         var pw = document.getElementById('login-pw').value.trim();
         var err = document.getElementById('login-error');
         if (!pw) { err.textContent = 'Bitte Passwort eingeben'; err.style.display = 'block'; return; }
-        auth.signInWithEmailAndPassword('info@segelfliegen-altdorf.de', pw)
+        auth.signInWithEmailAndPassword('gutschein@segelfliegen-altdorf.de', pw)
             .then(function() { err.style.display = 'none'; })
             .catch(function(e) {
                 err.textContent = e.code === 'auth/wrong-password' || e.code === 'auth/invalid-credential'
