@@ -411,6 +411,13 @@ function initForms() {
             const formType = form.getAttribute('data-emailjs');
             const fd = new FormData(form);
 
+            // Honeypot-Spam-Schutz
+            if (fd.get('website_url')) {
+                btn.textContent = originalText;
+                btn.disabled = false;
+                return;
+            }
+
             // Details-Zeilen je nach Formulartyp zusammenbauen (nur gefüllte Felder)
             var subject = '';
             var message = fd.get('message') || '';

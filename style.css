@@ -217,7 +217,6 @@ header {
     text-transform: uppercase;
     letter-spacing: 0.5px;
     padding: 5px 0;
-    overflow: visible;
 }
 
 .nav-menu a::before {
@@ -769,7 +768,8 @@ input[type="number"],
 textarea,
 select {
     width: 100%;
-    padding: 12px 15px;
+    padding: 14px 15px;
+    min-height: 44px;
     border: 1px solid #ddd;
     border-radius: 8px;
     background-color: #fff;
@@ -961,21 +961,6 @@ select { height: auto; min-height: 48px; line-height: 1.4; background-image: url
     line-height: 1.6;
 }
 
-/* Sticky Image Container */
-.news-image-container {
-    position: sticky;
-    top: 120px;
-    width: 100%;
-    height: auto;
-    aspect-ratio: 4 / 3;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
-    background: transparent;
-    border-radius: var(--radius);
-    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.14);
-}
 
 .news-image-container img {
     width: 100%;
@@ -1329,12 +1314,6 @@ footer {
     z-index: 1; /* Above footer background, behind text */
     opacity: 0.8;
     pointer-events: none;
-    opacity: 1.0;
-}
-
-.footer-spn-logo {
-    /* REMOVED or Unused now */
-    display: none;
 }
 
 .footer-bottom { 
@@ -1391,7 +1370,8 @@ footer {
     background-color: #ffffff;
     border: 2px solid var(--primary);
     color: var(--primary);
-    padding: 8px 20px;
+    padding: 10px 20px;
+    min-height: 44px;
     border-radius: 50px;
     font-weight: 700;
     font-size: 0.9rem;
@@ -1417,7 +1397,7 @@ footer {
     box-shadow: var(--shadow);
     border-top: 5px solid var(--accent);
 }
-@media(min-width: 768px) {
+@media (min-width: 768px) {
     .quote-wrapper { grid-template-columns: 2fr 1fr; }
 }
 .quote-text {
@@ -1554,7 +1534,7 @@ footer {
 @keyframes zoomIn { from {transform:scale(0.8); opacity: 0;} to {transform:scale(1); opacity: 1;} }
 @keyframes fadeIn { from {opacity: 0;} to {opacity: 1;} }
 
-@media only screen and (max-width: 700px) {
+@media (max-width: 700px) {
     .lightbox-content {
         width: 100%;
         margin-top: 50px;
@@ -1599,7 +1579,7 @@ footer {
 .prev:hover, .next:hover { background-color: var(--accent); }
 .fade { animation-name: fade; animation-duration: 1.5s; }
 @keyframes fade { from {opacity: .4} to {opacity: 1} }
-@media only screen and (max-width: 600px) { .mySlides { height: 250px; } }
+@media (max-width: 600px) { .mySlides { height: 250px; } }
 
 .admin-login-link { font-size: 0.8rem; color: #e0e0e0; cursor: pointer; margin-left: 10px; text-decoration: none; transition: color 0.3s; }
 .admin-login-link:hover { color: var(--accent); }
@@ -1915,7 +1895,8 @@ body.admin-mode .delete-btn { display: inline-block; }
     color: #fff;
     border: none;
     border-radius: 6px;
-    padding: 5px 12px;
+    padding: 8px 14px;
+    min-height: 44px;
     font-size: 0.75rem;
     cursor: pointer;
     font-weight: 600;

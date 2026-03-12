@@ -25,7 +25,7 @@ function escapeHTML(str) {
 // === Bild-Upload: Komprimierung & GitHub ===
 
 async function compressImage(file, maxWidth = 1200, quality = 0.80) {
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
         const img = new Image();
         const objectUrl = URL.createObjectURL(file);
         img.onload = () => {
@@ -40,6 +40,10 @@ async function compressImage(file, maxWidth = 1200, quality = 0.80) {
             canvas.height = height;
             canvas.getContext('2d').drawImage(img, 0, 0, width, height);
             canvas.toBlob(resolve, 'image/webp', quality);
+        };
+        img.onerror = () => {
+            URL.revokeObjectURL(objectUrl);
+            reject(new Error('Bild konnte nicht geladen werden. Bitte ein gültiges Bildformat verwenden.'));
         };
         img.src = objectUrl;
     });
@@ -241,8 +245,10 @@ async function startNewsLogic() {
         handleInternPageVisibility(isAdmin);
 
         if (!user) {
-            signInAnonymously(auth).catch((err) => {});
-            return; 
+            signInAnonymously(auth).catch((err) => {
+                console.error('Anonyme Anmeldung fehlgeschlagen:', err);
+            });
+            return;
         }
 
         const newsCollection = collectionPath(db);
@@ -281,8 +287,8 @@ async function startNewsLogic() {
                 return '<div class="news-card-img">'
                     + '<div class="news-carousel" data-index="0">'
                     + '<div class="news-carousel-track">' + slides + '</div>'
-                    + '<button class="news-carousel-btn prev">&#10094;</button>'
-                    + '<button class="news-carousel-btn next">&#10095;</button>'
+                    + '<button class="news-carousel-btn prev" aria-label="Vorheriges Bild">&#10094;</button>'
+                    + '<button class="news-carousel-btn next" aria-label="N\u00e4chstes Bild">&#10095;</button>'
                     + '<div class="news-carousel-dots">' + dots + '</div>'
                     + '</div></div>';
             }
@@ -306,6 +312,15 @@ async function startNewsLogic() {
                     carousel.querySelector('.news-carousel-btn.prev').addEventListener('click', function(e) { e.stopPropagation(); goTo(current - 1); });
                     carousel.querySelector('.news-carousel-btn.next').addEventListener('click', function(e) { e.stopPropagation(); goTo(current + 1); });
                     dots.forEach(function(d) { d.addEventListener('click', function(e) { e.stopPropagation(); goTo(parseInt(d.dataset.index)); }); });
+
+                    // Keyboard-Navigation
+                    carousel.setAttribute('tabindex', '0');
+                    carousel.setAttribute('role', 'region');
+                    carousel.setAttribute('aria-label', 'Bildergalerie');
+                    carousel.addEventListener('keydown', function(e) {
+                        if (e.key === 'ArrowLeft') { e.preventDefault(); goTo(current - 1); }
+                        if (e.key === 'ArrowRight') { e.preventDefault(); goTo(current + 1); }
+                    });
 
                     // Touch-Swipe
                     let startX = 0;
@@ -1497,7 +1512,7 @@ function renderOrderRow(order, isClosed) {
         ? '<span style="font-size:0.75rem; padding:3px 8px; border-radius:12px; font-weight:600; background:#e8f5e9; color:#2e7d32; margin-left:8px;">Bezahlt</span>'
         : '<span style="font-size:0.75rem; padding:3px 8px; border-radius:12px; font-weight:600; background:#fff3e0; color:#e65100; margin-left:8px;">Unbezahlt</span>';
 
-    var infoHtml = '<div style="flex:1; min-width:200px;"' + (!isClosed && isPaid ? ' onclick="loadVoucherOrder(' + JSON.stringify(order).replace(/"/g, '&quot;') + ')" style="cursor:pointer;"' : '') + '>'
+    var infoHtml = '<div style="flex:1; min-width:200px;' + (!isClosed && isPaid ? ' cursor:pointer;' : '') + '"' + (!isClosed && isPaid ? ' onclick="loadVoucherOrder(' + JSON.stringify(order).replace(/"/g, '&quot;') + ')"' : '') + '>'
         + '<strong style="font-size:1rem;">\u2709 ' + besteller + '</strong>' + paidBadge
         + '<div style="font-size:0.82rem; color:var(--text-light); margin-top:3px;">'
         + flugart + (wert ? ' &middot; ' + wert + ' \u20AC' : '') + ' &middot; F\u00FCr: ' + empfaenger
