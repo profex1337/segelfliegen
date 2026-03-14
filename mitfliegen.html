@@ -391,7 +391,7 @@
                     </div>
                     <div class="form-group">
                         <label>Gutscheinwert</label>
-                        <div id="gutschein-wert-display" style="padding:0 15px; height:50px; box-sizing:border-box; display:flex; align-items:center; justify-content:center; background:var(--bg-light); border:1px solid #ddd; border-radius:8px; font-size:16px; font-weight:700; color:var(--primary);">— €</div>
+                        <input type="text" id="gutschein-wert-display" readonly tabindex="-1" value="— €" style="font-weight:700; color:var(--primary); text-align:center; background:var(--bg-light); cursor:default;">
                         <input type="hidden" id="gutschein-wert-hidden" name="wert" value="">
                         <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: normal; margin-top: 8px; font-size: 0.9rem;">
                             <input type="checkbox" id="gutschein-wert-anzeigen" name="wert_anzeigen" value="ja" checked style="width: auto; margin: 0;">
@@ -553,7 +553,7 @@
             var display = document.getElementById('gutschein-wert-display');
             var hidden = document.getElementById('gutschein-wert-hidden');
             var zusatzWrap = document.getElementById('gutschein-zusatzzeit-wrap');
-            if (!opt || !opt.value) { display.textContent = '— €'; hidden.value = ''; return; }
+            if (!opt || !opt.value) { display.value = '— €'; hidden.value = ''; return; }
             var base = parseFloat(opt.getAttribute('data-base')) || 0;
             var perMin = parseFloat(opt.getAttribute('data-permin')) || 0;
             var zusatz = parseInt(document.getElementById('gutschein-zusatzzeit').value) || 0;
@@ -568,7 +568,7 @@
                 zusatzWrap.querySelector('input').disabled = false;
             }
             var total = base + (zusatz * perMin);
-            display.textContent = total.toFixed(2).replace('.', ',') + ' €';
+            display.value = total.toFixed(2).replace('.', ',') + ' €';
             hidden.value = total.toFixed(2).replace('.', ',');
         }
 
