@@ -66,7 +66,10 @@
             <div class="stat stat-open"><div class="stat-num" id="count-open">0</div><div class="stat-label">Offen</div></div>
             <div class="stat stat-redeemed"><div class="stat-num" id="count-redeemed">0</div><div class="stat-label">Eingelöst</div></div>
         </div>
-        <button class="btn-logout" onclick="doLogout()">Abmelden</button>
+        <div style="display:flex; gap:8px;">
+            <button class="btn-logout" onclick="history.back()">Zur&uuml;ck</button>
+            <button class="btn-logout" onclick="doLogout()">Abmelden</button>
+        </div>
     </div>
     <input type="text" class="search" id="search" placeholder="Suche nach Name, Nummer, Flugart...">
     <div id="voucher-content"></div>

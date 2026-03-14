@@ -75,7 +75,10 @@
             <div class="stat stat-unpaid"><div class="stat-num" id="count-unpaid">0</div><div class="stat-label">Unbezahlt</div></div>
             <div class="stat stat-paid"><div class="stat-num" id="count-paid">0</div><div class="stat-label">Bezahlt</div></div>
         </div>
-        <button class="btn-logout" onclick="doLogout()">Abmelden</button>
+        <div style="display:flex; gap:8px;">
+            <button class="btn-logout" onclick="history.back()">Zur&uuml;ck</button>
+            <button class="btn-logout" onclick="doLogout()">Abmelden</button>
+        </div>
     </div>
     <div id="success-msg" class="success-msg"></div>
     <input type="text" class="search" id="search" placeholder="Suche nach Name, Flugart, E-Mail...">
