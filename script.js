@@ -438,6 +438,8 @@ function initForms() {
                 if (fd.get('flugart')) detailRows.push({label: 'Flugart', value: fd.get('flugart')});
                 detailRows.push({label: 'Zusatzzeit', value: (fd.get('zusatzzeit') || '0') + ' Min.'});
                 detailRows.push({label: 'Gutscheinwert', value: (fd.get('wert') || '') + ' \u20AC', style: 'font-weight: bold; color: #e94560;'});
+                var wertAnzeigen = fd.get('wert_anzeigen') ? 'Ja' : 'Nein';
+                detailRows.push({label: 'Wert im Gutschein', value: wertAnzeigen});
                 if (fd.get('empfaenger')) detailRows.push({label: 'Empf\u00E4nger', value: fd.get('empfaenger')});
                 if (fd.get('anlass')) detailRows.push({label: 'Anlass', value: fd.get('anlass')});
                 if (fd.get('zustellung')) detailRows.push({label: 'Zustellung', value: fd.get('zustellung'), style: 'font-weight: bold; color: #6a1b9a;'});
@@ -514,7 +516,8 @@ function initForms() {
                             wert: fd.get('wert') || '',
                             empfaenger: fd.get('empfaenger') || '',
                             grusstext: fd.get('grusstext') || '',
-                            zustellung: fd.get('zustellung') || ''
+                            zustellung: fd.get('zustellung') || '',
+                            wertAnzeigen: fd.get('wert_anzeigen') ? true : false
                         });
                     }
                 }

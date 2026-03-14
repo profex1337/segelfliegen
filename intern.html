@@ -349,6 +349,10 @@
                                 <div>
                                     <label style="display:block; margin-bottom:6px; font-weight:600; font-size:0.9rem;">Wert (€)</label>
                                     <input type="text" id="voucher-value" placeholder="z.B. 80,00" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:6px;">
+                                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: normal; margin-top: 6px; font-size: 0.85rem;">
+                                        <input type="checkbox" id="voucher-show-value" checked style="width: auto; margin: 0;">
+                                        Wert im Gutschein anzeigen
+                                    </label>
                                 </div>
                                 <div>
                                     <label style="display:block; margin-bottom:6px; font-weight:600; font-size:0.9rem;">Zusatzzeit (Min.)</label>
@@ -740,9 +744,12 @@
             doc.setTextColor(233, 69, 96);
             doc.text(flightType, textCenterX, 71, { align: 'center' });
 
-            // Wert prominent
+            // Wert / Flugdauer prominent
             var hasWert = false;
-            if (voucherValue) {
+            var showValue = document.getElementById('voucher-show-value').checked;
+            var zusatzzeit = parseInt(document.getElementById('voucher-zusatzzeit').value || '0', 10);
+            var flugdauer = getFlugdauer(flightType, zusatzzeit);
+            if (voucherValue && showValue) {
                 hasWert = true;
                 doc.setFont('helvetica', 'bold');
                 doc.setFontSize(18);
@@ -750,12 +757,16 @@
                 doc.text('Wert: ' + voucherValue + ' \u20AC', textCenterX, 82, { align: 'center' });
 
                 // Flugdauer unter Wert
-                var zusatzzeit = parseInt(document.getElementById('voucher-zusatzzeit').value || '0', 10);
-                var flugdauer = getFlugdauer(flightType, zusatzzeit);
                 doc.setFont('helvetica', 'normal');
                 doc.setFontSize(8);
                 doc.setTextColor(140, 140, 140);
                 doc.text('Flugdauer: ' + flugdauer, textCenterX, 87, { align: 'center' });
+            } else if (flugdauer) {
+                hasWert = true;
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(14);
+                doc.setTextColor(15, 52, 96);
+                doc.text('Flugdauer: ' + flugdauer, textCenterX, 82, { align: 'center' });
             }
 
             // Dezente Trennlinie

@@ -1404,6 +1404,9 @@ async function startVoucherLogic() {
         // Zusatzzeit merken für Flugdauer auf dem PDF
         var zusatzField = document.getElementById('voucher-zusatzzeit');
         if (zusatzField) zusatzField.value = order.zusatzzeit || '0';
+        // Wert-Anzeige Checkbox setzen (Standard: true)
+        var showValueField = document.getElementById('voucher-show-value');
+        if (showValueField) showValueField.checked = order.wertAnzeigen !== false;
         // Zum Formular scrollen
         const form = document.getElementById('gutschein-form');
         if (form) form.scrollIntoView({ behavior: 'smooth', block: 'start' });
