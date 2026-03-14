@@ -1353,6 +1353,12 @@ async function startVoucherLogic() {
         });
     });
 
+    // Prüft ob Gutschein-Nr. schon als offen existiert
+    window.checkVoucherExists = (number) => {
+        if (!number) return false;
+        return cachedVouchers.find(function(v) { return v.number === number; }) || false;
+    };
+
     // Gutschein nach PDF-Generierung speichern (Event von intern.html)
     // Prüft ob Gutschein-Nr. schon existiert — wenn ja, nur aktualisieren
     window.saveVoucherToFirestore = async (data) => {

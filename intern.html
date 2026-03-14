@@ -861,6 +861,12 @@
             doc.setTextColor(160, 160, 160);
             doc.text('Wir fliegen zwischen April und Oktober an Wochenenden und Feiertagen. Deinen Wunschtermin bitte am Wochenende ab 9 Uhr unter 09189/310 vereinbaren.', textCenterX, h - 13, { align: 'center' });
 
+            // Prüfen ob Gutschein schon existiert
+            var existingVoucher = typeof window.checkVoucherExists === 'function' ? window.checkVoucherExists(voucherNr) : false;
+            if (existingVoucher) {
+                alert('Gutschein ' + voucherNr + ' ist bereits vorhanden. PDF wird erneut erstellt.');
+            }
+
             // PDF speichern
             const filename = voucherNr ? `Gutschein_${voucherNr}.pdf` : 'Gutschein.pdf';
             doc.save(filename);
