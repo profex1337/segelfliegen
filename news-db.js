@@ -1354,13 +1354,19 @@ async function startVoucherLogic() {
     });
 
     // Gutschein nach PDF-Generierung speichern (Event von intern.html)
+    // Prüft ob Gutschein-Nr. schon existiert — wenn ja, nur aktualisieren
     window.saveVoucherToFirestore = async (data) => {
         if (!auth.currentUser || auth.currentUser.isAnonymous) return;
         try {
-            await addDoc(voucherRef, {
-                ...data,
-                timestamp: Date.now()
-            });
+            var existing = data.number ? cachedVouchers.find(function(v) { return v.number === data.number; }) : null;
+            if (existing) {
+                await updateDoc(doc(db, 'vouchers', existing.id), data);
+            } else {
+                await addDoc(voucherRef, {
+                    ...data,
+                    timestamp: Date.now()
+                });
+            }
         } catch (e) {
             console.error('Gutschein speichern fehlgeschlagen:', e);
         }
