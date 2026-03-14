@@ -1399,7 +1399,7 @@ async function startVoucherLogic() {
         }
     };
 
-    // Gutschein erneut ins Formular laden (Nachdruck)
+    // Gutschein erneut drucken (Nachdruck) — befüllt Formular und generiert direkt PDF
     window.loadVoucherForReprint = (item) => {
         var recipient = document.getElementById('voucher-recipient');
         var flightType = document.getElementById('voucher-flight-type');
@@ -1417,8 +1417,9 @@ async function startVoucherLogic() {
         if (validUntil) validUntil.value = item.validUntil || '';
         if (zusatzField) zusatzField.value = item.zusatzzeit || '0';
         if (showValueField) showValueField.checked = item.showValue !== false;
-        var form = document.getElementById('gutschein-form');
-        if (form) form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        // Direkt PDF generieren
+        var generateBtn = document.getElementById('gutschein-generate-btn');
+        if (generateBtn) generateBtn.click();
     };
 
     // Bestellung ins Formular laden
