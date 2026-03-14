@@ -1387,6 +1387,28 @@ async function startVoucherLogic() {
         }
     };
 
+    // Gutschein erneut ins Formular laden (Nachdruck)
+    window.loadVoucherForReprint = (item) => {
+        var recipient = document.getElementById('voucher-recipient');
+        var flightType = document.getElementById('voucher-flight-type');
+        var greeting = document.getElementById('voucher-greeting');
+        var value = document.getElementById('voucher-value');
+        var voucherNr = document.getElementById('voucher-number');
+        var validUntil = document.getElementById('voucher-valid-until');
+        var zusatzField = document.getElementById('voucher-zusatzzeit');
+        var showValueField = document.getElementById('voucher-show-value');
+        if (recipient) recipient.value = item.recipient || '';
+        if (flightType) flightType.value = item.flightType || '';
+        if (greeting) greeting.value = item.greeting || '';
+        if (value) value.value = item.value || '';
+        if (voucherNr) voucherNr.value = item.number || '';
+        if (validUntil) validUntil.value = item.validUntil || '';
+        if (zusatzField) zusatzField.value = item.zusatzzeit || '0';
+        if (showValueField) showValueField.checked = item.showValue !== false;
+        var form = document.getElementById('gutschein-form');
+        if (form) form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    };
+
     // Bestellung ins Formular laden
     window.loadVoucherOrder = (order) => {
         const recipient = document.getElementById('voucher-recipient');
@@ -1700,9 +1722,19 @@ function renderVoucherRow(item) {
         + (item.flightType || '') + (item.value ? ' &middot; ' + item.value + ' \u20AC' : '') + ' &middot; ' + (item.number || '') + ' &middot; Erstellt: ' + createdDate
         + '</div>' + validLine + '</div>'
         + '<div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">'
+        + '<button class="btn btn-secondary voucher-reprint-btn" style="padding:6px 12px; font-size:0.78rem; background:var(--primary); color:#fff; border-color:var(--primary);">PDF</button>'
         + '<button onclick="toggleVoucherRedeemed(\'' + item.id + '\', ' + (!!item.redeemed) + ')" class="btn btn-secondary" style="padding:6px 12px; font-size:0.78rem;">' + toggleText + '</button>'
         + '<button onclick="deleteVoucher(\'' + item.id + '\')" class="btn btn-secondary" style="padding:6px 12px; font-size:0.78rem; background:#c0392b; color:#fff; border-color:#c0392b;">L\u00F6schen</button>'
         + '</div>';
+
+    // PDF-Button Event (vermeidet Probleme mit JSON in onclick)
+    var reprintBtn = row.querySelector('.voucher-reprint-btn');
+    reprintBtn.addEventListener('click', function() {
+        if (typeof window.loadVoucherForReprint === 'function') {
+            window.loadVoucherForReprint(item);
+        }
+    });
+
     return row;
 }
 
