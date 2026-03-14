@@ -2,34 +2,56 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    // Admin-E-Mail
+    function isAdmin() {
+      return request.auth != null
+             && request.auth.token.email == 'info@segelfliegen-altdorf.de';
+    }
+
+    // Nicht-anonymer User (allgemein eingeloggt)
+    function isLoggedIn() {
+      return request.auth != null
+             && request.auth.token.firebase.sign_in_provider != 'anonymous';
+    }
+
+    // Gutschein-User oder Admin
+    function isGutscheinUser() {
+      return isAdmin()
+             || (request.auth != null && request.auth.token.email == 'gutschein@segelfliegen-altdorf.de');
+    }
+
+    // Bestellungs-User oder Admin
+    function isBestellungUser() {
+      return isAdmin()
+             || (request.auth != null && request.auth.token.email == 'bestellung@segelfliegen-altdorf.de');
+    }
+
+    // News, Preise, Flugzeugpark — öffentlich lesbar, nur Admin schreibt
     match /news/{doc} {
       allow read: if true;
-      allow write: if request.auth != null
-                   && request.auth.token.firebase.sign_in_provider != 'anonymous';
+      allow write: if isAdmin();
     }
 
     match /prices/{doc} {
       allow read: if true;
-      allow write: if request.auth != null
-                   && request.auth.token.firebase.sign_in_provider != 'anonymous';
+      allow write: if isAdmin();
     }
 
     match /aircraft/{doc} {
       allow read: if true;
-      allow write: if request.auth != null
-                   && request.auth.token.firebase.sign_in_provider != 'anonymous';
+      allow write: if isAdmin();
     }
 
+    // Gutscheine — Admin + Gutschein-User
     match /vouchers/{doc} {
-      allow read: if request.auth != null;
-      allow write: if request.auth != null
-                   && request.auth.token.firebase.sign_in_provider != 'anonymous';
+      allow read: if isGutscheinUser();
+      allow write: if isGutscheinUser();
     }
 
+    // Bestellungen — anonyme User dürfen erstellen, Admin + Bestellungs-User lesen/bearbeiten
     match /voucherOrders/{doc} {
       allow create: if request.auth != null;
-      allow read, update, delete: if request.auth != null
-                   && request.auth.token.firebase.sign_in_provider != 'anonymous';
+      allow read, update, delete: if isBestellungUser();
     }
   }
 }
