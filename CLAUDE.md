@@ -31,6 +31,11 @@ segelfliegen/
 ├── datenschutz.html      # Privacy policy & cookie consent
 ├── intern.html           # Members-only admin panel (3 tabs: News, Gastfluggebühren, Flugzeugpark)
 │
+├── gutschein/            # Standalone voucher status page (open/redeemed)
+│   └── index.html        #   Firebase Compat-SDK, login: gutschein@segelfliegen-altdorf.de
+├── bestellungen/         # Standalone order management page (paid/reminder)
+│   └── index.html        #   Firebase Compat-SDK, login: bestellung@segelfliegen-altdorf.de
+│
 ├── script.js             # Shared UI logic: header/footer injection, mobile menu,
 │                         #   accordion, cookie consent, lightbox, slideshow,
 │                         #   reviews sidebar, back-to-top, AJAX forms, favicon
@@ -61,7 +66,7 @@ There is **no server-side runtime** and **no build pipeline**. Every file is ser
 |---|---|
 | Dynamic content (news, prices, aircraft fleet) | Firebase Firestore + real-time `onSnapshot` listener |
 | Form submissions | EmailJS (third-party service, no backend needed) — AJAX via EmailJS SDK |
-| Authentication (admin) | Firebase Authentication (email/password) |
+| Authentication (role-based) | Firebase Authentication (email/password) — 3 accounts with different Firestore access |
 | News image hosting | GitHub repository (`images/` folder) via GitHub Contents API |
 | Date picker | Flatpickr self-hosted in `lib/flatpickr/` (DSGVO-compliant, no CDN) |
 | Fonts | Self-hosted in `fonts/` (WOFF2, DSGVO-compliant, no Google server contact) |
@@ -89,10 +94,14 @@ The module is loaded as an **ES module** (`type="module"`) and handles:
 
 **Firestore collections (production)**:
 ```
-news/      — top-level collection, documents sorted descending by timestamp
-prices/    — top-level collection, documents sorted ascending by order field
-aircraft/  — top-level collection, documents sorted ascending by order field
+news/           — top-level, sorted descending by timestamp (public read, admin write)
+prices/         — top-level, sorted ascending by order field (public read, admin write)
+aircraft/       — top-level, sorted ascending by order field (public read, admin write)
+vouchers/       — top-level, sorted descending by timestamp (admin + gutschein@ user)
+voucherOrders/  — top-level, sorted descending by timestamp (create: any auth, read/update: admin + bestellung@ user)
 ```
+
+**Firestore security rules** are defined in `firestore-rules.txt` (must be manually pasted into Firebase Console → Firestore → Rules → Publish). Rules use helper functions `isAdmin()`, `isGutscheinUser()`, `isBestellungUser()` based on `request.auth.token.email`.
 
 **`news` document schema**:
 ```js
@@ -117,6 +126,42 @@ aircraft/  — top-level collection, documents sorted ascending by order field
   highlight:    boolean,       // If true, rendered with accent border and ★ badge
   imageUrl:     string | null, // GitHub raw URL (images/aircraft_<timestamp>.webp) or null
   order:        number         // Sort order (set to Date.now() on create; used for drag & drop)
+}
+```
+
+**`vouchers` document schema**:
+```js
+{
+  recipient:   string,           // Voucher recipient name
+  flightType:  string,           // Flight type (e.g. "Segelflug (Windenstart)")
+  greeting:    string,           // Greeting text for the voucher
+  number:      string,           // Voucher number (e.g. "GS-2026-0314-1530")
+  value:       string,           // Value in EUR (e.g. "80,00")
+  validUntil:  string,           // Validity date (e.g. "14.03.2027")
+  zusatzzeit:  string,           // Extra flight time in minutes (e.g. "10")
+  showValue:   boolean,          // Whether to show value on PDF (default: true)
+  redeemed:    boolean,          // Whether the voucher has been redeemed
+  timestamp:   number            // Unix ms — creation timestamp
+}
+```
+
+**`voucherOrders` document schema**:
+```js
+{
+  name:          string,         // Customer name
+  email:         string,         // Customer email
+  telefon:       string,         // Customer phone
+  flugart:       string,         // Flight type
+  zusatzzeit:    string,         // Extra flight time in minutes
+  wert:          string,         // Value in EUR (German decimal format, e.g. "80,00")
+  empfaenger:    string,         // Gift recipient name
+  grusstext:     string,         // Greeting text
+  zustellung:    string,         // Delivery method ("E-Mail (Zahlung per Überweisung)" or "Abholung...")
+  wertAnzeigen:  boolean,        // Whether to show value on voucher PDF (default: true)
+  status:        string,         // "neu" | "abgeschlossen"
+  paid:          boolean,        // Whether order has been paid
+  timestamp:     number,         // Unix ms — order creation timestamp
+  completedAt:   number | null   // Unix ms — when order was completed
 }
 ```
 
@@ -333,11 +378,50 @@ The panel is organised in **three tabs**:
 - The "Übernehmen" button and click-to-load only appear **after** the order is marked as paid.
 - **Payment Reminder**: Unpaid orders show a "Reminder" button that sends a reminder email to the customer via EmailJS (Template 2). The reminder dynamically adapts to the payment method (bank transfer vs. pickup).
 - **PDF generation** via jsPDF (self-hosted in `lib/jspdf/`). PDF includes: flight type, value, flight duration (calculated from base + extra time), recipient name, greeting text, voucher number, validity date, club address, and flight time info.
+- **"Wert im Gutschein anzeigen" checkbox**: Checked by default on `mitfliegen.html`. When unchecked, PDF shows only flight duration instead of value. For "Kunstflug", flight duration is never shown (pauschal). Stored as `wertAnzeigen` in `voucherOrders` and `showValue` in `vouchers`.
+- **PDF reprint**: Open and redeemed vouchers show a "PDF" button that directly regenerates the PDF without saving a duplicate to Firestore (checks voucher number against `cachedVouchers`). Voucher documents store `zusatzzeit` and `showValue` for accurate reprints.
 - **Gutschein-Versand is intentionally manual** — no automated email delivery of PDFs.
 - "Nicht personalisierten Text erstellen" button fills the form with generic text ("Jemand Besonderes" + standard greeting).
 - Voucher images per flight type are mapped in `gutscheinImageMap` (e.g., `'Motorsegler': 'images/Gutschein_Motorflug.jpg'`).
 
 **GitHub PAT**: A PAT with `contents: write` must be entered once in the News tab; it is shared by both the news and aircraft image upload pipelines (stored in `localStorage` under `gh_pat`).
+
+### Standalone Pages
+
+Two standalone pages provide limited access to specific Firestore collections. They use **Firebase Compat-SDK** (not ES modules) and are fully self-contained (no dependency on `script.js` or `news-db.js`).
+
+#### `gutschein/index.html` — Voucher Status
+
+- Shows open and redeemed vouchers from the `vouchers` collection.
+- Login: `gutschein@segelfliegen-altdorf.de` (or admin).
+- Features: mark as redeemed, reopen, search, stats.
+- Also hosted on Netlify: `https://comfy-fairy-7ce6c2.netlify.app/`
+
+#### `bestellungen/index.html` — Order Management
+
+- Shows open voucher orders from the `voucherOrders` collection (excludes completed orders).
+- Login: `bestellung@segelfliegen-altdorf.de` (or admin).
+- Features:
+  - **"Bezahlt"** button: marks order as paid + sends notification email to `info@segelfliegen-altdorf.de` via EmailJS Template 1 (with all order details and status "BEZAHLT"). Requires user confirmation before executing.
+  - **"Reminder"** button: sends payment reminder to customer via EmailJS Template 2 (adapts to bank transfer vs. pickup).
+- Unpaid orders shown prominently; paid orders in a collapsible section.
+- Contains local copies of `buildPaymentInfoHtml()` and `getFlugdauer()` (standalone, no script.js dependency).
+
+Both pages include "Zurück" (`history.back()`) and "Abmelden" buttons in the header.
+
+### Firebase Authentication (Role-Based Access)
+
+Three Firebase Auth accounts with different Firestore permissions (defined in `firestore-rules.txt`):
+
+| Account | Role | Collections |
+|---|---|---|
+| `info@segelfliegen-altdorf.de` | Admin | Full access to all collections |
+| `gutschein@segelfliegen-altdorf.de` | Voucher manager | `vouchers` only (read + write) |
+| `bestellung@segelfliegen-altdorf.de` | Order manager | `voucherOrders` only (read + update + delete) |
+
+Rules use helper functions (`isAdmin()`, `isGutscheinUser()`, `isBestellungUser()`) based on `request.auth.token.email`. The `firestore-rules.txt` file must be manually pasted into the Firebase Console (Firestore → Rules → Publish) whenever it changes.
+
+**Note**: Firebase Auth sessions are shared across all pages on the same domain. A user logged in on `intern.html` will also be authenticated on standalone pages.
 
 ---
 
