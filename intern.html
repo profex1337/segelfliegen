@@ -749,6 +749,7 @@
             var showValue = document.getElementById('voucher-show-value').checked;
             var zusatzzeit = parseInt(document.getElementById('voucher-zusatzzeit').value || '0', 10);
             var flugdauer = getFlugdauer(flightType, zusatzzeit);
+            var hasFlugdauer = flugdauer && flugdauer !== 'pauschal';
             if (voucherValue && showValue) {
                 hasWert = true;
                 doc.setFont('helvetica', 'bold');
@@ -756,12 +757,14 @@
                 doc.setTextColor(15, 52, 96);
                 doc.text('Wert: ' + voucherValue + ' \u20AC', textCenterX, 82, { align: 'center' });
 
-                // Flugdauer unter Wert
-                doc.setFont('helvetica', 'normal');
-                doc.setFontSize(8);
-                doc.setTextColor(140, 140, 140);
-                doc.text('Flugdauer: ' + flugdauer, textCenterX, 87, { align: 'center' });
-            } else if (flugdauer) {
+                // Flugdauer unter Wert (nicht bei Kunstflug)
+                if (hasFlugdauer) {
+                    doc.setFont('helvetica', 'normal');
+                    doc.setFontSize(8);
+                    doc.setTextColor(140, 140, 140);
+                    doc.text('Flugdauer: ' + flugdauer, textCenterX, 87, { align: 'center' });
+                }
+            } else if (hasFlugdauer) {
                 hasWert = true;
                 doc.setFont('helvetica', 'bold');
                 doc.setFontSize(14);
