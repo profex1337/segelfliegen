@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gutschein-Bestellungen</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: system-ui, -apple-system, sans-serif; background: #f4f6f8; color: #333; padding: 16px; font-size: 14px; }
+        .login-box { max-width: 360px; margin: 60px auto; background: #fff; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); text-align: center; }
+        .login-box h2 { color: #0f3460; margin-bottom: 6px; font-size: 1.3rem; }
+        .login-box p { color: #666; font-size: 0.85rem; margin-bottom: 20px; }
+        .login-box input { width: 100%; padding: 10px 14px; border: 2px solid #ddd; border-radius: 8px; font-size: 14px; margin-bottom: 12px; }
+        .login-box input:focus { border-color: #0f3460; outline: none; }
+        .login-box button { width: 100%; padding: 10px; background: #0f3460; color: #fff; border: none; border-radius: 8px; font-size: 14px; cursor: pointer; font-weight: 600; }
+        .login-box button:hover { background: #1a4a8a; }
+        .login-error { color: #c62828; font-size: 0.82rem; margin-top: 8px; display: none; }
+
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px; }
+        .header h1 { font-size: 1.2rem; color: #0f3460; }
+        .stats { display: flex; gap: 12px; flex-wrap: wrap; }
+        .stat { background: #fff; padding: 8px 16px; border-radius: 8px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+        .stat-num { font-size: 1.4rem; font-weight: 700; }
+        .stat-label { font-size: 0.7rem; color: #888; text-transform: uppercase; }
+        .stat-open .stat-num { color: #1565c0; }
+        .stat-unpaid .stat-num { color: #e65100; }
+        .stat-paid .stat-num { color: #2e7d32; }
+
+        .search { width: 100%; padding: 9px 14px; border: 2px solid #ddd; border-radius: 8px; font-size: 13px; margin-bottom: 16px; }
+        .search:focus { border-color: #0f3460; outline: none; }
+
+        .section-title { font-size: 0.9rem; font-weight: 700; color: #0f3460; margin: 18px 0 8px; padding-bottom: 4px; border-bottom: 2px solid #e0e0e0; }
+
+        .order-row { display: flex; align-items: center; gap: 12px; padding: 12px 14px; margin-bottom: 6px; border-radius: 8px; flex-wrap: wrap; background: #fff; border-left: 3px solid #1565c0; }
+        .order-row.paid { border-left-color: #2e7d32; background: #f1f8e9; }
+        .order-info { flex: 1; min-width: 200px; }
+        .order-name { font-weight: 600; font-size: 0.95rem; }
+        .order-meta { font-size: 0.78rem; color: #888; margin-top: 2px; }
+        .order-detail { font-size: 0.82rem; color: #555; margin-top: 3px; }
+        .order-gruss { font-size: 0.78rem; color: #666; margin-top: 4px; font-style: italic; }
+
+        .badge { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 0.72rem; font-weight: 600; margin-left: 8px; }
+        .badge-unpaid { background: #fff3e0; color: #e65100; }
+        .badge-paid { background: #e8f5e9; color: #2e7d32; }
+        .badge-pickup { background: #f3e5f5; color: #6a1b9a; }
+        .badge-transfer { background: #e3f2fd; color: #1565c0; }
+
+        .btn { padding: 6px 14px; border: 1px solid #ddd; border-radius: 6px; background: #fff; cursor: pointer; font-size: 0.78rem; font-weight: 500; }
+        .btn:hover { opacity: 0.85; }
+        .btn-paid { background: #2e7d32; color: #fff; border-color: #2e7d32; }
+        .btn-reminder { background: #e65100; color: #fff; border-color: #e65100; }
+        .btn-logout { padding: 6px 14px; border: none; border-radius: 6px; background: #eee; color: #666; cursor: pointer; font-size: 0.78rem; }
+        .btn-logout:hover { background: #ddd; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .empty { text-align: center; color: #999; padding: 30px; font-size: 0.9rem; }
+        .success-msg { background: #e8f5e9; color: #2e7d32; padding: 10px 16px; border-radius: 8px; margin-bottom: 12px; font-size: 0.85rem; display: none; }
+    </style>
+</head>
+<body>
+
+<div id="login-view" class="login-box">
+    <h2>Gutschein-Bestellungen</h2>
+    <p>Segelflugplatz Altdorf-Hagenhausen</p>
+    <input type="password" id="login-pw" placeholder="Passwort" autocomplete="current-password">
+    <button onclick="doLogin()">Anmelden</button>
+    <div id="login-error" class="login-error"></div>
+</div>
+
+<div id="app-view" style="display:none;">
+    <div class="header">
+        <h1><img src="https://raw.githubusercontent.com/profex1337/segelfliegen/main/images/LOGO%20SPN.png" alt="Logo" width="28" height="28" style="width:28px; max-width:28px; border-radius:50%; vertical-align:middle; margin-right:8px;">Bestellungen</h1>
+        <div class="stats">
+            <div class="stat stat-open"><div class="stat-num" id="count-total">0</div><div class="stat-label">Gesamt</div></div>
+            <div class="stat stat-unpaid"><div class="stat-num" id="count-unpaid">0</div><div class="stat-label">Unbezahlt</div></div>
+            <div class="stat stat-paid"><div class="stat-num" id="count-paid">0</div><div class="stat-label">Bezahlt</div></div>
+        </div>
+        <button class="btn-logout" onclick="doLogout()">Abmelden</button>
+    </div>
+    <div id="success-msg" class="success-msg"></div>
+    <input type="text" class="search" id="search" placeholder="Suche nach Name, Flugart, E-Mail...">
+    <div id="order-content"></div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script>
+    firebase.initializeApp({
+        apiKey: "AIzaSyB1X5H3LOGKOSrq59_am4YnkISyOyEUAg4",
+        authDomain: "segelfliegen.firebaseapp.com",
+        projectId: "segelfliegen",
+        storageBucket: "segelfliegen.firebasestorage.app",
+        messagingSenderId: "288557586639",
+        appId: "1:288557586639:web:984329930e12601b04bfba"
+    });
+
+    emailjs.init({ publicKey: 'XJb8wPMVJVP-bvjJo' });
+
+    var auth = firebase.auth();
+    var db = firebase.firestore();
+    var orders = [];
+    var unsubscribeFn = null;
+
+    // --- Hilfsfunktionen (aus script.js kopiert, da standalone) ---
+
+    function buildPaymentInfoHtml(name, wert, zustellung, qrUrl) {
+        var istAbholung = (zustellung || '').indexOf('Abholung') !== -1;
+        if (istAbholung) {
+            return '<div style="background: #f3e5f5; border: 1px solid #ce93d8; border-radius: 8px; padding: 20px; margin-bottom: 25px;">'
+                + '<div style="font-weight: bold; color: #6a1b9a; font-size: 15px; margin-bottom: 10px;">Abholung &amp; Barzahlung</div>'
+                + '<div style="font-size: 14px; line-height: 1.6; color: #555;">'
+                + 'Bitte hole deinen Gutschein ab bei:<br>'
+                + '<strong>J\u00F6rg Sperber, Schulstra\u00DFe 18, 90518 Altdorf</strong><br>'
+                + '<a href="https://maps.app.goo.gl/p4YEwmERAwFkmy479" style="color: #6a1b9a;">In Google Maps \u00F6ffnen</a><br>'
+                + 'Bitte vorher anrufen:<br><a href="tel:+4915117250329" style="color: #6a1b9a; font-weight: bold;">+49 1511 7250329</a>'
+                + (wert ? '<br><br><strong>Betrag:</strong> ' + wert + ' \u20AC (Barzahlung vor Ort)' : '')
+                + '</div></div>';
+        }
+        return '<div style="background: #fff8e1; border: 1px solid #ffd54f; border-radius: 8px; padding: 20px; margin-bottom: 25px;">'
+            + '<div style="font-weight: bold; color: #f57f17; font-size: 15px; margin-bottom: 15px;">Bitte \u00FCberweise den Betrag auf folgendes Konto:</div>'
+            + '<div style="margin-bottom: 10px;"><div style="font-size: 12px; color: #666; text-transform: uppercase; letter-spacing: 0.5px;">Kontoinhaber</div>'
+            + '<div style="font-weight: bold; font-size: 15px; margin-top: 2px;">Segelflieger im Post SV N\u00FCrnberg</div></div>'
+            + '<div style="margin-bottom: 10px;"><div style="font-size: 12px; color: #666; text-transform: uppercase; letter-spacing: 0.5px;">IBAN</div>'
+            + '<div style="font-weight: bold; font-family: monospace; font-size: 16px; margin-top: 2px;">DE20 7606 1482 0004 5555 54</div></div>'
+            + '<div style="margin-bottom: 10px;"><div style="font-size: 12px; color: #666; text-transform: uppercase; letter-spacing: 0.5px;">BIC</div>'
+            + '<div style="font-weight: bold; font-size: 15px; margin-top: 2px;">GENODEF1HSB</div></div>'
+            + '<div style="margin-bottom: 10px;"><div style="font-size: 12px; color: #666; text-transform: uppercase; letter-spacing: 0.5px;">Bank</div>'
+            + '<div style="font-size: 15px; margin-top: 2px;">Raiffeisenbank im N\u00FCrnberger Land</div></div>'
+            + '<div><div style="font-size: 12px; color: #666; text-transform: uppercase; letter-spacing: 0.5px;">Verwendungszweck</div>'
+            + '<div style="font-weight: bold; color: #e94560; font-size: 15px; margin-top: 2px;">Gutschein ' + (name || '') + '</div></div></div>'
+            + '<div style="text-align: center; margin-bottom: 25px;">'
+            + '<img src="' + (qrUrl || '') + '" alt="QR-Code" width="200" height="200" style="border-radius: 8px;">'
+            + '<div style="font-size: 12px; color: #888; margin-top: 8px;">QR-Code f\u00FCr deine Banking-App scannen</div></div>'
+            + '<div style="font-size: 14px; line-height: 1.7; color: #555; margin-bottom: 25px;">Nach Zahlungseingang erstellen wir deinen personalisierten Gutschein und senden ihn dir per E-Mail zu.</div>';
+    }
+
+    function getFlugdauer(flugart, zusatzMin) {
+        var basis = { 'Segelflug (Windenstart)': 20, 'Segelflug (F-Schlepp)': 20, 'Motorsegler': 15 };
+        var base = basis[flugart];
+        if (!base) return 'pauschal';
+        var text = 'bis zu ' + base + ' Min.';
+        if (zusatzMin > 0) text += ' + ' + zusatzMin + ' Min. zus\u00E4tzlich';
+        return text;
+    }
+
+    // --- Login / Logout ---
+
+    function doLogin() {
+        var pw = document.getElementById('login-pw').value.trim();
+        var err = document.getElementById('login-error');
+        if (!pw) { err.textContent = 'Bitte Passwort eingeben'; err.style.display = 'block'; return; }
+        auth.signInWithEmailAndPassword('bestellung@segelfliegen-altdorf.de', pw)
+            .then(function() { err.style.display = 'none'; })
+            .catch(function(e) {
+                err.textContent = e.code === 'auth/wrong-password' || e.code === 'auth/invalid-credential'
+                    ? 'Falsches Passwort' : 'Fehler: ' + e.message;
+                err.style.display = 'block';
+            });
+    }
+
+    document.getElementById('login-pw').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') doLogin();
+    });
+
+    function doLogout() {
+        if (unsubscribeFn) { unsubscribeFn(); unsubscribeFn = null; }
+        auth.signOut();
+    }
+
+    // --- Auth State ---
+
+    auth.onAuthStateChanged(function(user) {
+        if (user && !user.isAnonymous) {
+            document.getElementById('login-view').style.display = 'none';
+            document.getElementById('app-view').style.display = '';
+            startListening();
+        } else {
+            document.getElementById('login-view').style.display = '';
+            document.getElementById('app-view').style.display = 'none';
+            if (unsubscribeFn) { unsubscribeFn(); unsubscribeFn = null; }
+        }
+    });
+
+    // --- Firestore Listener ---
+
+    function startListening() {
+        if (unsubscribeFn) return;
+        unsubscribeFn = db.collection('voucherOrders').onSnapshot(function(snapshot) {
+            orders = [];
+            snapshot.forEach(function(d) { orders.push({ id: d.id, ...d.data() }); });
+            orders.sort(function(a, b) { return (b.timestamp || 0) - (a.timestamp || 0); });
+            // Nur offene Bestellungen (nicht abgeschlossen)
+            orders = orders.filter(function(o) { return o.status !== 'abgeschlossen'; });
+            renderList();
+        });
+    }
+
+    // --- Bezahlt markieren + Benachrichtigung ---
+
+    function markAsPaid(docId) {
+        var order = orders.find(function(o) { return o.id === docId; });
+        if (!order) return;
+        if (!confirm('Bestellung von ' + (order.name || '') + ' als bezahlt markieren?')) return;
+
+        db.collection('voucherOrders').doc(docId).update({ paid: true })
+            .then(function() {
+                // Benachrichtigung an Verein senden
+                var flugdauer = getFlugdauer(order.flugart || '', parseInt(order.zusatzzeit || '0', 10));
+                var detailsHtml = '';
+                var rows = [
+                    { label: 'Name', value: order.name || '' },
+                    { label: 'E-Mail', value: order.email || '' },
+                    { label: 'Telefon', value: order.telefon || '' },
+                    { label: 'Flugart', value: order.flugart || '' },
+                    { label: 'Gutscheinwert', value: (order.wert || '') + ' \u20AC', style: 'font-weight: bold; color: #e94560;' },
+                    { label: 'Empf\u00E4nger', value: order.empfaenger || '' },
+                    { label: 'Zustellung', value: order.zustellung || '' },
+                    { label: 'Flugdauer', value: flugdauer },
+                    { label: 'Status', value: 'BEZAHLT', style: 'font-weight: bold; color: #2e7d32;' }
+                ];
+                rows.forEach(function(row, i) {
+                    if (!row.value) return;
+                    var bg = i % 2 === 0 ? '' : ' background: #f4f6f8;';
+                    var valStyle = row.style ? ' ' + row.style : '';
+                    detailsHtml += '<tr>'
+                        + '<td style="padding: 10px 12px;' + bg + ' border-bottom: 1px solid #e8e8e8; width: 130px; font-weight: bold; color: #0f3460;">' + row.label + '</td>'
+                        + '<td style="padding: 10px 12px;' + bg + ' border-bottom: 1px solid #e8e8e8;' + valStyle + '">' + row.value + '</td>'
+                        + '</tr>';
+                });
+
+                return emailjs.send('service_cd14twj', 'template_eakr6dl', {
+                    subject: 'Gutschein-Bestellung bezahlt: ' + (order.name || ''),
+                    name: order.name || '',
+                    email: order.email || '',
+                    telefon: order.telefon || '',
+                    message: order.grusstext || '(kein Gru\u00DFtext)',
+                    details: detailsHtml,
+                    cc_email: 'dan@segelfliegen-altdorf.de,joergsperber@arcor.de,r.dachauer-kassier@web.de'
+                });
+            })
+            .then(function() {
+                showSuccess('Bestellung als bezahlt markiert und Benachrichtigung an info@segelfliegen-altdorf.de gesendet.');
+            })
+            .catch(function(e) {
+                console.error('Fehler:', e);
+                alert('Fehler: ' + e.message);
+            });
+    }
+
+    // --- Zahlungserinnerung ---
+
+    function sendReminder(docId) {
+        var order = orders.find(function(o) { return o.id === docId; });
+        if (!order) return;
+        if (!confirm('Zahlungserinnerung an ' + (order.email || '') + ' senden?')) return;
+
+        var wert = (order.wert || '').replace(',', '.');
+        var epcData = 'BCD\n002\n1\nSCT\nGENODEF1HSB\nSegelflieger im Post SV N\u00FCrnberg\nDE20760614820004555554\nEUR' + wert + '\n\n\nGutschein ' + (order.name || '');
+        var qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + encodeURIComponent(epcData);
+
+        var istAbholung = (order.zustellung || '').indexOf('Abholung') !== -1;
+        var params = {
+            subject: istAbholung ? 'Erinnerung \u2014 Gutschein-Abholung' : 'Zahlungserinnerung \u2014 Gutschein-Bestellung',
+            title: 'Erinnerung',
+            subtitle: istAbholung ? 'Dein Gutschein wartet auf Abholung' : 'Deine Zahlung steht noch aus',
+            intro: istAbholung
+                ? 'Hallo <strong>' + (order.name || '') + '</strong>,<br><br>wir m\u00F6chten dich freundlich daran erinnern, dass dein Flug-Gutschein beim Segelflugplatz Altdorf-Hagenhausen noch auf Abholung wartet.'
+                : 'Hallo <strong>' + (order.name || '') + '</strong>,<br><br>wir m\u00F6chten dich freundlich daran erinnern, dass die Zahlung f\u00FCr deinen Flug-Gutschein beim Segelflugplatz Altdorf-Hagenhausen noch aussteht.',
+            name: order.name || '',
+            email: order.email || '',
+            flugart: order.flugart || '',
+            empfaenger: order.empfaenger || '',
+            wert: order.wert || '',
+            flugdauer: getFlugdauer(order.flugart || '', parseInt(order.zusatzzeit || '0', 10)),
+            zustellung: order.zustellung || '',
+            payment_info: buildPaymentInfoHtml(order.name || '', order.wert || '', order.zustellung || '', qrUrl)
+        };
+
+        emailjs.send('service_cd14twj', 'template_ygdqime', params)
+            .then(function() {
+                showSuccess('Zahlungserinnerung an ' + (order.email || '') + ' gesendet.');
+            })
+            .catch(function(e) {
+                console.error('Fehler:', e);
+                alert('Fehler beim Senden: ' + e.message);
+            });
+    }
+
+    // --- Erfolgsmeldung ---
+
+    function showSuccess(msg) {
+        var el = document.getElementById('success-msg');
+        el.textContent = msg;
+        el.style.display = 'block';
+        setTimeout(function() { el.style.display = 'none'; }, 5000);
+    }
+
+    // --- Rendering ---
+
+    function renderList() {
+        var unpaid = orders.filter(function(o) { return !o.paid; });
+        var paid = orders.filter(function(o) { return !!o.paid; });
+
+        document.getElementById('count-total').textContent = orders.length;
+        document.getElementById('count-unpaid').textContent = unpaid.length;
+        document.getElementById('count-paid').textContent = paid.length;
+
+        var html = '';
+
+        if (unpaid.length > 0) {
+            html += '<div class="section-title">Unbezahlte Bestellungen (' + unpaid.length + ')</div>';
+            unpaid.forEach(function(o) { html += renderRow(o); });
+        }
+
+        if (paid.length > 0) {
+            html += '<details style="margin-top:12px;">';
+            html += '<summary class="section-title" style="cursor:pointer;">Bezahlte Bestellungen (' + paid.length + ')</summary>';
+            paid.forEach(function(o) { html += renderRow(o); });
+            html += '</details>';
+        }
+
+        if (orders.length === 0) {
+            html = '<div class="empty">Keine offenen Bestellungen vorhanden</div>';
+        }
+
+        document.getElementById('order-content').innerHTML = html;
+    }
+
+    function renderRow(o) {
+        var isPaid = !!o.paid;
+        var rowClass = isPaid ? 'order-row paid' : 'order-row';
+        var orderDate = o.timestamp ? new Date(o.timestamp).toLocaleDateString('de-DE') : '\u2014';
+        var istAbholung = (o.zustellung || '').indexOf('Abholung') !== -1;
+        var zustellBadge = istAbholung
+            ? '<span class="badge badge-pickup">\uD83D\uDCCD Abholung</span>'
+            : '<span class="badge badge-transfer">\u2709 \u00DCberweisung</span>';
+        var paidBadge = isPaid
+            ? '<span class="badge badge-paid">Bezahlt</span>'
+            : '<span class="badge badge-unpaid">Unbezahlt</span>';
+        var searchText = ((o.name || '') + ' ' + (o.flugart || '') + ' ' + (o.email || '') + ' ' + (o.empfaenger || '')).toLowerCase();
+
+        var buttons = '';
+        if (!isPaid) {
+            buttons = '<button class="btn btn-paid" onclick="markAsPaid(\'' + o.id + '\')">Bezahlt</button> '
+                + '<button class="btn btn-reminder" onclick="sendReminder(\'' + o.id + '\')">Reminder</button>';
+        }
+
+        return '<div class="' + rowClass + '" data-search="' + searchText + '">'
+            + '<div class="order-info">'
+            + '<span class="order-name">\u2709 ' + (o.name || '\u2014') + '</span>' + paidBadge + zustellBadge
+            + '<div class="order-detail">'
+            + (o.flugart || '') + (o.wert ? ' &middot; <strong>' + o.wert + ' \u20AC</strong>' : '') + ' &middot; F\u00FCr: ' + (o.empfaenger || '\u2014')
+            + '</div>'
+            + '<div class="order-meta">'
+            + (o.email || '') + (o.telefon ? ' &middot; ' + o.telefon : '') + ' &middot; ' + orderDate
+            + '</div>'
+            + (o.grusstext ? '<div class="order-gruss">\u201E' + o.grusstext.substring(0, 80) + (o.grusstext.length > 80 ? '...' : '') + '\u201C</div>' : '')
+            + '</div>'
+            + '<div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">' + buttons + '</div>'
+            + '</div>';
+    }
+
+    // --- Suche ---
+
+    document.getElementById('search').addEventListener('input', function() {
+        var q = this.value.toLowerCase().trim();
+        document.querySelectorAll('.order-row').forEach(function(row) {
+            var text = row.getAttribute('data-search') || '';
+            row.style.display = (!q || text.indexOf(q) !== -1) ? '' : 'none';
+        });
+    });
+</script>
+</body>
+</html>
