@@ -364,7 +364,7 @@ exports.sendAdminEmail = onCall(
           const info = await transporter.sendMail({
             from,
             to: VEREINS_EMAIL,
-            cc: "dan@segelfliegen-altdorf.de,joergsperber@arcor.de,r.dachauer-kassier@web.de",
+            cc: "dan@segelfliegen-altdorf.de,joergsperber@arcor.de",
             subject,
             html,
           });
