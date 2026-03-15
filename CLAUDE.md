@@ -65,7 +65,7 @@ There is **no server-side runtime** and **no build pipeline**. Every file is ser
 | Concern | Solution |
 |---|---|
 | Dynamic content (news, prices, aircraft fleet) | Firebase Firestore + real-time `onSnapshot` listener |
-| Form submissions | EmailJS (third-party service, no backend needed) — AJAX via EmailJS SDK |
+| Form submissions | Firebase Cloud Functions (`sendPublicEmail` via `fetch()`, `sendAdminEmail` via `httpsCallable()`) + Strato-SMTP |
 | Authentication (role-based) | Firebase Authentication (email/password) — 3 accounts with different Firestore access |
 | News image hosting | GitHub repository (`images/` folder) via GitHub Contents API |
 | Date picker | Flatpickr self-hosted in `lib/flatpickr/` (DSGVO-compliant, no CDN) |
@@ -271,12 +271,14 @@ There is no test suite and no linter/formatter configuration. Validate changes b
 - **Flight types** in forms and emails use: "Segelflug (Windenstart)", "Segelflug (F-Schlepp)", "Kunstflug", "Motorsegler" (NOT "Motorflug"). The voucher image file is still named `Gutschein_Motorflug.jpg`.
 - **Comments** in the source are written in German.
 - Firebase SDK (`v11.6.1`) is imported directly from the Google CDN (gstatic) using ES module URLs — do **not** switch to npm imports.
-- Never store sensitive logic client-side; secrets must remain in Firebase security rules or the EmailJS config.
+- Never store sensitive logic client-side; secrets must remain in Firebase security rules or Cloud Function secrets.
 
 ### `script.js` Feature Inventory
 
 | Function | Purpose |
 |---|---|
+| `CLOUD_FUNCTION_URL` | URL constant for `sendPublicEmail` Cloud Function (used by `callCloudFunction()`) |
+| `callCloudFunction(data)` | Sends form data to `sendPublicEmail` Cloud Function via `fetch()` POST |
 | `injectLayout()` | Injects `headerHTML`, `footerHTML`, `reviewsHTML`, `loginModalHTML` into the page |
 | `initFavicon()` | Dynamically sets `images/logo.png` as the page favicon |
 | `initLightbox()` | Creates a lightbox overlay; triggered by clicking any `.zoomable` image |
@@ -288,7 +290,7 @@ There is no test suite and no linter/formatter configuration. Validate changes b
 | `initDatepickers()` | Applies Flatpickr to `#wunschtermin` input (weekends only, German locale) |
 | `buildPaymentInfoHtml()` | Builds payment/pickup HTML block for customer emails (bank details + QR or pickup address) |
 | `getFlugdauer()` | Calculates flight duration string from flight type + extra time (e.g., "bis zu 20 Min. + 10 Min. zusätzlich") |
-| `initForms()` | Intercepts all `form[data-emailjs]` submit events and sends via EmailJS SDK |
+| `initForms()` | Intercepts all `form[data-emailjs]` submit events and sends via Cloud Function (`sendPublicEmail`) |
 | `getAvatarColor()` | Returns a random brand colour for review avatar backgrounds |
 
 ### `news-db.js` Function & Constant Inventory
@@ -311,7 +313,7 @@ There is no test suite and no linter/formatter configuration. Validate changes b
 | `compressImage(file, maxWidth, quality)` | Resizes image to max 1200 px, encodes as WebP at 80% quality; returns a Blob |
 | `uploadToGitHub(blob, filename, token)` | Uploads WebP blob to `images/<filename>` via GitHub Contents API; returns raw URL |
 | `deleteFromGitHub(imageUrl, token)` | Deletes `images/news_*.webp` or `images/aircraft_*.webp` from the repository |
-| `sendPaymentReminder(order)` | Sends payment/pickup reminder email to customer via EmailJS (with confirm dialog) |
+| `sendPaymentReminder(order)` | Sends payment/pickup reminder email to customer via Cloud Function `sendAdminEmail` (with confirm dialog) |
 | `loadVoucherOrder(order)` | Populates the voucher PDF form with order data (only available after order is marked as paid) |
 | `fillUnpersonalized()` | Fills voucher form with generic recipient ("Jemand Besonderes") and standard greeting text |
 
@@ -331,9 +333,9 @@ There is no test suite and no linter/formatter configuration. Validate changes b
 
 | Service | Config location | Notes |
 |---|---|---|
-| **Firebase** | `news-db.js` lines 5–13, `functions/index.js` | Project ID: `segelfliegen`. SDK version: `11.6.1`. Cloud Function `sendVoucherEmail` (europe-west1) for email via Strato-SMTP. Secrets: `SMTP_USER`, `SMTP_PASS`. |
+| **Firebase** | `news-db.js` lines 5–13, `functions/index.js` | Project ID: `segelfliegen`. SDK version: `11.6.1`. Cloud Functions (europe-west1): `sendPublicEmail` (onRequest, public forms), `sendAdminEmail` (onCall, admin), `sendVoucherEmail` (onCall, PDF). All use Strato-SMTP via Nodemailer. Secrets: `SMTP_USER`, `SMTP_PASS`. |
 | **GitHub API** | `news-db.js` `uploadToGitHub()` / `deleteFromGitHub()` | Used for news & aircraft image storage. Requires admin to supply a PAT with `contents: write`; stored in `localStorage`. |
-| **EmailJS** | `data-emailjs` attributes on HTML forms, `script.js`, `news-db.js` | Free plan (2 templates). Service ID `service_cd14twj`. Template 1 `template_eakr6dl` (notifications to club, uses `{{{details}}}`). Template 2 `template_ygdqime` (auto-reply + payment reminders to customers, uses `{{{intro}}}`, `{{{payment_info}}}`). All customer emails use "Du" form. |
+| **Cloud Functions** | `functions/index.js`, `script.js`, `news-db.js`, `bestellungen/index.html` | `sendPublicEmail` (onRequest, public forms via `fetch()`), `sendAdminEmail` (onCall, admin actions via `httpsCallable()`), `sendVoucherEmail` (onCall, PDF email). All use Strato-SMTP via Nodemailer. HTML templates built server-side. All customer emails use "Du" form. |
 | **Google Maps** | Embed `<iframe>` in `kontakt.html` | Uses consent overlay pattern; iframe only loads after cookie accept. |
 | **Flatpickr** | Self-hosted in `lib/flatpickr/` | Loaded locally in `mitfliegen.html` and `kontakt.html`. No CDN requests. |
 | **Fonts** | Self-hosted in `fonts/` | Montserrat, Open Sans, Tangerine as WOFF2. `@font-face` in `style.css`. No Google server contact. |
@@ -376,7 +378,7 @@ The panel is organised in **three tabs**:
 - Incoming voucher orders from `mitfliegen.html` are stored in Firestore (`voucherOrders` collection) and displayed as a list below the news admin.
 - Order workflow: **Neu** → mark as **Bezahlt** → **Übernehmen** (loads into PDF form) → **PDF generieren** → manually send PDF to customer → **Abschließen**.
 - The "Übernehmen" button and click-to-load only appear **after** the order is marked as paid.
-- **Payment Reminder**: Unpaid orders show a "Reminder" button that sends a reminder email to the customer via EmailJS (Template 2). The reminder dynamically adapts to the payment method (bank transfer vs. pickup).
+- **Payment Reminder**: Unpaid orders show a "Reminder" button that sends a reminder email to the customer via Cloud Function `sendAdminEmail`. The reminder dynamically adapts to the payment method (bank transfer vs. pickup).
 - **PDF generation** via jsPDF (self-hosted in `lib/jspdf/`). PDF includes: flight type, value, flight duration (calculated from base + extra time), recipient name, greeting text, voucher number, validity date, club address, and flight time info.
 - **"Wert im Gutschein anzeigen" checkbox**: Checked by default on `mitfliegen.html`. When unchecked, PDF shows only flight duration instead of value. For "Kunstflug", flight duration is never shown (pauschal). Stored as `wertAnzeigen` in `voucherOrders` and `showValue` in `vouchers`.
 - **PDF reprint**: Open and redeemed vouchers show a "PDF" button that directly regenerates the PDF without saving a duplicate to Firestore (checks voucher number against `cachedVouchers`). Voucher documents store `zusatzzeit` and `showValue` for accurate reprints.
@@ -403,10 +405,10 @@ Two standalone pages provide limited access to specific Firestore collections. T
 - Shows open voucher orders from the `voucherOrders` collection (excludes completed orders).
 - Login: `bestellung@segelfliegen-altdorf.de` (or admin).
 - Features:
-  - **"Bezahlt"** button: marks order as paid + sends notification email to `info@segelfliegen-altdorf.de` via EmailJS Template 1 (with all order details and status "BEZAHLT"). Requires user confirmation before executing.
-  - **"Reminder"** button: sends payment reminder to customer via EmailJS Template 2 (adapts to bank transfer vs. pickup).
+  - **"Bezahlt"** button: marks order as paid + sends notification email to `info@segelfliegen-altdorf.de` via Cloud Function `sendAdminEmail` (with all order details and status "BEZAHLT"). Requires user confirmation before executing.
+  - **"Reminder"** button: sends payment reminder to customer via Cloud Function `sendAdminEmail` (adapts to bank transfer vs. pickup).
 - Unpaid orders shown prominently; paid orders in a collapsible section.
-- Contains local copies of `buildPaymentInfoHtml()` and `getFlugdauer()` (standalone, no script.js dependency).
+- Uses Firebase Functions Compat SDK (`httpsCallable`) for `sendAdminEmail` — no local copies of email template helpers needed (server-side).
 
 Both pages include "Zurück" (`history.back()`) and "Abmelden" buttons in the header.
 
@@ -470,7 +472,7 @@ Edit the `headerHTML` template literal in `script.js`. The change applies to all
 ### Add/Update a Booking Form
 
 1. Add `data-emailjs="formtype"` to the `<form>` element (e.g., `data-emailjs="kontakt"`, `data-emailjs="gutschein"`, `data-emailjs="gastflug"`).
-2. Add the form type handling in `initForms()` in `script.js` to map form fields to EmailJS template parameters.
+2. Add the form type handling in `initForms()` in `script.js` to map form fields to Cloud Function parameters, and add the corresponding formType handler in `sendPublicEmail` in `functions/index.js`.
 3. Add Flatpickr to date inputs if needed (see `mitfliegen.html` for the pattern).
 4. Form submission is handled automatically via AJAX by `initForms()` in `script.js` — no extra JS needed.
 

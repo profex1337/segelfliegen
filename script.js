@@ -118,13 +118,21 @@ const reviewsHTML = `<aside id="reviews-sidebar" class="reviews-sidebar">
 </aside>
 <div id="reviews-overlay" class="reviews-overlay"></div>`;
 
-// EmailJS laden
-(function() {
-    var s = document.createElement('script');
-    s.src = 'https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js';
-    s.onload = function() { emailjs.init({ publicKey: 'XJb8wPMVJVP-bvjJo' }); };
-    document.head.appendChild(s);
-})();
+// Cloud Function URL für öffentliche Formulare
+const CLOUD_FUNCTION_URL = 'https://europe-west1-segelfliegen.cloudfunctions.net/sendPublicEmail';
+
+async function callCloudFunction(data) {
+    const resp = await fetch(CLOUD_FUNCTION_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    });
+    if (!resp.ok) {
+        const err = await resp.json().catch(() => ({}));
+        throw new Error(err.error || 'Senden fehlgeschlagen');
+    }
+    return resp.json();
+}
 
 function injectLayout() {
     const headerElement = document.getElementById('main-header');
@@ -411,101 +419,44 @@ function initForms() {
             const formType = form.getAttribute('data-emailjs');
             const fd = new FormData(form);
 
-            // Honeypot-Spam-Schutz
+            // Honeypot-Spam-Schutz (clientseitig + serverseitig)
             if (fd.get('website_url')) {
                 btn.textContent = originalText;
                 btn.disabled = false;
                 return;
             }
 
-            // Details-Zeilen je nach Formulartyp zusammenbauen (nur gefüllte Felder)
-            var subject = '';
-            var message = fd.get('message') || '';
-            var detailRows = [];
-            var ccList = ['dan@segelfliegen-altdorf.de'];
-
-            if (formType === 'kontakt') {
-                var betreff = fd.get('betreff') || 'Allgemein';
-                subject = 'Kontaktanfrage: ' + betreff;
-                detailRows.push({label: 'Betreff', value: betreff});
-                if (betreff === 'Ausbildung') {
-                    ccList.push('Jeremy.Wolfsteiner@gmail.com');
-                }
-
-            } else if (formType === 'gutschein') {
-                subject = 'Neue Gutschein-Bestellung';
-                message = fd.get('grusstext') || '(kein Grußtext)';
-                if (fd.get('flugart')) detailRows.push({label: 'Flugart', value: fd.get('flugart')});
-                detailRows.push({label: 'Zusatzzeit', value: (fd.get('zusatzzeit') || '0') + ' Min.'});
-                detailRows.push({label: 'Gutscheinwert', value: (fd.get('wert') || '') + ' \u20AC', style: 'font-weight: bold; color: #e94560;'});
-                var wertAnzeigen = fd.get('wert_anzeigen') ? 'Ja' : 'Nein';
-                detailRows.push({label: 'Wert im Gutschein', value: wertAnzeigen});
-                if (fd.get('empfaenger')) detailRows.push({label: 'Empf\u00E4nger', value: fd.get('empfaenger')});
-                if (fd.get('anlass')) detailRows.push({label: 'Anlass', value: fd.get('anlass')});
-                if (fd.get('zustellung')) detailRows.push({label: 'Zustellung', value: fd.get('zustellung'), style: 'font-weight: bold; color: #6a1b9a;'});
-                ccList.push('joergsperber@arcor.de');
-                ccList.push('r.dachauer-kassier@web.de');
-
-            } else if (formType === 'gastflug') {
-                subject = 'Neue Gastflug-Anfrage';
-                if (fd.get('interest')) detailRows.push({label: 'Interesse an', value: fd.get('interest')});
-            }
-
-            // HTML-Tabellenzeilen nur für vorhandene Felder generieren
-            var detailsHtml = '';
-            detailRows.forEach(function(row, i) {
-                var bg = i % 2 === 0 ? '' : ' background: #f4f6f8;';
-                var valStyle = row.style ? ' ' + row.style : '';
-                detailsHtml += '<tr>'
-                    + '<td style="padding: 10px 12px;' + bg + ' border-bottom: 1px solid #e8e8e8; width: 130px; font-weight: bold; color: #0f3460;">' + row.label + '</td>'
-                    + '<td style="padding: 10px 12px;' + bg + ' border-bottom: 1px solid #e8e8e8;' + valStyle + '">' + row.value + '</td>'
-                    + '</tr>';
-            });
-
-            var params = {
-                subject: subject,
+            // Daten für Cloud Function zusammenstellen
+            var cfData = {
+                formType: formType,
                 name: fd.get('name') || '',
                 email: fd.get('email') || '',
                 telefon: fd.get('telefon') || '',
-                message: message,
-                details: detailsHtml,
-                cc_email: ccList.join(',')
+                message: fd.get('message') || '',
+                website_url: fd.get('website_url') || ''
             };
 
+            if (formType === 'kontakt') {
+                cfData.betreff = fd.get('betreff') || 'Allgemein';
+            } else if (formType === 'gutschein') {
+                cfData.flugart = fd.get('flugart') || '';
+                cfData.zusatzzeit = fd.get('zusatzzeit') || '0';
+                cfData.wert = fd.get('wert') || '';
+                cfData.wertAnzeigen = fd.get('wert_anzeigen') ? true : false;
+                cfData.empfaenger = fd.get('empfaenger') || '';
+                cfData.anlass = fd.get('anlass') || '';
+                cfData.zustellung = fd.get('zustellung') || '';
+                cfData.grusstext = fd.get('grusstext') || '';
+            } else if (formType === 'gastflug') {
+                cfData.interest = fd.get('interest') || '';
+            }
+
             try {
-                // Benachrichtigung an den Verein senden
-                await emailjs.send('service_cd14twj', 'template_eakr6dl', params);
+                // Benachrichtigung + Auto-Reply über Cloud Function
+                await callCloudFunction(cfData);
 
-                // Bei Gutschein: Auto-Reply an Kunden + Firestore-Speicherung
+                // Bei Gutschein: Firestore-Speicherung
                 if (formType === 'gutschein') {
-                    // EPC-QR-Code URL für Auto-Reply E-Mail
-                    var replyWert = (fd.get('wert') || '').replace(',', '.');
-                    var replyName = fd.get('name') || '';
-                    var replyZustellung = fd.get('zustellung') || '';
-                    var replyFlugart = fd.get('flugart') || '';
-                    var replyZusatz = parseInt(fd.get('zusatzzeit') || '0', 10);
-                    var replyEpcData = 'BCD\n002\n1\nSCT\nGENODEF1HSB\nSegelflieger im Post SV Nürnberg\nDE20760614820004555554\nEUR' + replyWert + '\n\n\nGutschein ' + replyName;
-                    var replyQrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + encodeURIComponent(replyEpcData);
-
-                    // Flugdauer berechnen (Basis + Zusatzzeit)
-                    var replyFlugdauer = getFlugdauer(replyFlugart, replyZusatz);
-
-                    var replyParams = {
-                        subject: 'Deine Gutschein-Bestellung beim Segelflugplatz Altdorf',
-                        title: 'Vielen Dank!',
-                        subtitle: 'Deine Gutschein-Bestellung ist bei uns eingegangen',
-                        intro: 'Hallo <strong>' + replyName + '</strong>,<br><br>vielen Dank f\u00FCr deine Bestellung eines Flug-Gutscheins beim Segelflugplatz Altdorf-Hagenhausen!',
-                        name: replyName,
-                        email: fd.get('email') || '',
-                        flugart: replyFlugart,
-                        empfaenger: fd.get('empfaenger') || '',
-                        wert: fd.get('wert') || '',
-                        flugdauer: replyFlugdauer,
-                        zustellung: replyZustellung,
-                        payment_info: buildPaymentInfoHtml(replyName, fd.get('wert') || '', replyZustellung, replyQrUrl)
-                    };
-                    await emailjs.send('service_cd14twj', 'template_ygdqime', replyParams);
-
                     if (typeof window.saveVoucherOrder === 'function') {
                         window.saveVoucherOrder({
                             name: fd.get('name') || '',

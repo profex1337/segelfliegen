@@ -119,17 +119,12 @@
             </ul>
             <p>Die Daten in localStorage verbleiben auf Ihrem Gerät und werden nicht an unsere Server übertragen. Sie können localStorage jederzeit über die Browser-Einstellungen löschen.</p>
 
-            <h4>Kontaktformulare (via EmailJS)</h4>
-            <p>Für die Übermittlung von Kontaktformularen, Gastflug-Anfragen und Gutschein-Bestellungen nutzen wir den Dienst <strong>EmailJS</strong> (EmailJS, emailjs.com). Ihre Angaben aus den Formularen inklusive der von Ihnen angegebenen Kontaktdaten werden über EmailJS per E-Mail an uns weitergeleitet.</p>
-            <p>Bei Gutschein-Bestellungen wird zusätzlich eine automatische Bestätigungsmail mit den Zahlungsinformationen an die von Ihnen angegebene E-Mail-Adresse versendet.</p>
-            <p><strong>Übermittelte Daten:</strong> Name, E-Mail-Adresse, Telefonnummer (sofern angegeben), Nachrichtentext sowie bei Gutschein-Bestellungen zusätzlich: Flugart, Gutscheinwert, Name des Empfängers, Anlass und Grußtext.</p>
-            <p>Die Verarbeitung dieser Daten erfolgt auf Grundlage von Art. 6 Abs. 1 lit. b DSGVO (Vertragsanbahnung), sofern Ihre Anfrage mit der Erfüllung eines Vertrags zusammenhängt oder zur Durchführung vorvertraglicher Maßnahmen erforderlich ist. In allen übrigen Fällen beruht die Verarbeitung auf unserem berechtigten Interesse an der effektiven Bearbeitung der an uns gerichteten Anfragen (Art. 6 Abs. 1 lit. f DSGVO).</p>
-            <p>Weitere Informationen finden Sie in der <a href="https://www.emailjs.com/legal/privacy-policy/" target="_blank" rel="noopener noreferrer">Datenschutzerklärung von EmailJS</a>.</p>
-
-            <h4>Gutschein-Versand (via Firebase Cloud Function und Strato-SMTP)</h4>
-            <p>Bei Gutschein-Bestellungen wird nach Zahlungseingang der personalisierte Gutschein als PDF per E-Mail an Sie zugestellt. Der Versand erfolgt automatisiert über eine <strong>Firebase Cloud Function</strong> (Google Ireland Limited) und unseren E-Mail-Provider <strong>Strato</strong> (Strato AG, Otto-Ostrowski-Straße 7, 10249 Berlin).</p>
-            <p><strong>Übermittelte Daten:</strong> Name, E-Mail-Adresse, Gutschein-Details (Flugart, Wert, Empfänger, Gültigkeitsdatum) sowie der Gutschein als PDF-Anhang.</p>
-            <p>Die Verarbeitung erfolgt auf Grundlage von Art. 6 Abs. 1 lit. b DSGVO (Vertragserfüllung). Weitere Informationen finden Sie in der <a href="https://www.strato.de/datenschutz/" target="_blank" rel="noopener noreferrer">Datenschutzerklärung von Strato</a> sowie der <a href="https://firebase.google.com/support/privacy" target="_blank" rel="noopener noreferrer">Datenschutzerklärung von Firebase</a>.</p>
+            <h4>Kontaktformulare und E-Mail-Versand (via Firebase Cloud Functions und Strato-SMTP)</h4>
+            <p>Für die Übermittlung von Kontaktformularen, Gastflug-Anfragen und Gutschein-Bestellungen nutzen wir <strong>Firebase Cloud Functions</strong> (Google Ireland Limited) in Verbindung mit unserem E-Mail-Provider <strong>Strato</strong> (Strato AG, Otto-Ostrowski-Straße 7, 10249 Berlin). Ihre Angaben aus den Formularen werden serverseitig verarbeitet und per E-Mail (Strato-SMTP) an uns weitergeleitet.</p>
+            <p>Bei Gutschein-Bestellungen wird zusätzlich eine automatische Bestätigungsmail mit den Zahlungsinformationen an die von Ihnen angegebene E-Mail-Adresse versendet. Nach Zahlungseingang wird der personalisierte Gutschein als PDF per E-Mail an Sie zugestellt.</p>
+            <p><strong>Übermittelte Daten:</strong> Name, E-Mail-Adresse, Telefonnummer (sofern angegeben), Nachrichtentext sowie bei Gutschein-Bestellungen zusätzlich: Flugart, Gutscheinwert, Name des Empfängers, Anlass, Grußtext und der Gutschein als PDF-Anhang.</p>
+            <p>Die Verarbeitung dieser Daten erfolgt auf Grundlage von Art. 6 Abs. 1 lit. b DSGVO (Vertragsanbahnung bzw. Vertragserfüllung), sofern Ihre Anfrage mit der Erfüllung eines Vertrags zusammenhängt oder zur Durchführung vorvertraglicher Maßnahmen erforderlich ist. In allen übrigen Fällen beruht die Verarbeitung auf unserem berechtigten Interesse an der effektiven Bearbeitung der an uns gerichteten Anfragen (Art. 6 Abs. 1 lit. f DSGVO).</p>
+            <p>Weitere Informationen finden Sie in der <a href="https://www.strato.de/datenschutz/" target="_blank" rel="noopener noreferrer">Datenschutzerklärung von Strato</a> sowie der <a href="https://firebase.google.com/support/privacy" target="_blank" rel="noopener noreferrer">Datenschutzerklärung von Firebase</a>.</p>
 
             <h4>Firebase Firestore und Firebase Authentication</h4>
             <p>Diese Website nutzt <strong>Google Firebase</strong> (Google Ireland Limited, Gordon House, Barrow Street, Dublin 4, Irland) für folgende Zwecke:</p>
@@ -184,7 +179,6 @@
             <ul>
                 <li><strong>Google (Firebase, Google Maps, YouTube)</strong> — Google Data Processing Terms, <a href="https://business.safety.google/processorterms/" target="_blank" rel="noopener noreferrer">https://business.safety.google/processorterms/</a></li>
                 <li><strong>GitHub (Hosting, Bildspeicherung)</strong> — GitHub Data Protection Agreement, <a href="https://docs.github.com/de/site-policy/privacy-policies/github-data-protection-agreement" target="_blank" rel="noopener noreferrer">https://docs.github.com/de/site-policy/privacy-policies/github-data-protection-agreement</a></li>
-                <li><strong>EmailJS (Kontaktformulare)</strong> — EmailJS Privacy Policy, <a href="https://www.emailjs.com/legal/privacy-policy/" target="_blank" rel="noopener noreferrer">https://www.emailjs.com/legal/privacy-policy/</a></li>
                 <li><strong>Strato (E-Mail-Versand)</strong> — Strato Datenschutzerkl&auml;rung, <a href="https://www.strato.de/datenschutz/" target="_blank" rel="noopener noreferrer">https://www.strato.de/datenschutz/</a></li>
             </ul>
         </div>

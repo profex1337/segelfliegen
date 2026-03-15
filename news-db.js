@@ -1489,40 +1489,33 @@ async function startVoucherLogic() {
         }
     };
 
-    // Zahlungserinnerung an Kunden senden
+    // Zahlungserinnerung an Kunden senden (via Cloud Function)
     window.sendPaymentReminder = async (order) => {
         if (!auth.currentUser || auth.currentUser.isAnonymous) return;
         if (!confirm('Zahlungserinnerung an ' + order.email + ' senden?')) return;
 
-        // EPC-QR-Code URL
-        var wert = (order.wert || '').replace(',', '.');
-        var epcData = 'BCD\n002\n1\nSCT\nGENODEF1HSB\nSegelflieger im Post SV N\u00FCrnberg\nDE20760614820004555554\nEUR' + wert + '\n\n\nGutschein ' + (order.name || '');
-        var qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + encodeURIComponent(epcData);
-
-        var istAbholung = (order.zustellung || '').indexOf('Abholung') !== -1;
-        var params = {
-            subject: istAbholung ? 'Erinnerung \u2014 Gutschein-Abholung' : 'Zahlungserinnerung \u2014 Gutschein-Bestellung',
-            title: 'Erinnerung',
-            subtitle: istAbholung ? 'Dein Gutschein wartet auf Abholung' : 'Deine Zahlung steht noch aus',
-            intro: istAbholung
-                ? 'Hallo <strong>' + (order.name || '') + '</strong>,<br><br>wir m\u00F6chten dich freundlich daran erinnern, dass dein Flug-Gutschein beim Segelflugplatz Altdorf-Hagenhausen noch auf Abholung wartet.'
-                : 'Hallo <strong>' + (order.name || '') + '</strong>,<br><br>wir m\u00F6chten dich freundlich daran erinnern, dass die Zahlung f\u00FCr deinen Flug-Gutschein beim Segelflugplatz Altdorf-Hagenhausen noch aussteht.',
-            name: order.name || '',
-            email: order.email || '',
-            flugart: order.flugart || '',
-            empfaenger: order.empfaenger || '',
-            wert: order.wert || '',
-            flugdauer: getFlugdauer(order.flugart || '', parseInt(order.zusatzzeit || '0', 10)),
-            zustellung: order.zustellung || '',
-            payment_info: buildPaymentInfoHtml(order.name || '', order.wert || '', order.zustellung || '', qrUrl)
-        };
-
         try {
-            await emailjs.send('service_cd14twj', 'template_ygdqime', params);
+            const { getFunctions, httpsCallable } = await import('https://www.gstatic.com/firebasejs/11.6.1/firebase-functions.js');
+            const { getApp } = await import('https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js');
+            const functions = getFunctions(getApp(), 'europe-west1');
+            const sendAdmin = httpsCallable(functions, 'sendAdminEmail');
+
+            await sendAdmin({
+                action: 'paymentReminder',
+                order: {
+                    name: order.name || '',
+                    email: order.email || '',
+                    flugart: order.flugart || '',
+                    empfaenger: order.empfaenger || '',
+                    wert: order.wert || '',
+                    zusatzzeit: order.zusatzzeit || '0',
+                    zustellung: order.zustellung || ''
+                }
+            });
             alert('Zahlungserinnerung wurde an ' + order.email + ' gesendet.');
         } catch (e) {
             console.error('Reminder senden fehlgeschlagen:', e);
-            alert('Fehler beim Senden: ' + (e.text || e.message || e));
+            alert('Fehler beim Senden: ' + (e.message || e));
         }
     };
 }
