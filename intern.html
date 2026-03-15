@@ -375,6 +375,7 @@
                                         <button type="button" onclick="copyEmailFormatted()" class="btn" style="padding:4px 14px; font-size:0.78rem;">Formatiert kopieren</button>
                                         <button type="button" onclick="copyOrderEmail()" class="btn btn-secondary" style="padding:4px 14px; font-size:0.78rem;">E-Mail kopieren</button>
                                         <button type="button" onclick="copyEmailSubject()" class="btn btn-secondary" style="padding:4px 14px; font-size:0.78rem;">Betreff kopieren</button>
+                                        <button type="button" onclick="openInGmail()" class="btn" style="padding:4px 14px; font-size:0.78rem; background:#c62828;">In Gmail &ouml;ffnen</button>
                                     </div>
                                 </div>
                                 <div id="email-template-html" style="background:#fff; border-radius:8px; overflow:hidden; border:1px solid #e0e0e0;"></div>
@@ -619,6 +620,50 @@
             var subject = 'Dein Flug-Gutschein' + (flightType ? ' (' + flightType + ')' : '') + ' für ' + recipient;
             navigator.clipboard.writeText(subject).then(function() {
                 showCopyFeedback('Betreff kopiert!');
+            });
+        };
+
+        // HTML in Zwischenablage kopieren und Gmail Compose öffnen
+        window.openInGmail = function() {
+            var email = document.getElementById('voucher-order-email').value.trim();
+            var recipient = document.getElementById('voucher-recipient').value.trim() || 'Empfänger';
+            var flightType = document.getElementById('voucher-flight-type').value || '';
+            var subject = 'Dein Flug-Gutschein' + (flightType ? ' (' + flightType + ')' : '') + ' für ' + recipient;
+
+            if (!email) {
+                showCopyFeedback('Keine E-Mail-Adresse vorhanden!');
+                return;
+            }
+
+            // HTML-Vorlage in Zwischenablage kopieren
+            var el = document.getElementById('email-template-html');
+            var htmlContent = el.innerHTML;
+            var plainText = el.dataset.plain || '';
+            var copyPromise;
+            if (navigator.clipboard && navigator.clipboard.write) {
+                var htmlBlob = new Blob([htmlContent], { type: 'text/html' });
+                var textBlob = new Blob([plainText], { type: 'text/plain' });
+                copyPromise = navigator.clipboard.write([new ClipboardItem({ 'text/html': htmlBlob, 'text/plain': textBlob })]);
+            } else {
+                var range = document.createRange();
+                range.selectNodeContents(el);
+                var sel = window.getSelection();
+                sel.removeAllRanges();
+                sel.addRange(range);
+                document.execCommand('copy');
+                sel.removeAllRanges();
+                copyPromise = Promise.resolve();
+            }
+
+            copyPromise.then(function() {
+                showCopyFeedback('Vorlage kopiert! Gmail wird ge\u00F6ffnet\u2026 Einf\u00FCgen mit Strg+V');
+                // Gmail Compose mit Empfänger + Betreff öffnen
+                var gmailUrl = 'https://mail.google.com/mail/?view=cm&fs=1'
+                    + '&to=' + encodeURIComponent(email)
+                    + '&su=' + encodeURIComponent(subject);
+                window.open(gmailUrl, '_blank');
+            }).catch(function() {
+                showCopyFeedback('Fehler beim Kopieren');
             });
         };
 
