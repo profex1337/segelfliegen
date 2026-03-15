@@ -26,7 +26,24 @@ const LOGO_URL = "https://raw.githubusercontent.com/profex1337/segelfliegen/main
 function escapeHtml(str) {
   if (!str) return "";
   return str.replace(/&/g, "&amp;").replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+      .replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#x27;");
+}
+
+// E-Mail-Adresse validieren (RFC 5322 vereinfacht)
+function isValidEmail(email) {
+  return /^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/.test(email);
+}
+
+// Header-Injection verhindern: Zeilenumbrüche entfernen
+function sanitizeHeader(str) {
+  if (!str) return "";
+  return str.replace(/[\r\n]/g, "").substring(0, 500);
+}
+
+// Eingabelänge begrenzen
+function limitLength(str, max) {
+  if (!str) return "";
+  return str.substring(0, max);
 }
 
 function getFlugdauer(flugart, zusatzMin) {
@@ -157,13 +174,17 @@ const ALLOWED_ORIGINS = [
   "https://segelfliegenaltdorf.de",
 ];
 
+// Gibt true zurück wenn Origin erlaubt, sonst false
 function setCorsHeaders(req, res) {
   const origin = req.headers.origin;
-  if (ALLOWED_ORIGINS.includes(origin)) {
-    res.set("Access-Control-Allow-Origin", origin);
+  if (!origin || !ALLOWED_ORIGINS.includes(origin)) {
+    return false;
   }
+  res.set("Access-Control-Allow-Origin", origin);
   res.set("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.set("Access-Control-Allow-Headers", "Content-Type");
+  res.set("Access-Control-Max-Age", "86400");
+  return true;
 }
 
 exports.sendPublicEmail = onRequest(
@@ -173,7 +194,16 @@ exports.sendPublicEmail = onRequest(
       cors: false, // CORS manuell
     },
     async (req, res) => {
-      setCorsHeaders(req, res);
+      // CORS prüfen
+      if (!setCorsHeaders(req, res)) {
+        // Preflight ohne gültige Origin trotzdem beantworten (Browser braucht 204)
+        if (req.method === "OPTIONS") {
+          res.status(204).send("");
+          return;
+        }
+        res.status(403).json({error: "Origin nicht erlaubt"});
+        return;
+      }
 
       // Preflight
       if (req.method === "OPTIONS") {
@@ -194,10 +224,19 @@ exports.sendPublicEmail = onRequest(
         return;
       }
 
-      const {formType, name, email, telefon, message} = data;
+      const formType = sanitizeHeader(data.formType);
+      const name = limitLength(sanitizeHeader(data.name), 200);
+      const email = sanitizeHeader(data.email);
+      const telefon = limitLength(sanitizeHeader(data.telefon), 50);
+      const message = limitLength(data.message, 5000);
 
       if (!formType || !name || !email) {
         res.status(400).json({error: "formType, name und email sind Pflichtfelder."});
+        return;
+      }
+
+      if (!isValidEmail(email)) {
+        res.status(400).json({error: "Ungültige E-Mail-Adresse."});
         return;
       }
 
@@ -232,7 +271,7 @@ exports.sendPublicEmail = onRequest(
           subject = "Neue Gastflug-Anfrage";
           if (data.interest) detailsHtml += buildDetailRow("Interesse an", data.interest, rowIndex++);
         } else {
-          res.status(400).json({error: "Unbekannter formType: " + formType});
+          res.status(400).json({error: "Unbekannter Formulartyp."});
           return;
         }
 
@@ -274,7 +313,7 @@ exports.sendPublicEmail = onRequest(
         res.status(200).json({success: true});
       } catch (error) {
         console.error("sendPublicEmail Fehler:", error);
-        res.status(500).json({error: "Mail konnte nicht gesendet werden: " + error.message});
+        res.status(500).json({error: "Mail konnte nicht gesendet werden."});
       }
     },
 );
@@ -300,9 +339,22 @@ exports.sendAdminEmail = onCall(
       }
 
       const {action, order} = request.data;
-      if (!action || !order) {
+      if (!action || !order || typeof order !== "object") {
         throw new HttpsError("invalid-argument", "action und order sind Pflichtfelder.");
       }
+
+      // Order-Felder sanitizen
+      const safeOrder = {
+        name: limitLength(sanitizeHeader(order.name), 200),
+        email: sanitizeHeader(order.email),
+        telefon: limitLength(sanitizeHeader(order.telefon), 50),
+        flugart: limitLength(sanitizeHeader(order.flugart), 100),
+        wert: limitLength(sanitizeHeader(order.wert), 20),
+        empfaenger: limitLength(sanitizeHeader(order.empfaenger), 200),
+        zustellung: limitLength(sanitizeHeader(order.zustellung), 200),
+        zusatzzeit: limitLength(sanitizeHeader(order.zusatzzeit), 10),
+        grusstext: limitLength(order.grusstext, 2000),
+      };
 
       const transporter = createTransporter();
       const from = `"Segelflugplatz Altdorf" <${process.env.SMTP_USER}>`;
@@ -310,46 +362,46 @@ exports.sendAdminEmail = onCall(
       try {
         if (action === "paymentReminder") {
           // Zahlungserinnerung an Kunden
-          if (!order.email) {
-            throw new HttpsError("invalid-argument", "Kunden-E-Mail fehlt.");
+          if (!safeOrder.email || !isValidEmail(safeOrder.email)) {
+            throw new HttpsError("invalid-argument", "Ungültige Kunden-E-Mail.");
           }
 
-          const zusatz = parseInt(order.zusatzzeit || "0", 10);
-          const flugdauer = getFlugdauer(order.flugart || "", zusatz);
-          const qrUrl = buildEpcQrUrl(order.name, order.wert);
-          const paymentHtml = buildPaymentInfoHtml(order.name || "", order.wert || "", order.zustellung || "", qrUrl);
-          const istAbholung = (order.zustellung || "").indexOf("Abholung") !== -1;
+          const zusatz = parseInt(safeOrder.zusatzzeit || "0", 10);
+          const flugdauer = getFlugdauer(safeOrder.flugart || "", zusatz);
+          const qrUrl = buildEpcQrUrl(safeOrder.name, safeOrder.wert);
+          const paymentHtml = buildPaymentInfoHtml(safeOrder.name || "", safeOrder.wert || "", safeOrder.zustellung || "", qrUrl);
+          const istAbholung = (safeOrder.zustellung || "").indexOf("Abholung") !== -1;
 
           const replyHtml = buildCustomerReplyHtml(
               "Erinnerung",
               istAbholung ? "Dein Gutschein wartet auf Abholung" : "Deine Zahlung steht noch aus",
               istAbholung
-                ? "Hallo <strong>" + escapeHtml(order.name || "") + "</strong>,<br><br>wir möchten dich freundlich daran erinnern, dass dein Flug-Gutschein beim Segelflugplatz Altdorf-Hagenhausen noch auf Abholung wartet."
-                : "Hallo <strong>" + escapeHtml(order.name || "") + "</strong>,<br><br>wir möchten dich freundlich daran erinnern, dass die Zahlung für deinen Flug-Gutschein beim Segelflugplatz Altdorf-Hagenhausen noch aussteht.",
-              order.flugart, order.empfaenger, order.wert, flugdauer, order.zustellung, paymentHtml,
+                ? "Hallo <strong>" + escapeHtml(safeOrder.name) + "</strong>,<br><br>wir möchten dich freundlich daran erinnern, dass dein Flug-Gutschein beim Segelflugplatz Altdorf-Hagenhausen noch auf Abholung wartet."
+                : "Hallo <strong>" + escapeHtml(safeOrder.name) + "</strong>,<br><br>wir möchten dich freundlich daran erinnern, dass die Zahlung für deinen Flug-Gutschein beim Segelflugplatz Altdorf-Hagenhausen noch aussteht.",
+              safeOrder.flugart, safeOrder.empfaenger, safeOrder.wert, flugdauer, safeOrder.zustellung, paymentHtml,
           );
 
           const reminderSubject = istAbholung ? "Erinnerung — Gutschein-Abholung" : "Zahlungserinnerung — Gutschein-Bestellung";
 
           const info = await transporter.sendMail({
             from,
-            to: order.email,
+            to: safeOrder.email,
             subject: reminderSubject,
             html: replyHtml,
           });
           return {success: true, messageId: info.messageId};
         } else if (action === "paidNotification") {
           // Bezahlt-Benachrichtigung an Verein
-          const flugdauer = getFlugdauer(order.flugart || "", parseInt(order.zusatzzeit || "0", 10));
+          const flugdauer = getFlugdauer(safeOrder.flugart || "", parseInt(safeOrder.zusatzzeit || "0", 10));
           let detailsHtml = "";
           const rows = [
-            {label: "Name", value: order.name || ""},
-            {label: "E-Mail", value: order.email || ""},
-            {label: "Telefon", value: order.telefon || ""},
-            {label: "Flugart", value: order.flugart || ""},
-            {label: "Gutscheinwert", value: (order.wert || "") + " €", style: "font-weight: bold; color: #e94560;"},
-            {label: "Empfänger", value: order.empfaenger || ""},
-            {label: "Zustellung", value: order.zustellung || ""},
+            {label: "Name", value: safeOrder.name || ""},
+            {label: "E-Mail", value: safeOrder.email || ""},
+            {label: "Telefon", value: safeOrder.telefon || ""},
+            {label: "Flugart", value: safeOrder.flugart || ""},
+            {label: "Gutscheinwert", value: (safeOrder.wert || "") + " €", style: "font-weight: bold; color: #e94560;"},
+            {label: "Empfänger", value: safeOrder.empfaenger || ""},
+            {label: "Zustellung", value: safeOrder.zustellung || ""},
             {label: "Flugdauer", value: flugdauer},
             {label: "Status", value: "BEZAHLT", style: "font-weight: bold; color: #2e7d32;"},
           ];
@@ -358,8 +410,8 @@ exports.sendAdminEmail = onCall(
             detailsHtml += buildDetailRow(row.label, row.value, i, row.style);
           });
 
-          const subject = "Gutschein-Bestellung bezahlt: " + (order.name || "");
-          const html = buildNotificationHtml(subject, order.name || "", order.email || "", order.telefon || "", order.grusstext || "(kein Grußtext)", detailsHtml);
+          const subject = "Gutschein-Bestellung bezahlt: " + (safeOrder.name || "");
+          const html = buildNotificationHtml(subject, safeOrder.name || "", safeOrder.email || "", safeOrder.telefon || "", safeOrder.grusstext || "(kein Grußtext)", detailsHtml);
 
           const info = await transporter.sendMail({
             from,
@@ -370,12 +422,12 @@ exports.sendAdminEmail = onCall(
           });
           return {success: true, messageId: info.messageId};
         } else {
-          throw new HttpsError("invalid-argument", "Unbekannte Aktion: " + action);
+          throw new HttpsError("invalid-argument", "Unbekannte Aktion.");
         }
       } catch (error) {
         if (error instanceof HttpsError) throw error;
         console.error("sendAdminEmail Fehler:", error);
-        throw new HttpsError("internal", "Mail konnte nicht gesendet werden: " + error.message);
+        throw new HttpsError("internal", "Mail konnte nicht gesendet werden.");
       }
     },
 );
@@ -434,7 +486,7 @@ exports.sendVoucherEmail = onCall(
         return {success: true, messageId: info.messageId};
       } catch (error) {
         console.error("SMTP Fehler:", error);
-        throw new HttpsError("internal", `Mail konnte nicht gesendet werden: ${error.message}`);
+        throw new HttpsError("internal", "Mail konnte nicht gesendet werden.");
       }
     },
 );
