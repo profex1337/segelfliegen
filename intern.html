@@ -841,7 +841,8 @@
         }
 
         // Gutschein in Firestore speichern + Nr. erneuern
-        function saveAndResetVoucher() {
+        // Gutschein in Firestore speichern (ohne Nr. zu erneuern)
+        function saveVoucher() {
             const voucherNr = document.getElementById('voucher-number').value.trim();
             var isReprint = typeof window.checkVoucherExists === 'function' && window.checkVoucherExists(voucherNr);
             if (!isReprint && typeof window.saveVoucherToFirestore === 'function') {
@@ -857,11 +858,6 @@
                     redeemed: false
                 });
             }
-            // Gutschein-Nr. f\u00FCr den n\u00E4chsten aktualisieren
-            const now = new Date();
-            const pad = n => String(n).padStart(2, '0');
-            document.getElementById('voucher-number').value =
-                'GS-' + now.getFullYear() + '-' + pad(now.getMonth()+1) + pad(now.getDate()) + '-' + pad(now.getHours()) + pad(now.getMinutes());
         }
 
         // Status-Anzeige f\u00FCr Senden
@@ -881,7 +877,7 @@
             const voucherNr = document.getElementById('voucher-number').value.trim();
             const filename = voucherNr ? 'Gutschein_' + voucherNr + '.pdf' : 'Gutschein.pdf';
             doc.save(filename);
-            saveAndResetVoucher();
+            saveVoucher();
         });
 
         // Button 2: PDF per E-Mail senden (Cloud Function)
@@ -930,7 +926,7 @@
                 });
 
                 showSendStatus('E-Mail erfolgreich an ' + email + ' gesendet!', false);
-                saveAndResetVoucher();
+                saveVoucher();
             } catch (error) {
                 console.error('Senden fehlgeschlagen:', error);
                 showSendStatus('Fehler beim Senden: ' + (error.message || error), true);
