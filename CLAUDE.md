@@ -331,7 +331,7 @@ There is no test suite and no linter/formatter configuration. Validate changes b
 
 | Service | Config location | Notes |
 |---|---|---|
-| **Firebase** | `news-db.js` lines 5–13 | Project ID: `segelfliegen`. SDK version: `11.6.1`. API key is public (restricted via Firebase console). |
+| **Firebase** | `news-db.js` lines 5–13, `functions/index.js` | Project ID: `segelfliegen`. SDK version: `11.6.1`. Cloud Function `sendVoucherEmail` (europe-west1) for email via Strato-SMTP. Secrets: `SMTP_USER`, `SMTP_PASS`. |
 | **GitHub API** | `news-db.js` `uploadToGitHub()` / `deleteFromGitHub()` | Used for news & aircraft image storage. Requires admin to supply a PAT with `contents: write`; stored in `localStorage`. |
 | **EmailJS** | `data-emailjs` attributes on HTML forms, `script.js`, `news-db.js` | Free plan (2 templates). Service ID `service_cd14twj`. Template 1 `template_eakr6dl` (notifications to club, uses `{{{details}}}`). Template 2 `template_ygdqime` (auto-reply + payment reminders to customers, uses `{{{intro}}}`, `{{{payment_info}}}`). All customer emails use "Du" form. |
 | **Google Maps** | Embed `<iframe>` in `kontakt.html` | Uses consent overlay pattern; iframe only loads after cookie accept. |
@@ -380,9 +380,9 @@ The panel is organised in **three tabs**:
 - **PDF generation** via jsPDF (self-hosted in `lib/jspdf/`). PDF includes: flight type, value, flight duration (calculated from base + extra time), recipient name, greeting text, voucher number, validity date, club address, and flight time info.
 - **"Wert im Gutschein anzeigen" checkbox**: Checked by default on `mitfliegen.html`. When unchecked, PDF shows only flight duration instead of value. For "Kunstflug", flight duration is never shown (pauschal). Stored as `wertAnzeigen` in `voucherOrders` and `showValue` in `vouchers`.
 - **PDF reprint**: Open and redeemed vouchers show a "PDF" button that directly regenerates the PDF without saving a duplicate to Firestore (checks voucher number against `cachedVouchers`). Voucher documents store `zusatzzeit` and `showValue` for accurate reprints.
-- **Gutschein-Versand is intentionally manual** — no automated email delivery of PDFs.
-- **E-Mail-Vorlage**: HTML-formatted email template with club design (blue header, logo, details table, footer). Buttons: "Formatiert kopieren" (Clipboard API `text/html`), "E-Mail kopieren" (customer email), "Betreff kopieren" (subject line), "In Gmail öffnen" (copies HTML to clipboard + opens Gmail Compose with `to` and `su` pre-filled — user pastes with Ctrl+V). Gmail is opened first (before async clipboard) to avoid popup blocker. Strato webmail doesn't support HTML paste, so Gmail is used as send-as alias for the Strato SMTP account.
-- "Nicht personalisierten Text erstellen" button fills the form with generic text ("Jemand Besonderes" + standard greeting).
+- **Gutschein-Versand** — two options: "PDF herunterladen" (manual send) and "PDF per E-Mail senden" (automatic via Firebase Cloud Function over Strato-SMTP, sends HTML email with PDF attachment). Cloud Function: `sendVoucherEmail` (europe-west1), callable, admin-only, uses Secrets `SMTP_USER` / `SMTP_PASS`.
+- **E-Mail-Vorlage**: HTML-formatted email template with club design (blue header, logo, details table, footer). Backup buttons: "Formatiert kopieren" (Clipboard API `text/html`), "E-Mail kopieren" (customer email), "Betreff kopieren" (subject line).
+- "Standardtext einsetzen" link (next to "Persönlicher Grußtext" label) fills the form with generic text ("Jemand Besonderes" + standard greeting).
 - Voucher images per flight type are mapped in `gutscheinImageMap` (e.g., `'Motorsegler': 'images/Gutschein_Motorflug.jpg'`).
 
 **GitHub PAT**: A PAT with `contents: write` must be entered once in the News tab; it is shared by both the news and aircraft image upload pipelines (stored in `localStorage` under `gh_pat`).

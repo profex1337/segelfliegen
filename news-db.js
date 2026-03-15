@@ -1417,9 +1417,9 @@ async function startVoucherLogic() {
         if (validUntil) validUntil.value = item.validUntil || '';
         if (zusatzField) zusatzField.value = item.zusatzzeit || '0';
         if (showValueField) showValueField.checked = item.showValue !== false;
-        // Direkt PDF generieren
-        var generateBtn = document.getElementById('gutschein-generate-btn');
-        if (generateBtn) generateBtn.click();
+        // Direkt PDF herunterladen
+        var downloadBtn = document.getElementById('gutschein-download-btn');
+        if (downloadBtn) downloadBtn.click();
     };
 
     // Bestellung ins Formular laden

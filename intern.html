@@ -337,7 +337,10 @@
                                 </div>
                             </div>
                             <div style="margin-bottom:10px;">
-                                <label style="display:block; margin-bottom:6px; font-weight:600; font-size:0.9rem;">Persönlicher Grußtext (optional)</label>
+                                <div style="display:flex; align-items:baseline; gap:10px; margin-bottom:6px;">
+                                    <label style="font-weight:600; font-size:0.9rem;">Persönlicher Grußtext (optional)</label>
+                                    <a href="#" onclick="fillUnpersonalized(); return false;" style="font-size:0.78rem; color:var(--accent);">Standardtext einsetzen</a>
+                                </div>
                                 <textarea id="voucher-greeting" rows="6" maxlength="800" placeholder="z.B. Alles Gute zum Geburtstag! (max. 10 Zeilen)" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:6px;"></textarea>
                                 <div style="font-size: 0.8rem; color: #888; margin-top: 4px;">Maximal 10 Zeilen — längere Texte werden im PDF abgeschnitten.</div>
                             </div>
@@ -364,10 +367,11 @@
                                 </div>
                             </div>
                             <div style="display:flex; gap:10px; flex-wrap:wrap;">
-                                <button type="button" id="gutschein-generate-btn" class="btn" style="min-width: 280px;">PDF generieren & herunterladen</button>
-                                <button type="button" class="btn btn-secondary" style="min-width: 280px;" onclick="fillUnpersonalized()">Nicht personalisierten Text erstellen</button>
-                                <button type="button" class="btn btn-secondary" style="min-width: 280px; background: #1565c0; color: #fff; border-color: #1565c0;" onclick="generateEmailTemplate()">E-Mail-Vorlage kopieren</button>
+                                <button type="button" id="gutschein-download-btn" class="btn" style="min-width: 260px;">PDF herunterladen</button>
+                                <button type="button" id="gutschein-send-btn" class="btn" style="min-width: 260px; background:#27ae60; border-color:#27ae60;">PDF per E-Mail senden</button>
+                                <button type="button" class="btn btn-secondary" style="min-width: 260px;" onclick="generateEmailTemplate()">E-Mail-Vorlage kopieren</button>
                             </div>
+                            <div id="send-status" style="display:none; margin-top:10px; padding:10px 14px; border-radius:6px; font-size:0.9rem; font-weight:600;"></div>
                             <div id="email-template-box" style="display:none; margin-top:16px; background:#f4f6f8; border:1px solid #ddd; border-radius:8px; padding:16px; position:relative;">
                                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
                                     <strong style="color:#0f3460; font-size:0.9rem;">E-Mail-Vorlage</strong>
@@ -375,7 +379,6 @@
                                         <button type="button" onclick="copyEmailFormatted()" class="btn" style="padding:4px 14px; font-size:0.78rem;">Formatiert kopieren</button>
                                         <button type="button" onclick="copyOrderEmail()" class="btn btn-secondary" style="padding:4px 14px; font-size:0.78rem;">E-Mail kopieren</button>
                                         <button type="button" onclick="copyEmailSubject()" class="btn btn-secondary" style="padding:4px 14px; font-size:0.78rem;">Betreff kopieren</button>
-                                        <button type="button" onclick="openInGmail()" class="btn" style="padding:4px 14px; font-size:0.78rem; background:#c62828;">In Gmail &ouml;ffnen</button>
                                     </div>
                                 </div>
                                 <div id="email-template-html" style="background:#fff; border-radius:8px; overflow:hidden; border:1px solid #e0e0e0;"></div>
@@ -623,46 +626,6 @@
             });
         };
 
-        // HTML in Zwischenablage kopieren und Gmail Compose öffnen
-        window.openInGmail = function() {
-            var email = document.getElementById('voucher-order-email').value.trim();
-            var recipient = document.getElementById('voucher-recipient').value.trim() || 'Empfänger';
-            var flightType = document.getElementById('voucher-flight-type').value || '';
-            var subject = 'Dein Flug-Gutschein' + (flightType ? ' (' + flightType + ')' : '') + ' für ' + recipient;
-
-            if (!email) {
-                showCopyFeedback('Keine E-Mail-Adresse vorhanden!');
-                return;
-            }
-
-            // Gmail ZUERST öffnen (im direkten Klick-Kontext, sonst blockt Popup-Blocker)
-            var gmailUrl = 'https://mail.google.com/mail/?view=cm&fs=1'
-                + '&to=' + encodeURIComponent(email)
-                + '&su=' + encodeURIComponent(subject);
-            window.open(gmailUrl, '_blank');
-
-            // Dann HTML-Vorlage in Zwischenablage kopieren
-            var el = document.getElementById('email-template-html');
-            var htmlContent = el.innerHTML;
-            var plainText = el.dataset.plain || '';
-            if (navigator.clipboard && navigator.clipboard.write) {
-                var htmlBlob = new Blob([htmlContent], { type: 'text/html' });
-                var textBlob = new Blob([plainText], { type: 'text/plain' });
-                navigator.clipboard.write([new ClipboardItem({ 'text/html': htmlBlob, 'text/plain': textBlob })]).then(function() {
-                    showCopyFeedback('Gmail ge\u00F6ffnet! Einf\u00FCgen mit Strg+V');
-                });
-            } else {
-                var range = document.createRange();
-                range.selectNodeContents(el);
-                var sel = window.getSelection();
-                sel.removeAllRanges();
-                sel.addRange(range);
-                document.execCommand('copy');
-                sel.removeAllRanges();
-                showCopyFeedback('Gmail ge\u00F6ffnet! Einf\u00FCgen mit Strg+V');
-            }
-        };
-
         function showCopyFeedback(msg) {
             var fb = document.getElementById('email-copy-feedback');
             fb.textContent = msg;
@@ -676,8 +639,8 @@
             document.getElementById('voucher-greeting').value = 'Mit diesem Gutschein f\u00FCr einen Flug am Flugplatz\nAltdorf-Hagenhausen gleitest Du der Freiheit entgegen.\nErlebe die Welt aus der Vogelperspektive und lass\nden Alltag einfach am Boden zur\u00FCck.\nM\u00F6ge dieser Ausflug in die L\u00FCfte ein\nunvergessliches Abenteuer voller neuer H\u00F6hen werden.\n\nLass Dich tragen und genie\u00DFe das Leben \u00FCber den Wolken!';
         };
 
-        // PDF-Generator
-        document.getElementById('gutschein-generate-btn')?.addEventListener('click', () => {
+        // PDF generieren — gibt jsPDF doc zurück (ohne zu speichern)
+        function generatePDF() {
             const recipient = document.getElementById('voucher-recipient').value.trim();
             const flightType = document.getElementById('voucher-flight-type').value;
             const greeting = document.getElementById('voucher-greeting').value.trim();
@@ -686,47 +649,40 @@
             const validUntil = document.getElementById('voucher-valid-until').value.trim();
 
             if (!recipient || !flightType) {
-                alert('Bitte Empfänger-Name und Flugart ausfüllen.');
-                return;
+                alert('Bitte Empf\u00E4nger-Name und Flugart ausf\u00FCllen.');
+                return null;
             }
 
             if (typeof jspdf === 'undefined') {
                 alert('jsPDF konnte nicht geladen werden.');
-                return;
+                return null;
             }
 
             const { jsPDF } = jspdf;
             const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
-            const w = doc.internal.pageSize.getWidth();   // 297
-            const h = doc.internal.pageSize.getHeight();  // 210
+            const w = doc.internal.pageSize.getWidth();
+            const h = doc.internal.pageSize.getHeight();
             const margin = 8;
 
-            // --- Weißer Hintergrund ---
             doc.setFillColor(255, 255, 255);
             doc.rect(0, 0, w, h, 'F');
 
-            // --- Bild links: proportional korrekt (cover-Methode) ---
             const imgAreaW = w * 0.38;
-            // Passendes Bild für Flugart auswählen (Fallback: _default)
             const imgSrc = gutscheinImageMap[flightType] || gutscheinImageMap['_default'];
             const bgData = gutscheinImages[imgSrc] || gutscheinImages[gutscheinImageMap['_default']];
             if (bgData) {
                 try {
                     const aspectRatio = bgData.w / bgData.h;
-                    // Cover: Bild füllt die volle Höhe, Breite wird proportional berechnet
                     let drawW = h * aspectRatio;
                     let drawH = h;
-                    // Falls Bild schmaler als Bereich, auf Breite skalieren
                     if (drawW < imgAreaW) {
                         drawW = imgAreaW;
                         drawH = imgAreaW / aspectRatio;
                     }
-                    // Zentriert im Bildbereich positionieren (Überschuss abschneiden per Clipping)
                     const offsetX = (imgAreaW - drawW) / 2;
                     const offsetY = (h - drawH) / 2;
                     doc.addImage(bgData.base64, 'JPEG', offsetX, offsetY, drawW, drawH);
 
-                    // Sanfter Übergang: halbtransparente Streifen für Fade-Out nach rechts
                     const fadeStart = imgAreaW - 40;
                     const fadeEnd = imgAreaW + 5;
                     const steps = 50;
@@ -738,54 +694,45 @@
                         doc.rect(x, 0, (fadeEnd - fadeStart) / steps + 0.3, h, 'F');
                     }
                     doc.setGState(new doc.GState({ opacity: 1 }));
-                    // Weißer Bereich rechts vom Bild
                     doc.setFillColor(255, 255, 255);
                     doc.rect(imgAreaW + 5, 0, w - imgAreaW - 5, h, 'F');
                 } catch(e) {}
             }
 
-            // --- Minimalistischer Rahmen ---
             doc.setDrawColor(15, 52, 96);
             doc.setLineWidth(1.5);
             doc.rect(margin, margin, w - margin * 2, h - margin * 2);
 
-            // --- Textbereich ---
             const textCenterX = imgAreaW + (w - imgAreaW) / 2;
             const textLeft = imgAreaW + 15;
             const textRight = w - margin - 10;
             const textWidth = textRight - textLeft;
 
-            // Logo
             if (logoBase64) {
                 try {
                     doc.addImage(logoBase64, 'PNG', textCenterX - 10, 16, 20, 20);
                 } catch(e) {}
             }
 
-            // Club-Name
             doc.setFont('helvetica', 'normal');
             doc.setFontSize(7.5);
             doc.setTextColor(120, 120, 120);
-            doc.text('SEGELFLIEGER IM POST-SV NÜRNBERG E.V.', textCenterX, 42, { align: 'center' });
+            doc.text('SEGELFLIEGER IM POST-SV N\u00DCRNBERG E.V.', textCenterX, 42, { align: 'center' });
 
-            // Trennlinie dünn
             doc.setDrawColor(233, 69, 96);
             doc.setLineWidth(0.6);
             doc.line(textCenterX - 30, 46, textCenterX + 30, 46);
 
-            // "GUTSCHEIN" — groß und modern
             doc.setFont('helvetica', 'bold');
             doc.setFontSize(36);
             doc.setTextColor(15, 52, 96);
             doc.text('G U T S C H E I N', textCenterX, 60, { align: 'center' });
 
-            // Flugart
             doc.setFont('helvetica', 'bold');
             doc.setFontSize(11);
             doc.setTextColor(233, 69, 96);
             doc.text(flightType, textCenterX, 71, { align: 'center' });
 
-            // Wert / Flugdauer prominent
             var hasWert = false;
             var showValue = document.getElementById('voucher-show-value').checked;
             var zusatzzeit = parseInt(document.getElementById('voucher-zusatzzeit').value || '0', 10);
@@ -797,8 +744,6 @@
                 doc.setFontSize(18);
                 doc.setTextColor(15, 52, 96);
                 doc.text('Wert: ' + voucherValue + ' \u20AC', textCenterX, 82, { align: 'center' });
-
-                // Flugdauer unter Wert (nicht bei Kunstflug)
                 if (hasFlugdauer) {
                     doc.setFont('helvetica', 'normal');
                     doc.setFontSize(8);
@@ -813,42 +758,34 @@
                 doc.text('Flugdauer: ' + flugdauer, textCenterX, 82, { align: 'center' });
             }
 
-            // Dezente Trennlinie
             const lineY = hasWert ? 91 : 77;
             doc.setDrawColor(220, 220, 220);
             doc.setLineWidth(0.3);
             doc.line(textCenterX - 25, lineY, textCenterX + 25, lineY);
 
-            // "für" — klein
             doc.setFont('helvetica', 'normal');
             doc.setFontSize(10);
             doc.setTextColor(160, 160, 160);
-            doc.text('für', textCenterX, lineY + 10, { align: 'center' });
+            doc.text('f\u00FCr', textCenterX, lineY + 10, { align: 'center' });
 
-            // Empfänger — groß und prominent
             doc.setFont('helvetica', 'bold');
             doc.setFontSize(24);
             doc.setTextColor(15, 52, 96);
             doc.text(recipient, textCenterX, lineY + 21, { align: 'center' });
 
-            // Grußtext
             let nextY = lineY + 32;
             if (greeting) {
                 doc.setFont('helvetica', 'italic');
                 doc.setFontSize(10);
                 doc.setTextColor(100, 100, 100);
-                var allLines = doc.splitTextToSize(`\u201E${greeting}\u201C`, textWidth - 10);
-                // Maximal 10 Zeilen im PDF (entspricht ~Beispieltext mit Zeilenumbrüchen)
+                var allLines = doc.splitTextToSize('\u201E' + greeting + '\u201C', textWidth - 10);
                 var maxLines = 11;
                 if (allLines.length > maxLines) allLines = allLines.slice(0, maxLines);
                 doc.text(allLines, textCenterX, nextY, { align: 'center' });
                 nextY += allLines.length * 5 + 14;
             }
 
-            // Gutschein-Nr. und Gültigkeits-Box
             nextY = Math.max(nextY, lineY + 50);
-
-            // Minimales Info-Layout — maximal bis Footer-Linie (h - 30)
             nextY = Math.min(nextY, h - 42);
             doc.setFont('helvetica', 'normal');
             doc.setFontSize(8);
@@ -866,13 +803,12 @@
             if (validUntil) {
                 doc.setFont('helvetica', 'normal');
                 doc.setTextColor(140, 140, 140);
-                doc.text('GÜLTIG BIS', infoLeft, nextY, { align: 'left' });
+                doc.text('G\u00DCLTIG BIS', infoLeft, nextY, { align: 'left' });
                 doc.setFont('helvetica', 'bold');
                 doc.setTextColor(60, 60, 60);
                 doc.text(validUntil, infoRight, nextY, { align: 'right' });
             }
 
-            // --- Wasserzeichen (spn_flieger.png) unten rechts im Textbereich ---
             if (watermarkBase64 && watermarkW && watermarkH) {
                 try {
                     const wmMaxH = 60;
@@ -887,7 +823,6 @@
                 } catch(e) {}
             }
 
-            // --- Footer ---
             doc.setDrawColor(15, 52, 96);
             doc.setLineWidth(0.2);
             doc.line(textLeft, h - 26, textRight, h - 26);
@@ -902,31 +837,107 @@
             doc.setTextColor(160, 160, 160);
             doc.text('Wir fliegen zwischen April und Oktober an Wochenenden und Feiertagen. Deinen Wunschtermin bitte am Wochenende ab 9 Uhr unter 09189/310 vereinbaren.', textCenterX, h - 13, { align: 'center' });
 
-            // PDF speichern
-            const filename = voucherNr ? `Gutschein_${voucherNr}.pdf` : 'Gutschein.pdf';
-            doc.save(filename);
+            return doc;
+        }
 
-            // In Firestore speichern — nur bei neuem Gutschein, nicht bei Nachdruck
+        // Gutschein in Firestore speichern + Nr. erneuern
+        function saveAndResetVoucher() {
+            const voucherNr = document.getElementById('voucher-number').value.trim();
             var isReprint = typeof window.checkVoucherExists === 'function' && window.checkVoucherExists(voucherNr);
             if (!isReprint && typeof window.saveVoucherToFirestore === 'function') {
                 window.saveVoucherToFirestore({
-                    recipient,
-                    flightType,
-                    greeting: greeting || '',
+                    recipient: document.getElementById('voucher-recipient').value.trim(),
+                    flightType: document.getElementById('voucher-flight-type').value,
+                    greeting: document.getElementById('voucher-greeting').value.trim() || '',
                     number: voucherNr,
-                    value: voucherValue || '',
-                    validUntil: validUntil || '',
+                    value: document.getElementById('voucher-value').value.trim() || '',
+                    validUntil: document.getElementById('voucher-valid-until').value.trim() || '',
                     zusatzzeit: document.getElementById('voucher-zusatzzeit').value || '0',
                     showValue: document.getElementById('voucher-show-value').checked,
                     redeemed: false
                 });
             }
-
-            // Gutschein-Nr. für den nächsten aktualisieren
+            // Gutschein-Nr. f\u00FCr den n\u00E4chsten aktualisieren
             const now = new Date();
             const pad = n => String(n).padStart(2, '0');
             document.getElementById('voucher-number').value =
-                `GS-${now.getFullYear()}-${pad(now.getMonth()+1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}`;
+                'GS-' + now.getFullYear() + '-' + pad(now.getMonth()+1) + pad(now.getDate()) + '-' + pad(now.getHours()) + pad(now.getMinutes());
+        }
+
+        // Status-Anzeige f\u00FCr Senden
+        function showSendStatus(msg, isError) {
+            var el = document.getElementById('send-status');
+            el.textContent = msg;
+            el.style.display = 'block';
+            el.style.background = isError ? '#fdecea' : '#e8f5e9';
+            el.style.color = isError ? '#c62828' : '#2e7d32';
+            if (!isError) setTimeout(function() { el.style.display = 'none'; }, 5000);
+        }
+
+        // Button 1: PDF herunterladen
+        document.getElementById('gutschein-download-btn')?.addEventListener('click', () => {
+            const doc = generatePDF();
+            if (!doc) return;
+            const voucherNr = document.getElementById('voucher-number').value.trim();
+            const filename = voucherNr ? 'Gutschein_' + voucherNr + '.pdf' : 'Gutschein.pdf';
+            doc.save(filename);
+            saveAndResetVoucher();
+        });
+
+        // Button 2: PDF per E-Mail senden (Cloud Function)
+        document.getElementById('gutschein-send-btn')?.addEventListener('click', async () => {
+            const email = document.getElementById('voucher-order-email').value.trim();
+            if (!email) {
+                alert('Keine E-Mail-Adresse vorhanden. Bitte zuerst eine Bestellung \u00FCbernehmen.');
+                return;
+            }
+
+            const doc = generatePDF();
+            if (!doc) return;
+
+            const sendBtn = document.getElementById('gutschein-send-btn');
+            const recipient = document.getElementById('voucher-recipient').value.trim();
+            const flightType = document.getElementById('voucher-flight-type').value || '';
+            const voucherNr = document.getElementById('voucher-number').value.trim();
+            const subject = 'Dein Flug-Gutschein' + (flightType ? ' (' + flightType + ')' : '') + ' f\u00FCr ' + recipient;
+            const filename = voucherNr ? 'Gutschein_' + voucherNr + '.pdf' : 'Gutschein.pdf';
+
+            // E-Mail-HTML generieren (gleiche Vorlage wie generateEmailTemplate)
+            generateEmailTemplate();
+            const htmlContent = document.getElementById('email-template-html').innerHTML;
+            document.getElementById('email-template-box').style.display = 'none';
+
+            // PDF als Base64
+            const pdfBase64 = doc.output('datauristring').split(',')[1];
+
+            // Button deaktivieren w\u00E4hrend Versand
+            sendBtn.disabled = true;
+            sendBtn.textContent = 'Wird gesendet...';
+            showSendStatus('E-Mail wird gesendet...', false);
+
+            try {
+                const { getFunctions, httpsCallable } = await import('https://www.gstatic.com/firebasejs/11.6.1/firebase-functions.js');
+                const { getApp } = await import('https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js');
+                const functions = getFunctions(getApp(), 'europe-west1');
+                const sendMail = httpsCallable(functions, 'sendVoucherEmail');
+
+                const result = await sendMail({
+                    to: email,
+                    subject: subject,
+                    html: htmlContent,
+                    pdfBase64: pdfBase64,
+                    pdfFilename: filename
+                });
+
+                showSendStatus('E-Mail erfolgreich an ' + email + ' gesendet!', false);
+                saveAndResetVoucher();
+            } catch (error) {
+                console.error('Senden fehlgeschlagen:', error);
+                showSendStatus('Fehler beim Senden: ' + (error.message || error), true);
+            } finally {
+                sendBtn.disabled = false;
+                sendBtn.textContent = 'PDF per E-Mail senden';
+            }
         });
 
         // Tab-Steuerung
