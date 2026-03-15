@@ -635,15 +635,22 @@
                 return;
             }
 
-            // HTML-Vorlage in Zwischenablage kopieren
+            // Gmail ZUERST öffnen (im direkten Klick-Kontext, sonst blockt Popup-Blocker)
+            var gmailUrl = 'https://mail.google.com/mail/?view=cm&fs=1'
+                + '&to=' + encodeURIComponent(email)
+                + '&su=' + encodeURIComponent(subject);
+            window.open(gmailUrl, '_blank');
+
+            // Dann HTML-Vorlage in Zwischenablage kopieren
             var el = document.getElementById('email-template-html');
             var htmlContent = el.innerHTML;
             var plainText = el.dataset.plain || '';
-            var copyPromise;
             if (navigator.clipboard && navigator.clipboard.write) {
                 var htmlBlob = new Blob([htmlContent], { type: 'text/html' });
                 var textBlob = new Blob([plainText], { type: 'text/plain' });
-                copyPromise = navigator.clipboard.write([new ClipboardItem({ 'text/html': htmlBlob, 'text/plain': textBlob })]);
+                navigator.clipboard.write([new ClipboardItem({ 'text/html': htmlBlob, 'text/plain': textBlob })]).then(function() {
+                    showCopyFeedback('Gmail ge\u00F6ffnet! Einf\u00FCgen mit Strg+V');
+                });
             } else {
                 var range = document.createRange();
                 range.selectNodeContents(el);
@@ -652,19 +659,8 @@
                 sel.addRange(range);
                 document.execCommand('copy');
                 sel.removeAllRanges();
-                copyPromise = Promise.resolve();
+                showCopyFeedback('Gmail ge\u00F6ffnet! Einf\u00FCgen mit Strg+V');
             }
-
-            copyPromise.then(function() {
-                showCopyFeedback('Vorlage kopiert! Gmail wird ge\u00F6ffnet\u2026 Einf\u00FCgen mit Strg+V');
-                // Gmail Compose mit Empfänger + Betreff öffnen
-                var gmailUrl = 'https://mail.google.com/mail/?view=cm&fs=1'
-                    + '&to=' + encodeURIComponent(email)
-                    + '&su=' + encodeURIComponent(subject);
-                window.open(gmailUrl, '_blank');
-            }).catch(function() {
-                showCopyFeedback('Fehler beim Kopieren');
-            });
         };
 
         function showCopyFeedback(msg) {
