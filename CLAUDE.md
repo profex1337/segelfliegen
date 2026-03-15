@@ -381,6 +381,7 @@ The panel is organised in **three tabs**:
 - **"Wert im Gutschein anzeigen" checkbox**: Checked by default on `mitfliegen.html`. When unchecked, PDF shows only flight duration instead of value. For "Kunstflug", flight duration is never shown (pauschal). Stored as `wertAnzeigen` in `voucherOrders` and `showValue` in `vouchers`.
 - **PDF reprint**: Open and redeemed vouchers show a "PDF" button that directly regenerates the PDF without saving a duplicate to Firestore (checks voucher number against `cachedVouchers`). Voucher documents store `zusatzzeit` and `showValue` for accurate reprints.
 - **Gutschein-Versand is intentionally manual** — no automated email delivery of PDFs.
+- **E-Mail-Vorlage**: HTML-formatted email template with club design (blue header, logo, details table, footer). Buttons: "Formatiert kopieren" (Clipboard API `text/html`), "E-Mail kopieren" (customer email), "Betreff kopieren" (subject line), "In Gmail öffnen" (copies HTML to clipboard + opens Gmail Compose with `to` and `su` pre-filled — user pastes with Ctrl+V). Gmail is opened first (before async clipboard) to avoid popup blocker. Strato webmail doesn't support HTML paste, so Gmail is used as send-as alias for the Strato SMTP account.
 - "Nicht personalisierten Text erstellen" button fills the form with generic text ("Jemand Besonderes" + standard greeting).
 - Voucher images per flight type are mapped in `gutscheinImageMap` (e.g., `'Motorsegler': 'images/Gutschein_Motorflug.jpg'`).
 
@@ -395,7 +396,7 @@ Two standalone pages provide limited access to specific Firestore collections. T
 - Shows open and redeemed vouchers from the `vouchers` collection.
 - Login: `gutschein@segelfliegen-altdorf.de` (or admin).
 - Features: mark as redeemed, reopen, search, stats.
-- Also hosted on Netlify: `https://comfy-fairy-7ce6c2.netlify.app/`
+- Hosted on GitHub Pages (same as main site).
 
 #### `bestellungen/index.html` — Order Management
 
