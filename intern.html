@@ -76,22 +76,14 @@
         }
         .intern-tab-btn:hover { color: var(--primary); background: var(--bg-light); }
         .intern-tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); background: var(--bg-light); }
-        /* Alle Panels übereinander gestapelt — Höhe bleibt konstant */
         .intern-tab-panels {
-            display: grid;
+            position: relative;
         }
         .intern-tab-panel {
-            grid-row: 1;
-            grid-column: 1;
-            visibility: hidden;
-            opacity: 0;
-            transition: opacity 0.2s ease;
-            pointer-events: none;
+            display: none;
         }
         .intern-tab-panel.active {
-            visibility: visible;
-            opacity: 1;
-            pointer-events: auto;
+            display: block;
         }
 
         .dashboard-card {
