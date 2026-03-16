@@ -1009,9 +1009,9 @@ select { height: auto; min-height: 48px; line-height: 1.4; background-image: url
 }
 
 /* Drag & Drop Admin */
-.aircraft-admin-row[draggable="true"] { cursor: grab; }
-.aircraft-admin-row[draggable="true"]:active { cursor: grabbing; }
-.aircraft-admin-row.drag-over {
+.aircraft-admin-row[draggable="true"], .price-admin-row[draggable="true"] { cursor: grab; }
+.aircraft-admin-row[draggable="true"]:active, .price-admin-row[draggable="true"]:active { cursor: grabbing; }
+.aircraft-admin-row.drag-over, .price-admin-row.drag-over-price {
     outline: 2px dashed var(--accent);
     background: rgba(233, 69, 96, 0.07) !important;
 }

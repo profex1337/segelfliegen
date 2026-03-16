@@ -775,6 +775,8 @@ async function startNewsLogic() {
 // === Preise (Gastfluggebühren) ===
 
 let currentPriceItems = [];
+let draggedPriceItem = null;
+let draggedPriceEl = null;
 
 async function startPricesLogic() {
     const pricesContainer = document.getElementById('dynamic-prices-list');
@@ -868,36 +870,47 @@ function renderAdminPrices(container, items, isAdmin) {
 
     items.forEach((item, idx) => {
         const row = document.createElement('div');
-        row.style.cssText = 'background:#f9f9f9; padding:15px; margin-bottom:10px; border-radius:8px;';
+        row.className = 'price-admin-row';
+        row.draggable = true;
+        row.style.cssText = 'background:#f9f9f9; padding:15px; margin-bottom:10px; border-radius:8px; cursor:grab;';
 
-        row.innerHTML = `
-            <div style="display:flex; flex-wrap:wrap; gap:10px; margin-bottom:8px;">
-                <input type="text" data-field="label" placeholder="Bezeichnung" style="flex:2 1 150px; padding:8px; border:1px solid #ddd; border-radius:4px;">
-                <input type="text" data-field="description" placeholder="Beschreibung" style="flex:2 1 150px; padding:8px; border:1px solid #ddd; border-radius:4px;">
-                <input type="text" data-field="price" placeholder="Preis" style="flex:0 0 100px; padding:8px; border:1px solid #ddd; border-radius:4px; text-align:right;">
-            </div>
-            <div style="display:flex; gap:8px; align-items:center;">
-                <button class="save-price-btn btn" style="padding:5px 12px; font-size:0.85rem;">Speichern</button>
-                <button class="delete-price-btn btn btn-secondary" style="padding:5px 12px; font-size:0.85rem; background:#c0392b; color:#fff; border-color:#c0392b;">Löschen</button>
-                <span class="price-save-status" style="color:#27ae60; font-size:0.8rem; display:none;"></span>
-            </div>
-        `;
+        const handle = document.createElement('div');
+        handle.textContent = '⠿';
+        handle.style.cssText = 'color:#bbb; font-size:1.3rem; line-height:1; user-select:none; flex-shrink:0; margin-right:6px;';
+
+        const content = document.createElement('div');
+        content.style.cssText = 'flex:1;';
+        content.innerHTML = '<div style="display:flex; flex-wrap:wrap; gap:10px; margin-bottom:8px;">'
+            + '<input type="text" data-field="label" placeholder="Bezeichnung" style="flex:2 1 150px; padding:8px; border:1px solid #ddd; border-radius:4px;">'
+            + '<input type="text" data-field="description" placeholder="Beschreibung" style="flex:2 1 150px; padding:8px; border:1px solid #ddd; border-radius:4px;">'
+            + '<input type="text" data-field="price" placeholder="Preis" style="flex:0 0 100px; padding:8px; border:1px solid #ddd; border-radius:4px; text-align:right;">'
+            + '</div>'
+            + '<div style="display:flex; gap:8px; align-items:center;">'
+            + '<button class="save-price-btn btn" style="padding:5px 12px; font-size:0.85rem;">Speichern</button>'
+            + '<button class="delete-price-btn btn btn-secondary" style="padding:5px 12px; font-size:0.85rem; background:#c0392b; color:#fff; border-color:#c0392b;">Löschen</button>'
+            + '<span class="price-save-status" style="color:#27ae60; font-size:0.8rem; display:none;"></span>'
+            + '</div>';
+
+        row.style.display = 'flex';
+        row.style.alignItems = 'flex-start';
+        row.appendChild(handle);
+        row.appendChild(content);
 
         // Werte sicher per DOM-Property setzen
-        row.querySelector('[data-field="label"]').value = item.label || '';
-        row.querySelector('[data-field="description"]').value = item.description || '';
-        row.querySelector('[data-field="price"]').value = item.price || '';
+        content.querySelector('[data-field="label"]').value = item.label || '';
+        content.querySelector('[data-field="description"]').value = item.description || '';
+        content.querySelector('[data-field="price"]').value = item.price || '';
 
-        row.querySelector('.save-price-btn').onclick = async () => {
+        content.querySelector('.save-price-btn').onclick = async () => {
             const data = {
-                label: row.querySelector('[data-field="label"]').value,
-                description: row.querySelector('[data-field="description"]').value,
-                price: row.querySelector('[data-field="price"]').value,
+                label: content.querySelector('[data-field="label"]').value,
+                description: content.querySelector('[data-field="description"]').value,
+                price: content.querySelector('[data-field="price"]').value,
                 order: idx
             };
             try {
                 await updateDoc(doc(db, 'prices', item.id), data);
-                const status = row.querySelector('.price-save-status');
+                const status = content.querySelector('.price-save-status');
                 status.textContent = 'Gespeichert';
                 status.style.display = 'inline';
                 setTimeout(() => status.style.display = 'none', 2000);
@@ -906,8 +919,8 @@ function renderAdminPrices(container, items, isAdmin) {
             }
         };
 
-        row.querySelector('.delete-price-btn').onclick = async () => {
-            if (confirm('\"' + (item.label || 'Position') + '\" wirklich löschen?')) {
+        content.querySelector('.delete-price-btn').onclick = async () => {
+            if (confirm('"' + (item.label || 'Position') + '" wirklich löschen?')) {
                 try {
                     await deleteDoc(doc(db, 'prices', item.id));
                 } catch (e) {
@@ -915,6 +928,42 @@ function renderAdminPrices(container, items, isAdmin) {
                 }
             }
         };
+
+        // Drag & Drop Handler
+        row.addEventListener('dragstart', (e) => {
+            draggedPriceItem = item;
+            draggedPriceEl = row;
+            setTimeout(() => { row.style.opacity = '0.4'; }, 0);
+            e.dataTransfer.effectAllowed = 'move';
+        });
+        row.addEventListener('dragend', () => {
+            row.style.opacity = '1';
+            draggedPriceEl = null;
+            container.querySelectorAll('.price-admin-row').forEach(r => r.classList.remove('drag-over-price'));
+        });
+        row.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            if (draggedPriceEl && row !== draggedPriceEl) row.classList.add('drag-over-price');
+        });
+        row.addEventListener('dragleave', () => row.classList.remove('drag-over-price'));
+        row.addEventListener('drop', async (e) => {
+            e.preventDefault();
+            row.classList.remove('drag-over-price');
+            if (!draggedPriceItem || draggedPriceEl === row) return;
+            const sorted = [...items].sort((a, b) => (a.order || 0) - (b.order || 0));
+            const without = sorted.filter(i => i.id !== draggedPriceItem.id);
+            const targetIdx = without.findIndex(i => i.id === item.id);
+            without.splice(targetIdx === -1 ? without.length : targetIdx, 0, draggedPriceItem);
+            try {
+                const base = Date.now();
+                await Promise.all(without.map((p, i) =>
+                    updateDoc(doc(db, 'prices', p.id), { order: base + i * 100 })
+                ));
+            } catch (err) {
+                alert('Sortierung konnte nicht gespeichert werden: ' + err.message);
+            }
+            draggedPriceItem = null;
+        });
 
         container.appendChild(row);
     });
