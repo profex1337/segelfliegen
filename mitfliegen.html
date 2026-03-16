@@ -628,7 +628,7 @@
                 + 'Beginne mit einer persönlichen Anrede (z.B. "Lieber Hans,"). '
                 + (besteller ? 'Ende mit einer persönlichen Grußformel vom Schenkenden (z.B. "Dein ' + besteller + '"). ' : '')
                 + 'Schreibe NUR den Grußtext — keine Überschrift. '
-                + 'Der Text darf maximal 800 Zeichen und maximal 10 Zeilen lang sein. Verwende Zeilenumbrüche sparsam. Sprache: Deutsch.';
+                + 'WICHTIG: Der Text darf MAXIMAL 600 Zeichen und MAXIMAL 8 Zeilen haben. Halte dich strikt an dieses Limit! Verwende Zeilenumbrüche sparsam. Sprache: Deutsch.';
 
             try {
                 var _k = atob('ENTFERNTER-API-KEY-B64');
@@ -655,7 +655,12 @@
                 }
                 var text = data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts[0].text;
                 if (text) {
-                    document.getElementById('gutschein-grusstext').value = text.trim();
+                    text = text.trim();
+                    var lines = text.split('\n');
+                    if (lines.length > 10) text = lines.slice(0, 10).join('\n');
+                    if (text.length > 800) text = text.substring(0, 800);
+                    document.getElementById('gutschein-grusstext').value = text;
+                    document.getElementById('gruss-counter').textContent = text.length + ' / 800';
                 } else {
                     alert('Kein Text generiert. Bitte erneut versuchen.');
                 }
