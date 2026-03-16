@@ -103,18 +103,19 @@ const loginModalHTML = `
 </div>
 `;
 
+const GOOGLE_MAPS_REVIEW_URL = 'https://www.google.de/maps/place/Segelflugplatz+Altdorf-Hagenhausen+Post-SV+N%C3%BCrnberg/@49.3902569,11.4256224,247m/data=!3m1!1e3!4m6!3m5!1s0x410c9f6d5ba244cb:0x8d005d5cdc3b2aca!8m2!3d49.3899301!4d11.4267085!16s%2Fg%2F11b6g8prkb!5m1!1e1?entry=ttu';
 const reviewsHTML = `<aside id="reviews-sidebar" class="reviews-sidebar">
     <div class="reviews-header">
         <h3>Google Rezensionen</h3>
         <span id="close-reviews" class="close-reviews">&times;</span>
     </div>
-            <div class="reviews-summary">
-                <div class="big-rating">4.9</div>
-                <div class="stars-gold">★★★★★</div>
-                <p>Basierend auf Google Maps</p>
-                                                    <a href="https://www.google.de/maps/place/Segelflugplatz+Altdorf-Hagenhausen+Post-SV+N%C3%BCrnberg/@49.3902569,11.4256224,247m/data=!3m1!1e3!4m6!3m5!1s0x410c9f6d5ba244cb:0x8d005d5cdc3b2aca!8m2!3d49.3899301!4d11.4267085!16s%2Fg%2F11b6g8prkb!5m1!1e1?entry=ttu&g_ep=EgoyMDI2MDIwNC4wIKXMDSoASAFQAw%3D%3D" target="_blank" rel="noopener noreferrer" class="btn-review-google">
-                                                        Auf Google bewerten
-                                                    </a>            </div>    <div class="reviews-list" id="reviews-list-container"></div>
+    <div class="reviews-summary">
+        <div class="big-rating" id="reviews-avg-rating">4.9</div>
+        <div class="stars-gold" id="reviews-avg-stars">★★★★★</div>
+        <p id="reviews-count">Basierend auf Google Maps</p>
+        <a href="${GOOGLE_MAPS_REVIEW_URL}" target="_blank" rel="noopener noreferrer" class="btn-review-google">Auf Google bewerten</a>
+    </div>
+    <div class="reviews-list" id="reviews-list-container"></div>
 </aside>
 <div id="reviews-overlay" class="reviews-overlay"></div>`;
 
@@ -229,66 +230,69 @@ function initReviews() {
     const overlay = document.getElementById('reviews-overlay');
     const listContainer = document.getElementById('reviews-list-container');
 
-    if (!trigger || !sidebar) return; 
+    if (!trigger || !sidebar) return;
 
-    const realReviews = [
-        { 
-            name: "Michael Dittrich", 
-            rating: 5, 
-            date: "vor einem Jahr",
-            text: "War heute mit meinem Enkel am Flugplatz. Ganz liebe Leute!!!! Uns wurde alles gezeigt und Milo durfte sich sogar in ein Segelflugzeug setzen.<br>Werden im Sommer gerne nochmal kommen.<br>VG Michael"
-        },
-        {
-            name: "A. Delino",
-            rating: 5,
-            date: "vor 2 Jahren",
-            text: "Tolle zuvorkommende freundliche Mannschaft, die mit Begeisterung ihren Gästen das Segelfliegen zeigen. Kaffee und Kuchen gibt's am Wochenende noch oben drauf. Einfach herrlich und genial."
-        },
-        {
-            name: "Gizi Silberhorn",
-            rating: 5,
-            date: "vor 4 Jahren",
-            text: "War nur zur Geburtstagsfeier dort. Hab gleich ne Einladung von nem Mitglied zum Flugtag Anfang August bekommen, finde ich echt nett"
-        },
-        {
-            name: "Kevin Fritsch",
-            rating: 5,
-            date: "vor 7 Jahren",
-            text: "Super Flugplatz und ganz liebe Flieger!<br>Man fühlt sich \"wie daheim\", man wird - egal ob per Flugzeug oder zu Fuß - sehr herzlich aufgenommen!<br><br>Auf jeden Fall einen Besuch wert! ;-)"
-        },
-        {
-            name: "Smolto van der Bruggenkötter",
-            rating: 5,
-            date: "vor 7 Jahren", 
-            text: "Sehr zu empfehlen! Coole Menschen sehr lockere Atmosphäre, sehr freundlich und hilfsbereit.<br>Ein Erlebnis für jung und alt. Hier könnt ihr spontan mitfliegen und einen unvergesslichen tag erleben!<br>Ich komme wieder! Danke für den sehr schönen tag" 
+    // Fallback-Reviews (werden angezeigt bis Live-Daten geladen sind)
+    const fallbackReviews = {
+        rating: 4.9,
+        totalReviews: 0,
+        reviews: [
+            { name: "Michael Dittrich", rating: 5, date: "vor einem Jahr", text: "War heute mit meinem Enkel am Flugplatz. Ganz liebe Leute!!!! Uns wurde alles gezeigt und Milo durfte sich sogar in ein Segelflugzeug setzen." },
+            { name: "A. Delino", rating: 5, date: "vor 2 Jahren", text: "Tolle zuvorkommende freundliche Mannschaft, die mit Begeisterung ihren Gästen das Segelfliegen zeigen. Kaffee und Kuchen gibt's am Wochenende noch oben drauf." },
+            { name: "Kevin Fritsch", rating: 5, date: "vor 7 Jahren", text: "Super Flugplatz und ganz liebe Flieger! Man fühlt sich wie daheim, man wird sehr herzlich aufgenommen!" }
+        ]
+    };
+
+    function renderReviews(data) {
+        // Durchschnittsbewertung + Anzahl aktualisieren
+        var avgEl = document.getElementById('reviews-avg-rating');
+        var starsEl = document.getElementById('reviews-avg-stars');
+        var countEl = document.getElementById('reviews-count');
+        var triggerScore = document.querySelector('.rating-score');
+        if (avgEl && data.rating) avgEl.textContent = data.rating.toFixed(1).replace('.', ',');
+        if (starsEl && data.rating) {
+            var full = Math.floor(data.rating);
+            var half = data.rating - full >= 0.3 ? 1 : 0;
+            starsEl.textContent = '★'.repeat(full) + (half ? '★' : '') + '☆'.repeat(5 - full - half);
         }
-    ];
+        if (countEl && data.totalReviews) countEl.textContent = data.totalReviews + ' Bewertungen auf Google Maps';
+        if (triggerScore && data.rating) triggerScore.textContent = data.rating.toFixed(1).replace('.', ',');
 
-    if (listContainer) {
-        listContainer.innerHTML = realReviews.map(review => {
-            const initials = review.name.split(' ').map(n => n[0]).join('');
-            const starsHTML = '★'.repeat(review.rating) + '☆'.repeat(5 - review.rating);
-            
-            return `
-            <div class="review-card">
-                <div class="review-avatar" style="background-color: ${getAvatarColor()}">${initials}</div>
-                <div class="review-content">
-                    <h4>${review.name}</h4>
-                    <span class="review-meta">${review.date}</span>
-                    <div style="color: #ffc107; font-size: 0.9rem;">${starsHTML}</div>
-                    <p>${review.text}</p>
-                </div>
-            </div>`;
+        // Reviews rendern
+        if (!listContainer || !data.reviews) return;
+        listContainer.innerHTML = data.reviews.map(function(review) {
+            var initials = review.name.split(' ').map(function(n) { return n[0]; }).join('');
+            var starsHTML = '★'.repeat(review.rating) + '☆'.repeat(5 - review.rating);
+            var textEscaped = (review.text || '').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>');
+            return '<div class="review-card">'
+                + '<div class="review-avatar" style="background-color: ' + getAvatarColor() + '">' + initials + '</div>'
+                + '<div class="review-content">'
+                + '<h4>' + review.name + '</h4>'
+                + '<span class="review-meta">' + (review.date || '') + '</span>'
+                + '<div style="color: #ffc107; font-size: 0.9rem;">' + starsHTML + '</div>'
+                + '<p>' + textEscaped + '</p>'
+                + '</div></div>';
         }).join('');
     }
 
-    const openSidebar = () => {
+    // Sofort Fallback anzeigen
+    renderReviews(fallbackReviews);
+
+    // Live-Daten von Cloud Function laden
+    fetch('https://europe-west1-segelfliegen.cloudfunctions.net/getGoogleReviews')
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (data && data.reviews && data.reviews.length > 0) renderReviews(data);
+        })
+        .catch(function() { /* Fallback bleibt stehen */ });
+
+    var openSidebar = function() {
         sidebar.classList.add('active');
         overlay.classList.add('active');
         document.body.style.overflow = 'hidden';
     };
 
-    const closeSidebar = () => {
+    var closeSidebar = function() {
         sidebar.classList.remove('active');
         overlay.classList.remove('active');
         document.body.style.overflow = '';

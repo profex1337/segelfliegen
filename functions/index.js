@@ -4,6 +4,18 @@ const nodemailer = require("nodemailer");
 
 setGlobalOptions({maxInstances: 5, region: "europe-west1"});
 
+// Lazy-Init für Firestore (nur für Reviews benötigt)
+let _db = null;
+function getFirestore() {
+  if (!_db) {
+    const {initializeApp, getApps} = require("firebase-admin/app");
+    const {getFirestore: gfs} = require("firebase-admin/firestore");
+    if (!getApps().length) initializeApp();
+    _db = gfs();
+  }
+  return _db;
+}
+
 // ========== SMTP-Transporter (Strato) ==========
 
 function createTransporter() {
@@ -492,3 +504,111 @@ exports.sendVoucherEmail = onCall(
       }
     },
 );
+
+// ========== Google Reviews (Places API → Firestore Cache) ==========
+
+const PLACE_ID = "ChIJy0SiW22fDEERyio73FxdAI0";
+const REVIEWS_CACHE_DOC = "reviewsCache/latest";
+const CACHE_MAX_AGE_MS = 24 * 60 * 60 * 1000; // 24 Stunden
+
+async function fetchAndCacheReviews() {
+  const apiKey = process.env.GOOGLE_PLACES_KEY;
+  if (!apiKey) {
+    console.error("GOOGLE_PLACES_KEY Secret nicht gesetzt.");
+    return null;
+  }
+
+  try {
+    const url = "https://places.googleapis.com/v1/places/" + PLACE_ID
+        + "?fields=rating,userRatingCount,reviews&languageCode=de";
+
+    const response = await fetch(url, {
+      headers: {
+        "X-Goog-Api-Key": apiKey,
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      const errText = await response.text();
+      console.error("Places API Fehler:", response.status, errText);
+      return null;
+    }
+
+    const data = await response.json();
+    const reviews = (data.reviews || []).map((r) => ({
+      name: (r.authorAttribution && r.authorAttribution.displayName) || "Anonym",
+      rating: r.rating || 5,
+      text: (r.originalText && r.originalText.text) || (r.text && r.text.text) || "",
+      date: r.relativePublishTimeDescription || "",
+      publishTime: r.publishTime || "",
+    }));
+
+    const cacheData = {
+      rating: data.rating || 0,
+      totalReviews: data.userRatingCount || 0,
+      reviews: reviews,
+      updatedAt: Date.now(),
+    };
+
+    await getFirestore().doc(REVIEWS_CACHE_DOC).set(cacheData);
+    console.log("Reviews gecached:", reviews.length, "Bewertungen");
+    return cacheData;
+  } catch (error) {
+    console.error("fetchAndCacheReviews Fehler:", error);
+    return null;
+  }
+}
+
+// Öffentlicher Endpoint: Reviews aus Cache liefern, bei Bedarf neu holen
+exports.getGoogleReviews = onRequest(
+    {
+      secrets: ["GOOGLE_PLACES_KEY"],
+      invoker: "public",
+      cors: false,
+    },
+    async (req, res) => {
+      // CORS
+      if (!setCorsHeaders(req, res)) {
+        if (req.method === "OPTIONS") {
+          res.status(204).send("");
+          return;
+        }
+        res.status(403).json({error: "Origin nicht erlaubt"});
+        return;
+      }
+      if (req.method === "OPTIONS") {
+        res.status(204).send("");
+        return;
+      }
+
+      try {
+        // Cache prüfen
+        const cacheDoc = await getFirestore().doc(REVIEWS_CACHE_DOC).get();
+        if (cacheDoc.exists) {
+          const cached = cacheDoc.data();
+          const age = Date.now() - (cached.updatedAt || 0);
+          if (age < CACHE_MAX_AGE_MS) {
+            res.status(200).json(cached);
+            return;
+          }
+        }
+
+        // Cache abgelaufen oder nicht vorhanden → neu holen
+        const fresh = await fetchAndCacheReviews();
+        if (fresh) {
+          res.status(200).json(fresh);
+        } else if (cacheDoc.exists) {
+          // API-Fehler → alten Cache liefern
+          res.status(200).json(cacheDoc.data());
+        } else {
+          res.status(500).json({error: "Keine Reviews verfügbar."});
+        }
+      } catch (error) {
+        console.error("getGoogleReviews Fehler:", error);
+        res.status(500).json({error: "Interner Fehler."});
+      }
+    },
+);
+
+// Kein Scheduled Job nötig — getGoogleReviews aktualisiert den Cache bei Ablauf (24h) automatisch
