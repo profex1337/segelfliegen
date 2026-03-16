@@ -385,7 +385,7 @@
                 </div>
                 <div class="form-responsive" style="margin-top: 20px;">
                     <div class="form-group" id="gutschein-zusatzzeit-wrap">
-                        <label for="gutschein-zusatzzeit">Zusätzliche Flugzeit (Minuten)</label>
+                        <label for="gutschein-zusatzzeit">Optional: Zusätzliche Flugzeit (<span id="zusatzzeit-label" style="cursor:help; text-decoration:underline dotted; text-underline-offset:3px;" title="Wähle zuerst eine Flugart">Minuten</span>)</label>
                         <input type="number" id="gutschein-zusatzzeit" name="zusatzzeit" min="0" max="120" value="0" placeholder="0" oninput="updateGutscheinWert()">
                         <small style="color:var(--text-light);">Über die inkludierte Grundzeit hinaus</small>
                     </div>
@@ -572,9 +572,11 @@
             var display = document.getElementById('gutschein-wert-display');
             var hidden = document.getElementById('gutschein-wert-hidden');
             var zusatzWrap = document.getElementById('gutschein-zusatzzeit-wrap');
-            if (!opt || !opt.value) { display.value = '— €'; hidden.value = ''; return; }
+            var zusatzLabel = document.getElementById('zusatzzeit-label');
+            if (!opt || !opt.value) { display.value = '— €'; hidden.value = ''; zusatzLabel.title = 'Wähle zuerst eine Flugart'; return; }
             var base = parseFloat(opt.getAttribute('data-base')) || 0;
             var perMin = parseFloat(opt.getAttribute('data-permin')) || 0;
+            zusatzLabel.title = perMin > 0 ? 'Verlängerung: ' + perMin.toFixed(2).replace('.', ',') + ' € pro Minute' : 'Keine Verlängerung möglich';
             var zusatz = parseInt(document.getElementById('gutschein-zusatzzeit').value) || 0;
             // Kunstflug: keine Verlängerung möglich
             if (perMin === 0) {
