@@ -573,12 +573,18 @@
             var hidden = document.getElementById('gutschein-wert-hidden');
             var zusatzWrap = document.getElementById('gutschein-zusatzzeit-wrap');
             var zusatzLabel = document.getElementById('zusatzzeit-label');
-            if (!opt || !opt.value) { display.value = '— €'; hidden.value = ''; zusatzLabel.title = 'Wähle zuerst eine Flugart'; return; }
+            if (!opt || !opt.value) {
+                display.value = '— €'; hidden.value = '';
+                zusatzLabel.title = 'Wähle zuerst eine Flugart';
+                zusatzWrap.style.opacity = '0.4';
+                zusatzWrap.querySelector('input').disabled = true;
+                zusatzWrap.querySelector('input').value = 0;
+                return;
+            }
             var base = parseFloat(opt.getAttribute('data-base')) || 0;
             var perMin = parseFloat(opt.getAttribute('data-permin')) || 0;
-            zusatzLabel.title = perMin > 0 ? 'Verlängerung: ' + perMin.toFixed(2).replace('.', ',') + ' € pro Minute' : 'Keine Verlängerung möglich';
+            zusatzLabel.title = perMin > 0 ? 'Verlängerung: ' + perMin.toFixed(2).replace('.', ',') + ' € pro Minute' : 'Keine Verlängerung möglich (Pauschalpreis)';
             var zusatz = parseInt(document.getElementById('gutschein-zusatzzeit').value) || 0;
-            // Kunstflug: keine Verlängerung möglich
             if (perMin === 0) {
                 zusatzWrap.style.opacity = '0.4';
                 zusatzWrap.querySelector('input').disabled = true;
