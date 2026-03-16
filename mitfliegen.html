@@ -419,27 +419,29 @@
                     <label for="gutschein-empfaenger">Name des Beschenkten *</label>
                     <input type="text" id="gutschein-empfaenger" name="empfaenger" required placeholder="Für wen ist der Gutschein?">
                 </div>
-                <p style="font-size: 0.85rem; color: var(--text-light); margin-top: 25px; margin-bottom: 12px;">Optional — für die KI-Textgenerierung:</p>
-                <div class="form-row" style="gap: 15px;">
-                    <div class="form-group" style="flex: 1;">
-                        <label for="ki-anlass">Anlass</label>
-                        <input type="text" id="ki-anlass" name="anlass" placeholder="z.B. Geburtstag, Weihnachten...">
+                <fieldset style="border: 1px solid #ddd; border-radius: var(--radius); padding: 18px 20px 12px; margin-top: 25px; background: var(--bg-light);">
+                    <legend style="font-size: 0.85rem; color: var(--text-light); padding: 0 8px;">Optional — für die KI-Textgenerierung</legend>
+                    <div class="form-row" style="gap: 15px;">
+                        <div class="form-group" style="flex: 1;">
+                            <label for="ki-anlass">Anlass</label>
+                            <input type="text" id="ki-anlass" name="anlass" placeholder="z.B. Geburtstag, Weihnachten...">
+                        </div>
+                        <div class="form-group" style="flex: 1;">
+                            <label for="ki-schreibstil">Schreibstil</label>
+                            <select id="ki-schreibstil">
+                                <option value="">— Standard —</option>
+                                <option value="herzlich und warmherzig">Herzlich</option>
+                                <option value="lustig und humorvoll">Lustig</option>
+                                <option value="förmlich und elegant">Förmlich</option>
+                                <option value="als gereimtes Gedicht">Als Gedicht</option>
+                                <option value="mit bayerischem Dialekt/Slang">Bayerisch</option>
+                                <option value="mit fränkischem Dialekt">Fränkisch</option>
+                                <option value="episch und dramatisch, wie ein Filmtrailer">Episch</option>
+                                <option value="kurz und knackig, maximal 2-3 Sätze">Kurz &amp; knackig</option>
+                            </select>
+                        </div>
                     </div>
-                    <div class="form-group" style="flex: 1;">
-                        <label for="ki-schreibstil">Schreibstil</label>
-                        <select id="ki-schreibstil">
-                            <option value="">— Standard —</option>
-                            <option value="herzlich und warmherzig">Herzlich</option>
-                            <option value="lustig und humorvoll">Lustig</option>
-                            <option value="förmlich und elegant">Förmlich</option>
-                            <option value="als gereimtes Gedicht">Als Gedicht</option>
-                            <option value="mit bayerischem Dialekt/Slang">Bayerisch</option>
-                            <option value="mit fränkischem Dialekt">Fränkisch</option>
-                            <option value="episch und dramatisch, wie ein Filmtrailer">Episch</option>
-                            <option value="kurz und knackig, maximal 2-3 Sätze">Kurz & knackig</option>
-                        </select>
-                    </div>
-                </div>
+                </fieldset>
                 <div class="form-group" style="margin-top: 20px;">
                     <label for="gutschein-grusstext">Persönlicher Grußtext (optional)</label>
                     <div style="position:relative;">
