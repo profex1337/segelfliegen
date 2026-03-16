@@ -419,9 +419,26 @@
                     <label for="gutschein-empfaenger">Name des Beschenkten *</label>
                     <input type="text" id="gutschein-empfaenger" name="empfaenger" required placeholder="Für wen ist der Gutschein?">
                 </div>
-                <div class="form-group" style="margin-top: 20px;">
-                    <label for="ki-anlass">Anlass (optional)</label>
-                    <input type="text" id="ki-anlass" name="anlass" placeholder="z.B. Geburtstag, Weihnachten, Hochzeitstag...">
+                <p style="font-size: 0.85rem; color: var(--text-light); margin-top: 25px; margin-bottom: 12px;">Optional — für die KI-Textgenerierung:</p>
+                <div class="form-row" style="gap: 15px;">
+                    <div class="form-group" style="flex: 1;">
+                        <label for="ki-anlass">Anlass</label>
+                        <input type="text" id="ki-anlass" name="anlass" placeholder="z.B. Geburtstag, Weihnachten...">
+                    </div>
+                    <div class="form-group" style="flex: 1;">
+                        <label for="ki-schreibstil">Schreibstil</label>
+                        <select id="ki-schreibstil">
+                            <option value="">— Standard —</option>
+                            <option value="herzlich und warmherzig">Herzlich</option>
+                            <option value="lustig und humorvoll">Lustig</option>
+                            <option value="förmlich und elegant">Förmlich</option>
+                            <option value="als gereimtes Gedicht">Als Gedicht</option>
+                            <option value="mit bayerischem Dialekt/Slang">Bayerisch</option>
+                            <option value="mit fränkischem Dialekt">Fränkisch</option>
+                            <option value="episch und dramatisch, wie ein Filmtrailer">Episch</option>
+                            <option value="kurz und knackig, maximal 2-3 Sätze">Kurz & knackig</option>
+                        </select>
+                    </div>
                 </div>
                 <div class="form-group" style="margin-top: 20px;">
                     <label for="gutschein-grusstext">Persönlicher Grußtext (optional)</label>
@@ -430,7 +447,7 @@
                         <div id="gruss-counter" style="text-align:right; font-size:0.75rem; color:var(--text-light); margin-top:4px;">0 / 800 · max. 10 Zeilen</div>
                         <button type="button" id="ki-toggle-btn" title="KI-Grußtext generieren" onclick="generateGreeting()" class="ki-btn">KI</button>
                     </div>
-                    <p style="font-size: 0.75rem; color: var(--text-light); margin-top: 6px;">Bei Nutzung der KI-Funktion werden deine Eingaben (Name, Flugart, Anlass) zur Textgenerierung an die Google Gemini API übermittelt. <a href="datenschutz.html" style="color: var(--primary);">Mehr erfahren</a></p>
+                    <p style="font-size: 0.75rem; color: var(--text-light); margin-top: 6px;">Bei Nutzung der KI-Funktion werden deine Eingaben (Name, Flugart, Anlass, Schreibstil) zur Textgenerierung an die Google Gemini API übermittelt. <a href="datenschutz.html" style="color: var(--primary);">Mehr erfahren</a></p>
                 </div>
 
                 <div class="checkbox-wrapper" style="margin-top: 25px;">
@@ -584,6 +601,7 @@
             }
 
             var anlass = document.getElementById('ki-anlass').value.trim() || 'ohne bestimmten Anlass';
+            var schreibstil = document.getElementById('ki-schreibstil').value;
             var empfaenger = empfaengerVal;
             var besteller = nameVal;
             var flugart = flugartVal;
@@ -593,13 +611,17 @@
             btn.textContent = '...';
             btn.disabled = true;
 
-            var prompt = 'Erstelle einen kreativen, herzlichen Gutscheintext für einen Flug-Gutschein mit folgenden Daten:\n'
+            var stilAnweisung = schreibstil
+                ? 'Schreibe den Text im folgenden Stil: ' + schreibstil + '. '
+                : 'Schreibe 3-5 begeisternde Sätze. Verwende gerne Metaphern rund ums Fliegen, Freiheit und Abenteuer. ';
+
+            var prompt = 'Erstelle einen kreativen Gutscheintext für einen Flug-Gutschein mit folgenden Daten:\n'
                 + '- Name des Beschenkten: ' + empfaenger + '\n'
                 + '- Flugart: ' + flugart + '\n'
                 + '- Anlass: ' + anlass + '\n'
                 + (besteller ? '- Geschenk von: ' + besteller + '\n' : '')
                 + '\nDer Gutschein ist vom Segelflugplatz Altdorf-Hagenhausen (Segelfliegen). '
-                + 'Schreibe 3-5 begeisternde Sätze. Verwende gerne Metaphern rund ums Fliegen, Freiheit und Abenteuer. '
+                + stilAnweisung
                 + 'Gehe auf den Anlass und den Namen ein. '
                 + 'Beginne mit einer persönlichen Anrede (z.B. "Lieber Hans,"). '
                 + (besteller ? 'Ende mit einer persönlichen Grußformel vom Schenkenden (z.B. "Dein ' + besteller + '"). ' : '')
