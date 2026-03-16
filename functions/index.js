@@ -265,7 +265,9 @@ exports.sendPublicEmail = onRequest(
           if (data.empfaenger) detailsHtml += buildDetailRow("Empfänger", data.empfaenger, rowIndex++);
           if (data.anlass) detailsHtml += buildDetailRow("Anlass", data.anlass, rowIndex++);
           if (data.zustellung) detailsHtml += buildDetailRow("Zustellung", data.zustellung, rowIndex++, "font-weight: bold; color: #6a1b9a;");
-          ccList.push("joergsperber@arcor.de");
+          if ((data.zustellung || "").indexOf("Abholung") !== -1) {
+            ccList.push("joergsperber@arcor.de");
+          }
           ccList.push("r.dachauer-kassier@web.de");
         } else if (formType === "gastflug") {
           subject = "Neue Gastflug-Anfrage";
@@ -416,7 +418,7 @@ exports.sendAdminEmail = onCall(
           const info = await transporter.sendMail({
             from,
             to: VEREINS_EMAIL,
-            cc: "dan@segelfliegen-altdorf.de,joergsperber@arcor.de",
+            cc: "dan@segelfliegen-altdorf.de" + ((safeOrder.zustellung || "").indexOf("Abholung") !== -1 ? ",joergsperber@arcor.de" : ""),
             subject,
             html,
           });
