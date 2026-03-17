@@ -451,8 +451,14 @@ function initForms() {
             } else if (formType === 'gutschein') {
                 var flugartSelect = document.getElementById('gutschein-flugart');
                 var selectedOpt = flugartSelect ? flugartSelect.options[flugartSelect.selectedIndex] : null;
+                if (!selectedOpt || !selectedOpt.value || !selectedOpt.getAttribute('data-base')) {
+                    btn.textContent = originalText;
+                    btn.disabled = false;
+                    alert('Bitte warte kurz, die Preise werden noch geladen.');
+                    return;
+                }
                 var zusatz = parseInt(fd.get('zusatzzeit') || '0', 10);
-                var desc = selectedOpt ? (selectedOpt.getAttribute('data-description') || '') : '';
+                var desc = selectedOpt.getAttribute('data-description') || '';
                 cfData.flugart = fd.get('flugart') || '';
                 cfData.zusatzzeit = fd.get('zusatzzeit') || '0';
                 cfData.wert = fd.get('wert') || '';

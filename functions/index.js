@@ -371,6 +371,7 @@ exports.sendAdminEmail = onCall(
         zustellung: limitLength(sanitizeHeader(order.zustellung), 200),
         zusatzzeit: limitLength(sanitizeHeader(order.zusatzzeit), 10),
         grusstext: limitLength(order.grusstext, 2000),
+        flugdauer: limitLength(sanitizeHeader(order.flugdauer), 200),
       };
 
       const transporter = createTransporter();
