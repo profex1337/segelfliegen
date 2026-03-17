@@ -661,7 +661,9 @@
             doc.rect(0, 0, w, h, 'F');
 
             const imgAreaW = w * 0.38;
-            const imgSrc = gutscheinImageMap[flightType] || gutscheinImageMap['_default'];
+            const imgSrc = gutscheinImageMap[flightType]
+                || Object.keys(gutscheinImageMap).filter(function(k) { return k !== '_default' && flightType.startsWith(k); }).map(function(k) { return gutscheinImageMap[k]; })[0]
+                || gutscheinImageMap['_default'];
             const bgData = gutscheinImages[imgSrc] || gutscheinImages[gutscheinImageMap['_default']];
             if (bgData) {
                 try {

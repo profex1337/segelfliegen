@@ -401,6 +401,12 @@ function buildPaymentInfoHtml(name, wert, zustellung, qrUrl) {
 function getFlugdauer(flugart, zusatzMin) {
     var basis = { 'Segelflug (Windenstart)': 20, 'Segelflug (F-Schlepp)': 20, 'Motorsegler': 15 };
     var base = basis[flugart];
+    if (!base) {
+        var keys = Object.keys(basis);
+        for (var i = 0; i < keys.length; i++) {
+            if (flugart.indexOf(keys[i]) === 0) { base = basis[keys[i]]; break; }
+        }
+    }
     if (!base) return 'pauschal';
     var text = 'bis zu ' + base + ' Min.';
     if (zusatzMin > 0) text += ' + ' + zusatzMin + ' Min. zus\u00E4tzlich';

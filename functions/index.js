@@ -60,7 +60,11 @@ function limitLength(str, max) {
 
 function getFlugdauer(flugart, zusatzMin) {
   const basis = {"Segelflug (Windenstart)": 20, "Segelflug (F-Schlepp)": 20, "Motorsegler": 15};
-  const base = basis[flugart];
+  let base = basis[flugart];
+  if (!base) {
+    const key = Object.keys(basis).find((k) => flugart.startsWith(k));
+    if (key) base = basis[key];
+  }
   if (!base) return "pauschal";
   let text = "bis zu " + base + " Min.";
   if (zusatzMin > 0) text += " + " + zusatzMin + " Min. zusätzlich";
