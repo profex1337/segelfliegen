@@ -863,35 +863,45 @@ function updateGutscheinDropdown(items) {
         return parseFloat(str.replace(/[^\d,]/g, '').replace(',', '.')) || 0;
     }
 
-    // Preise nach Label in Map sammeln
-    const priceMap = {};
-    items.forEach(function(item) { priceMap[item.label] = parsePrice(item.price); });
+    // Basis-Flugarten (gutschein=true) und Zusatzzeit-Preise (perMinute=true) trennen
+    const baseItems = items.filter(function(i) { return !!i.gutschein; });
+    const perMinItems = items.filter(function(i) { return !!i.perMinute; });
 
-    // Zuordnung: Flugart → Basispreis-Label, Verlängerungspreis-Label
-    const flugarten = [
-        { value: 'Segelflug (Windenstart)', baseLabel: 'Segelflug (Windenstart)', perMinLabel: 'Verlängerung Segelflug' },
-        { value: 'Segelflug (F-Schlepp)', baseLabel: 'Segelflug (F-Schlepp)', perMinLabel: 'Verlängerung Segelflug' },
-        { value: 'Kunstflug', baseLabel: 'Segelkunstflug', perMinLabel: null },
-        { value: 'Motorsegler', baseLabel: 'Motorsegler', perMinLabel: 'Verlängerung Motorsegler' }
-    ];
+    // Fuer jede Basis-Flugart den passenden Minutenpreis finden
+    // Matching: Label des Minutenpreises enthaelt Schluesselwort der Basis-Flugart
+    function findPerMin(baseLabel) {
+        // Schluesselwoerter extrahieren (z.B. "Segelflug (Windenstart)" → ["segelflug"])
+        // "Segelkunstflug" → ["kunstflug", "segelkunstflug"]
+        const lower = baseLabel.toLowerCase();
+        for (var i = 0; i < perMinItems.length; i++) {
+            var pmLabel = perMinItems[i].label.toLowerCase();
+            // Pruefe ob der Minutenpreis-Label ein Schluesselwort der Basis-Flugart enthaelt
+            // z.B. "verlängerung segelflug" matched "segelflug (windenstart)" weil beide "segelflug" enthalten
+            // z.B. "verlängerung motorsegler" matched "motorsegler"
+            var pmKeywords = pmLabel.replace(/verl.ngerung\s*/i, '').trim();
+            if (pmKeywords && lower.indexOf(pmKeywords) !== -1) {
+                return parsePrice(perMinItems[i].price);
+            }
+        }
+        return 0;
+    }
 
     // Aktuelle Auswahl merken
     const currentValue = select.value;
 
     // Optionen neu aufbauen
-    select.innerHTML = '<option value="" disabled selected>Bitte wählen...</option>';
-    flugarten.forEach(function(fa) {
-        const base = priceMap[fa.baseLabel];
-        if (base === undefined) return; // Flugart nicht in DB vorhanden
-        const perMin = fa.perMinLabel ? (priceMap[fa.perMinLabel] || 0) : 0;
-        const opt = document.createElement('option');
-        opt.value = fa.value;
+    select.innerHTML = '<option value="" disabled selected>Bitte w\u00e4hlen...</option>';
+    baseItems.forEach(function(item) {
+        var base = parsePrice(item.price);
+        var perMin = findPerMin(item.label);
+        var opt = document.createElement('option');
+        opt.value = item.label;
         opt.setAttribute('data-base', base);
         opt.setAttribute('data-permin', perMin);
         if (perMin === 0) {
-            opt.textContent = fa.value + ' \u2014 ' + base.toFixed(2).replace('.', ',') + ' \u20AC pauschal';
+            opt.textContent = item.label + ' \u2014 ' + base.toFixed(2).replace('.', ',') + ' \u20AC pauschal';
         } else {
-            opt.textContent = fa.value + ' \u2014 ab ' + base.toFixed(2).replace('.', ',') + ' \u20AC';
+            opt.textContent = item.label + ' \u2014 ab ' + base.toFixed(2).replace('.', ',') + ' \u20AC';
         }
         select.appendChild(opt);
     });
@@ -940,10 +950,14 @@ function renderAdminPrices(container, items, isAdmin) {
             + '<input type="text" data-field="description" placeholder="Beschreibung" style="flex:2 1 150px; padding:8px; border:1px solid #ddd; border-radius:4px;">'
             + '<input type="text" data-field="price" placeholder="Preis" style="flex:0 0 100px; padding:8px; border:1px solid #ddd; border-radius:4px; text-align:right;">'
             + '</div>'
-            + '<div style="display:flex; gap:8px; align-items:center;">'
+            + '<div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">'
             + '<button class="save-price-btn btn" style="padding:5px 12px; font-size:0.85rem;">Speichern</button>'
-            + '<button class="delete-price-btn btn btn-secondary" style="padding:5px 12px; font-size:0.85rem; background:#c0392b; color:#fff; border-color:#c0392b;">Löschen</button>'
+            + '<button class="delete-price-btn btn btn-secondary" style="padding:5px 12px; font-size:0.85rem; background:#c0392b; color:#fff; border-color:#c0392b;">L\u00f6schen</button>'
             + '<span class="price-save-status" style="color:#27ae60; font-size:0.8rem; display:none;"></span>'
+            + '<span style="margin-left:auto; display:flex; gap:6px;">'
+            + '<button type="button" class="toggle-gutschein" title="Als Gutschein-Flugart im Dropdown anzeigen" style="padding:3px 8px; font-size:0.75rem; border-radius:4px; border:1px solid #ccc; cursor:pointer; background:#eee; color:#666;">Gutschein</button>'
+            + '<button type="button" class="toggle-perminute" title="Als Minutenpreis f\u00fcr Zusatzzeit verwenden" style="padding:3px 8px; font-size:0.75rem; border-radius:4px; border:1px solid #ccc; cursor:pointer; background:#eee; color:#666;">Zusatzzeit</button>'
+            + '</span>'
             + '</div>';
 
         row.style.display = 'flex';
@@ -955,6 +969,36 @@ function renderAdminPrices(container, items, isAdmin) {
         content.querySelector('[data-field="label"]').value = item.label || '';
         content.querySelector('[data-field="description"]').value = item.description || '';
         content.querySelector('[data-field="price"]').value = item.price || '';
+
+        // Gutschein/Zusatzzeit Toggle-Buttons
+        const gutscheinBtn = content.querySelector('.toggle-gutschein');
+        const perMinBtn = content.querySelector('.toggle-perminute');
+
+        function styleToggle(btn, active, color) {
+            btn.style.background = active ? color : '#eee';
+            btn.style.color = active ? '#fff' : '#666';
+            btn.style.borderColor = active ? color : '#ccc';
+        }
+        styleToggle(gutscheinBtn, !!item.gutschein, '#0f3460');
+        styleToggle(perMinBtn, !!item.perMinute, '#e94560');
+
+        gutscheinBtn.onclick = async () => {
+            const newVal = !item.gutschein;
+            try {
+                // Gutschein und perMinute schliessen sich gegenseitig aus
+                const updates = { gutschein: newVal };
+                if (newVal) updates.perMinute = false;
+                await updateDoc(doc(db, 'prices', item.id), updates);
+            } catch (e) { alert('Fehler: ' + e.message); }
+        };
+        perMinBtn.onclick = async () => {
+            const newVal = !item.perMinute;
+            try {
+                const updates = { perMinute: newVal };
+                if (newVal) updates.gutschein = false;
+                await updateDoc(doc(db, 'prices', item.id), updates);
+            } catch (e) { alert('Fehler: ' + e.message); }
+        };
 
         content.querySelector('.save-price-btn').onclick = async () => {
             const data = {
@@ -1026,13 +1070,13 @@ function renderAdminPrices(container, items, isAdmin) {
 
 async function seedDefaultPrices() {
     const defaults = [
-        { label: "Segelflug (Windenstart)", description: "bis 20 Minuten Flugzeit", price: "48,00 €", order: 0 },
-        { label: "Gruppen ab 10 Personen", description: "bis 20 Minuten, Windenstart", price: "30,00 €", order: 1 },
-        { label: "Segelflug (F-Schlepp)", description: "bis 20 Minuten", price: "80,00 €", order: 2 },
-        { label: "Verlängerung Segelflug", description: "Jede weitere Minute über 20 Min. Flugzeit", price: "0,75 €", order: 3 },
-        { label: "Motorsegler", description: "bis 15 Minuten", price: "55,00 €", order: 4 },
-        { label: "Verlängerung Motorsegler", description: "jede weitere Minute", price: "3,75 €", order: 5 },
-        { label: "Segelkunstflug", description: "mit F-Schlepp pauschal", price: "160,00 €", order: 6 }
+        { label: "Segelflug (Windenstart)", description: "bis 20 Minuten Flugzeit", price: "48,00 €", order: 0, gutschein: true, perMinute: false },
+        { label: "Gruppen ab 10 Personen", description: "bis 20 Minuten, Windenstart", price: "30,00 €", order: 1, gutschein: false, perMinute: false },
+        { label: "Segelflug (F-Schlepp)", description: "bis 20 Minuten", price: "80,00 €", order: 2, gutschein: true, perMinute: false },
+        { label: "Verlängerung Segelflug", description: "Jede weitere Minute über 20 Min. Flugzeit", price: "0,75 €", order: 3, gutschein: false, perMinute: true },
+        { label: "Motorsegler", description: "bis 15 Minuten", price: "55,00 €", order: 4, gutschein: true, perMinute: false },
+        { label: "Verlängerung Motorsegler", description: "jede weitere Minute", price: "3,75 €", order: 5, gutschein: false, perMinute: true },
+        { label: "Segelkunstflug", description: "mit F-Schlepp pauschal", price: "160,00 €", order: 6, gutschein: true, perMinute: false }
     ];
 
     try {
