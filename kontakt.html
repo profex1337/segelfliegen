@@ -130,7 +130,8 @@
                         <label for="betreff">Betreff</label>
                         <select id="betreff" name="betreff">
                             <option value="Allgemein">Allgemeine Anfrage</option>
-                            <option value="Gutschein">Gutschein Bestellung</option>
+                            <option value="Gastflug">Gastflug-Anfrage</option>
+                            <option value="Gutschein">Gutschein-Anfrage</option>
                             <option value="Ausbildung">Ausbildung / Mitgliedschaft</option>
                             <option value="Event">Veranstaltung / Hallenfest</option>
                         </select>
@@ -161,6 +162,24 @@
     <footer id="main-footer"></footer>
     <button id="btn-back-to-top" title="Nach oben" aria-label="Zurück nach oben">↑</button>
     <script src="script.js"></script>
+    <script>
+        // Betreff aus URL-Parameter vorauswählen (z.B. ?betreff=Gastflug)
+        (function() {
+            var params = new URLSearchParams(window.location.search);
+            var betreff = params.get('betreff');
+            if (betreff) {
+                var sel = document.getElementById('betreff');
+                if (sel) {
+                    for (var i = 0; i < sel.options.length; i++) {
+                        if (sel.options[i].value === betreff) {
+                            sel.selectedIndex = i;
+                            break;
+                        }
+                    }
+                }
+            }
+        })();
+    </script>
 </body>
 </html>
 
