@@ -449,6 +449,10 @@ function initForms() {
             if (formType === 'kontakt') {
                 cfData.betreff = fd.get('betreff') || 'Allgemein';
             } else if (formType === 'gutschein') {
+                var flugartSelect = document.getElementById('gutschein-flugart');
+                var selectedOpt = flugartSelect ? flugartSelect.options[flugartSelect.selectedIndex] : null;
+                var zusatz = parseInt(fd.get('zusatzzeit') || '0', 10);
+                var desc = selectedOpt ? (selectedOpt.getAttribute('data-description') || '') : '';
                 cfData.flugart = fd.get('flugart') || '';
                 cfData.zusatzzeit = fd.get('zusatzzeit') || '0';
                 cfData.wert = fd.get('wert') || '';
@@ -457,6 +461,7 @@ function initForms() {
                 cfData.anlass = fd.get('anlass') || '';
                 cfData.zustellung = fd.get('zustellung') || '';
                 cfData.grusstext = fd.get('grusstext') || '';
+                cfData.flugdauer = zusatz > 0 ? desc + ' + ' + zusatz + ' Min. zusätzlich' : desc;
             } else if (formType === 'gastflug') {
                 cfData.interest = fd.get('interest') || '';
             }
@@ -478,7 +483,8 @@ function initForms() {
                             empfaenger: fd.get('empfaenger') || '',
                             grusstext: fd.get('grusstext') || '',
                             zustellung: fd.get('zustellung') || '',
-                            wertAnzeigen: fd.get('wert_anzeigen') ? true : false
+                            wertAnzeigen: fd.get('wert_anzeigen') ? true : false,
+                            flugdauer: cfData.flugdauer || ''
                         });
                     }
                 }

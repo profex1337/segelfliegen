@@ -898,6 +898,7 @@ function updateGutscheinDropdown(items) {
         opt.value = item.label;
         opt.setAttribute('data-base', base);
         opt.setAttribute('data-permin', perMin);
+        opt.setAttribute('data-description', item.description || '');
         if (perMin === 0) {
             opt.textContent = item.label + ' \u2014 ' + base.toFixed(2).replace('.', ',') + ' \u20AC pauschal';
         } else {
@@ -1565,6 +1566,8 @@ async function startVoucherLogic() {
         if (validUntil) validUntil.value = item.validUntil || '';
         if (zusatzField) zusatzField.value = item.zusatzzeit || '0';
         if (showValueField) showValueField.checked = item.showValue !== false;
+        var flugdauerField = document.getElementById('voucher-flugdauer');
+        if (flugdauerField) flugdauerField.value = item.flugdauer || '';
         // Direkt PDF herunterladen
         var downloadBtn = document.getElementById('gutschein-download-btn');
         if (downloadBtn) downloadBtn.click();
@@ -1584,9 +1587,11 @@ async function startVoucherLogic() {
         if (bestellerField) bestellerField.value = order.name || '';
         var emailField = document.getElementById('voucher-order-email');
         if (emailField) emailField.value = order.email || '';
-        // Zusatzzeit merken für Flugdauer auf dem PDF
+        // Zusatzzeit und Flugdauer merken für PDF
         var zusatzField = document.getElementById('voucher-zusatzzeit');
         if (zusatzField) zusatzField.value = order.zusatzzeit || '0';
+        var flugdauerField = document.getElementById('voucher-flugdauer');
+        if (flugdauerField) flugdauerField.value = order.flugdauer || '';
         // Wert-Anzeige Checkbox setzen (Standard: true)
         var showValueField = document.getElementById('voucher-show-value');
         if (showValueField) showValueField.checked = order.wertAnzeigen !== false;
@@ -1657,7 +1662,8 @@ async function startVoucherLogic() {
                     empfaenger: order.empfaenger || '',
                     wert: order.wert || '',
                     zusatzzeit: order.zusatzzeit || '0',
-                    zustellung: order.zustellung || ''
+                    zustellung: order.zustellung || '',
+                    flugdauer: order.flugdauer || ''
                 }
             });
             alert('Zahlungserinnerung wurde an ' + order.email + ' gesendet.');

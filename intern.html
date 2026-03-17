@@ -334,6 +334,7 @@
                                 <div>
                                     <label style="display:block; margin-bottom:6px; font-weight:600; font-size:0.9rem;">Zusatzzeit (Min.)</label>
                                     <input type="number" id="voucher-zusatzzeit" value="0" min="0" step="5" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:6px;">
+                                    <input type="hidden" id="voucher-flugdauer" value="">
                                 </div>
                                 <div>
                                     <label style="display:block; margin-bottom:6px; font-weight:600; font-size:0.9rem;">Gültig bis</label>
@@ -486,9 +487,8 @@
             var recipient = document.getElementById('voucher-recipient').value.trim() || 'Empf\u00E4nger';
             var flightType = document.getElementById('voucher-flight-type').value || 'Flugart';
             var value = document.getElementById('voucher-value').value.trim() || '\u2014';
-            var zusatz = parseInt(document.getElementById('voucher-zusatzzeit').value || '0', 10);
             var validUntil = document.getElementById('voucher-valid-until').value.trim();
-            var flugdauer = typeof getFlugdauer === 'function' ? getFlugdauer(flightType, zusatz) : '';
+            var flugdauer = document.getElementById('voucher-flugdauer').value || '';
             var besteller = document.getElementById('voucher-besteller').value.trim();
             var anrede = besteller ? 'Hallo <strong>' + besteller + '</strong>,' : 'Hallo,';
 
@@ -730,9 +730,8 @@
 
             var hasWert = false;
             var showValue = document.getElementById('voucher-show-value').checked;
-            var zusatzzeit = parseInt(document.getElementById('voucher-zusatzzeit').value || '0', 10);
-            var flugdauer = getFlugdauer(flightType, zusatzzeit);
-            var hasFlugdauer = flugdauer && flugdauer !== 'pauschal';
+            var flugdauer = document.getElementById('voucher-flugdauer').value || '';
+            var hasFlugdauer = !!flugdauer;
             if (voucherValue && showValue) {
                 hasWert = true;
                 doc.setFont('helvetica', 'bold');
@@ -850,6 +849,7 @@
                     validUntil: document.getElementById('voucher-valid-until').value.trim() || '',
                     zusatzzeit: document.getElementById('voucher-zusatzzeit').value || '0',
                     showValue: document.getElementById('voucher-show-value').checked,
+                    flugdauer: document.getElementById('voucher-flugdauer').value || '',
                     redeemed: false
                 });
             }

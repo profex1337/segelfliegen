@@ -308,8 +308,7 @@ exports.sendPublicEmail = onRequest(
 
         // Bei Gutschein: Auto-Reply an Kunden
         if (formType === "gutschein") {
-          const zusatz = parseInt(data.zusatzzeit || "0", 10);
-          const flugdauer = getFlugdauer(data.flugart || "", zusatz);
+          const flugdauer = data.flugdauer || getFlugdauer(data.flugart || "", parseInt(data.zusatzzeit || "0", 10));
           const qrUrl = buildEpcQrUrl(name, data.wert);
           const paymentHtml = buildPaymentInfoHtml(name, data.wert || "", data.zustellung || "", qrUrl);
 
@@ -384,8 +383,7 @@ exports.sendAdminEmail = onCall(
             throw new HttpsError("invalid-argument", "Ungültige Kunden-E-Mail.");
           }
 
-          const zusatz = parseInt(safeOrder.zusatzzeit || "0", 10);
-          const flugdauer = getFlugdauer(safeOrder.flugart || "", zusatz);
+          const flugdauer = safeOrder.flugdauer || getFlugdauer(safeOrder.flugart || "", parseInt(safeOrder.zusatzzeit || "0", 10));
           const qrUrl = buildEpcQrUrl(safeOrder.name, safeOrder.wert);
           const paymentHtml = buildPaymentInfoHtml(safeOrder.name || "", safeOrder.wert || "", safeOrder.zustellung || "", qrUrl);
           const istAbholung = (safeOrder.zustellung || "").indexOf("Abholung") !== -1;
@@ -410,7 +408,7 @@ exports.sendAdminEmail = onCall(
           return {success: true, messageId: info.messageId};
         } else if (action === "paidNotification") {
           // Bezahlt-Benachrichtigung an Verein
-          const flugdauer = getFlugdauer(safeOrder.flugart || "", parseInt(safeOrder.zusatzzeit || "0", 10));
+          const flugdauer = safeOrder.flugdauer || getFlugdauer(safeOrder.flugart || "", parseInt(safeOrder.zusatzzeit || "0", 10));
           let detailsHtml = "";
           const rows = [
             {label: "Name", value: safeOrder.name || ""},
