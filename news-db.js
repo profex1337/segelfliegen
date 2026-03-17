@@ -803,6 +803,7 @@ async function startPricesLogic() {
 
             if (pricesContainer) renderPublicPrices(pricesContainer, items);
             if (pricesAdminList) renderAdminPrices(pricesAdminList, items, isAdmin);
+            updateGutscheinDropdown(items);
         });
     });
 
@@ -849,6 +850,57 @@ function renderPublicPrices(container, items) {
         li.appendChild(priceSpan);
         container.appendChild(li);
     });
+}
+
+// Gutschein-Dropdown dynamisch aus Firestore-Preisen befuellen
+function updateGutscheinDropdown(items) {
+    const select = document.getElementById('gutschein-flugart');
+    if (!select || items.length === 0) return;
+
+    // Preise aus Firestore extrahieren (Format "48,00 €" → 48)
+    function parsePrice(str) {
+        if (!str) return 0;
+        return parseFloat(str.replace(/[^\d,]/g, '').replace(',', '.')) || 0;
+    }
+
+    // Preise nach Label in Map sammeln
+    const priceMap = {};
+    items.forEach(function(item) { priceMap[item.label] = parsePrice(item.price); });
+
+    // Zuordnung: Flugart → Basispreis-Label, Verlängerungspreis-Label
+    const flugarten = [
+        { value: 'Segelflug (Windenstart)', baseLabel: 'Segelflug (Windenstart)', perMinLabel: 'Verlängerung Segelflug' },
+        { value: 'Segelflug (F-Schlepp)', baseLabel: 'Segelflug (F-Schlepp)', perMinLabel: 'Verlängerung Segelflug' },
+        { value: 'Kunstflug', baseLabel: 'Segelkunstflug', perMinLabel: null },
+        { value: 'Motorsegler', baseLabel: 'Motorsegler', perMinLabel: 'Verlängerung Motorsegler' }
+    ];
+
+    // Aktuelle Auswahl merken
+    const currentValue = select.value;
+
+    // Optionen neu aufbauen
+    select.innerHTML = '<option value="" disabled selected>Bitte wählen...</option>';
+    flugarten.forEach(function(fa) {
+        const base = priceMap[fa.baseLabel];
+        if (base === undefined) return; // Flugart nicht in DB vorhanden
+        const perMin = fa.perMinLabel ? (priceMap[fa.perMinLabel] || 0) : 0;
+        const opt = document.createElement('option');
+        opt.value = fa.value;
+        opt.setAttribute('data-base', base);
+        opt.setAttribute('data-permin', perMin);
+        if (perMin === 0) {
+            opt.textContent = fa.value + ' \u2014 ' + base.toFixed(2).replace('.', ',') + ' \u20AC pauschal';
+        } else {
+            opt.textContent = fa.value + ' \u2014 ab ' + base.toFixed(2).replace('.', ',') + ' \u20AC';
+        }
+        select.appendChild(opt);
+    });
+
+    // Vorherige Auswahl wiederherstellen
+    if (currentValue) {
+        select.value = currentValue;
+        if (typeof updateGutscheinWert === 'function') updateGutscheinWert();
+    }
 }
 
 function renderAdminPrices(container, items, isAdmin) {
