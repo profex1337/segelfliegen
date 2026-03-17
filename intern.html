@@ -635,7 +635,28 @@
 
         // PDF generieren — gibt jsPDF doc zurück (ohne zu speichern)
         function generatePDF() {
-            const recipient = document.getElementById('voucher-recipient').value.trim();
+            // Emoji durch PDF-kompatible Zeichen ersetzen (Helvetica hat keine Emoji-Glyphen)
+            function replaceEmoji(text) {
+                var map = [
+                    [/[\u2764\u2765]\uFE0F?/g, '<3'],
+                    [/[\u{1F495}\u{1F496}\u{1F497}\u{1F498}\u{1F49B}\u{1F49A}\u{1F499}\u{1F49C}\u{1F5A4}\u{1F90D}\u{1F90E}\u{1F9E1}]/gu, '<3'],
+                    [/\u{1F60A}/gu, ':)'], [/\u{1F602}/gu, ':D'], [/\u{1F609}/gu, ';)'],
+                    [/\u{1F389}/gu, '*'], [/\u{1F388}/gu, '*'], [/\u{1F381}/gu, '*'],
+                    [/\u{2B50}\uFE0F?/gu, '*'], [/\u{1F31F}/gu, '*'], [/\u{1F4AA}/gu, '!'],
+                    [/\u{1F44D}\uFE0F?/gu, '(Y)'], [/\u{1F44B}\uFE0F?/gu, ''],
+                    [/\u{1F60D}/gu, '<3'], [/\u{1F618}/gu, '<3'],
+                    [/\u{2708}\uFE0F?/gu, '~'], [/\u{1F6E9}\uFE0F?/gu, '~'],
+                    [/\u{2600}\uFE0F?/gu, '*'], [/\u{1F308}/gu, ''],
+                ];
+                for (var i = 0; i < map.length; i++) {
+                    text = text.replace(map[i][0], map[i][1]);
+                }
+                // Verbleibende Emoji-Zeichen entfernen (Supplementary Plane + Variation Selectors)
+                text = text.replace(/[\u{1F000}-\u{1FFFF}]|\uFE0F/gu, '');
+                return text;
+            }
+
+            const recipient = replaceEmoji(document.getElementById('voucher-recipient').value.trim());
             const flightType = document.getElementById('voucher-flight-type').value;
             const greeting = document.getElementById('voucher-greeting').value.trim();
             const voucherNr = document.getElementById('voucher-number').value.trim();
@@ -774,7 +795,8 @@
                 doc.setFont('helvetica', 'italic');
                 doc.setFontSize(10);
                 doc.setTextColor(100, 100, 100);
-                var allLines = doc.splitTextToSize('\u201E' + greeting + '\u201C', textWidth - 10);
+                var cleanGreeting = replaceEmoji(greeting);
+                var allLines = doc.splitTextToSize('\u201E' + cleanGreeting + '\u201C', textWidth - 10);
                 var maxLines = 11;
                 if (allLines.length > maxLines) allLines = allLines.slice(0, maxLines);
                 doc.text(allLines, textCenterX, nextY, { align: 'center' });
