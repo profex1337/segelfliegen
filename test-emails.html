@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E-Mail Test — Cloud Functions</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: system-ui, -apple-system, sans-serif; background: #f4f6f8; color: #333; padding: 20px; }
+        h1 { text-align: center; color: #0f3460; margin-bottom: 5px; }
+        .subtitle { text-align: center; color: #666; font-size: 14px; margin-bottom: 30px; }
+        .login-section { max-width: 400px; margin: 60px auto; background: #fff; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+        .login-section h2 { color: #0f3460; margin-bottom: 20px; }
+        .login-section input { width: 100%; padding: 10px 14px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; margin-bottom: 12px; }
+        .login-section button { width: 100%; padding: 12px; background: #0f3460; color: #fff; border: none; border-radius: 8px; font-size: 15px; cursor: pointer; }
+        .login-section button:hover { background: #1a4a8a; }
+
+        .main { display: none; max-width: 1200px; margin: 0 auto; }
+        .test-email-bar { display: flex; gap: 10px; align-items: center; background: #fff; padding: 15px 20px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.06); margin-bottom: 25px; flex-wrap: wrap; }
+        .test-email-bar label { font-weight: bold; color: #0f3460; white-space: nowrap; }
+        .test-email-bar input { flex: 1; min-width: 250px; padding: 10px 14px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; }
+        .test-email-bar .btn-logout { padding: 10px 20px; background: #e94560; color: #fff; border: none; border-radius: 8px; cursor: pointer; font-size: 13px; }
+
+        .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 20px; }
+        .card { background: #fff; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.06); overflow: hidden; }
+        .card-header { padding: 15px 20px; background: linear-gradient(135deg, #0f3460, #1a4a8a); color: #fff; display: flex; justify-content: space-between; align-items: center; }
+        .card-header h3 { font-size: 15px; }
+        .card-header .badge { font-size: 11px; background: rgba(255,255,255,0.2); padding: 3px 10px; border-radius: 20px; }
+        .card-body { padding: 20px; }
+        .card-body p { font-size: 13px; color: #666; margin-bottom: 15px; line-height: 1.5; }
+        .card-actions { display: flex; gap: 8px; }
+        .btn { padding: 10px 18px; border: none; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600; }
+        .btn-preview { background: #f4f6f8; color: #0f3460; }
+        .btn-preview:hover { background: #e8ecf1; }
+        .btn-send { background: #0f3460; color: #fff; }
+        .btn-send:hover { background: #1a4a8a; }
+        .btn-send:disabled { opacity: 0.5; cursor: not-allowed; }
+        .status { font-size: 12px; margin-top: 10px; padding: 8px 12px; border-radius: 6px; display: none; }
+        .status.success { display: block; background: #e8f5e9; color: #2e7d32; }
+        .status.error { display: block; background: #fce4ec; color: #c62828; }
+        .status.sending { display: block; background: #fff8e1; color: #f57f17; }
+
+        /* Preview Modal */
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 1000; justify-content: center; align-items: center; padding: 20px; }
+        .modal-overlay.active { display: flex; }
+        .modal { background: #fff; border-radius: 12px; max-width: 700px; width: 100%; max-height: 90vh; display: flex; flex-direction: column; }
+        .modal-header { padding: 15px 20px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
+        .modal-header h3 { color: #0f3460; }
+        .modal-close { background: none; border: none; font-size: 24px; cursor: pointer; color: #999; }
+        .modal-body { padding: 20px; overflow-y: auto; flex: 1; }
+        .modal-body iframe { width: 100%; min-height: 600px; border: 1px solid #eee; border-radius: 8px; }
+    </style>
+</head>
+<body>
+
+<!-- Login -->
+<div id="loginSection" class="login-section">
+    <h2>Admin Login</h2>
+    <p style="font-size: 13px; color: #666; margin-bottom: 15px;">Anmelden um E-Mail-Funktionen zu testen.</p>
+    <input type="password" id="loginPassword" placeholder="Admin-Passwort">
+    <button onclick="handleLogin()">Anmelden</button>
+    <div id="loginError" style="color: #e94560; font-size: 13px; margin-top: 10px;"></div>
+</div>
+
+<!-- Main Content -->
+<div id="mainContent" class="main">
+    <h1>E-Mail Test</h1>
+    <p class="subtitle">Alle Mails werden nur an die Testadresse gesendet — keine Admins, kein CC.</p>
+
+    <div class="test-email-bar">
+        <label>Test-E-Mail:</label>
+        <input type="email" id="testEmail" placeholder="deine@email.de">
+        <button class="btn-logout" onclick="handleLogout()">Abmelden</button>
+    </div>
+
+    <div class="cards">
+
+        <!-- 1. Kontaktanfrage (Benachrichtigung an Verein) -->
+        <div class="card">
+            <div class="card-header">
+                <h3>Kontaktanfrage</h3>
+                <span class="badge">sendPublicEmail</span>
+            </div>
+            <div class="card-body">
+                <p>Vereins-Benachrichtigung bei Kontaktformular (Betreff: Ausbildung). Zeigt wie die interne Benachrichtigungs-Mail aussieht.</p>
+                <div class="card-actions">
+                    <button class="btn btn-preview" onclick="preview('kontakt')">Vorschau</button>
+                    <button class="btn btn-send" onclick="sendTest('kontakt')">Senden</button>
+                </div>
+                <div class="status" id="status-kontakt"></div>
+            </div>
+        </div>
+
+        <!-- 2. Gutschein-Bestellung (Benachrichtigung an Verein) -->
+        <div class="card">
+            <div class="card-header">
+                <h3>Gutschein — Vereins-Info</h3>
+                <span class="badge">sendPublicEmail</span>
+            </div>
+            <div class="card-body">
+                <p>Interne Benachrichtigung bei neuer Gutschein-Bestellung (Überweisung). So sieht die Mail an info@ aus.</p>
+                <div class="card-actions">
+                    <button class="btn btn-preview" onclick="preview('gutschein-notify')">Vorschau</button>
+                    <button class="btn btn-send" onclick="sendTest('gutschein-notify')">Senden</button>
+                </div>
+                <div class="status" id="status-gutschein-notify"></div>
+            </div>
+        </div>
+
+        <!-- 3. Gutschein Auto-Reply (Kunde — Überweisung) -->
+        <div class="card">
+            <div class="card-header">
+                <h3>Gutschein — Kunden-Mail (Überweisung)</h3>
+                <span class="badge">sendPublicEmail</span>
+            </div>
+            <div class="card-body">
+                <p>Automatische Bestätigung an den Kunden mit Bankdaten und QR-Code. Flugart: Segelflug (Windenstart) + 10 Min.</p>
+                <div class="card-actions">
+                    <button class="btn btn-preview" onclick="preview('gutschein-reply-bank')">Vorschau</button>
+                    <button class="btn btn-send" onclick="sendTest('gutschein-reply-bank')">Senden</button>
+                </div>
+                <div class="status" id="status-gutschein-reply-bank"></div>
+            </div>
+        </div>
+
+        <!-- 4. Gutschein Auto-Reply (Kunde — Abholung) -->
+        <div class="card">
+            <div class="card-header">
+                <h3>Gutschein — Kunden-Mail (Abholung)</h3>
+                <span class="badge">sendPublicEmail</span>
+            </div>
+            <div class="card-body">
+                <p>Automatische Bestätigung an den Kunden mit Abholungsinfo. Flugart: Motorsegler.</p>
+                <div class="card-actions">
+                    <button class="btn btn-preview" onclick="preview('gutschein-reply-pickup')">Vorschau</button>
+                    <button class="btn btn-send" onclick="sendTest('gutschein-reply-pickup')">Senden</button>
+                </div>
+                <div class="status" id="status-gutschein-reply-pickup"></div>
+            </div>
+        </div>
+
+        <!-- 5. Gutschein Auto-Reply (Kunstflug) -->
+        <div class="card">
+            <div class="card-header">
+                <h3>Gutschein — Kunden-Mail (Kunstflug)</h3>
+                <span class="badge">sendPublicEmail</span>
+            </div>
+            <div class="card-body">
+                <p>Kunden-Bestätigung für Kunstflug-Gutschein. Flugdauer = pauschal (wird nicht angezeigt).</p>
+                <div class="card-actions">
+                    <button class="btn btn-preview" onclick="preview('gutschein-reply-kunstflug')">Vorschau</button>
+                    <button class="btn btn-send" onclick="sendTest('gutschein-reply-kunstflug')">Senden</button>
+                </div>
+                <div class="status" id="status-gutschein-reply-kunstflug"></div>
+            </div>
+        </div>
+
+        <!-- 6. Gastflug-Anfrage (Benachrichtigung) -->
+        <div class="card">
+            <div class="card-header">
+                <h3>Gastflug-Anfrage</h3>
+                <span class="badge">sendPublicEmail</span>
+            </div>
+            <div class="card-body">
+                <p>Vereins-Benachrichtigung bei Gastflug-Anfrage mit Interesse an Segelflug.</p>
+                <div class="card-actions">
+                    <button class="btn btn-preview" onclick="preview('gastflug')">Vorschau</button>
+                    <button class="btn btn-send" onclick="sendTest('gastflug')">Senden</button>
+                </div>
+                <div class="status" id="status-gastflug"></div>
+            </div>
+        </div>
+
+        <!-- 7. Zahlungserinnerung (Überweisung) -->
+        <div class="card">
+            <div class="card-header">
+                <h3>Zahlungserinnerung (Überweisung)</h3>
+                <span class="badge">sendAdminEmail</span>
+            </div>
+            <div class="card-body">
+                <p>Erinnerung an den Kunden, dass die Überweisung noch aussteht. Segelflug (F-Schlepp).</p>
+                <div class="card-actions">
+                    <button class="btn btn-preview" onclick="preview('reminder-bank')">Vorschau</button>
+                    <button class="btn btn-send" onclick="sendTest('reminder-bank')">Senden</button>
+                </div>
+                <div class="status" id="status-reminder-bank"></div>
+            </div>
+        </div>
+
+        <!-- 8. Abholungserinnerung -->
+        <div class="card">
+            <div class="card-header">
+                <h3>Abholungserinnerung</h3>
+                <span class="badge">sendAdminEmail</span>
+            </div>
+            <div class="card-body">
+                <p>Erinnerung an den Kunden, den Gutschein abzuholen. Motorsegler, Abholung.</p>
+                <div class="card-actions">
+                    <button class="btn btn-preview" onclick="preview('reminder-pickup')">Vorschau</button>
+                    <button class="btn btn-send" onclick="sendTest('reminder-pickup')">Senden</button>
+                </div>
+                <div class="status" id="status-reminder-pickup"></div>
+            </div>
+        </div>
+
+        <!-- 9. Bezahlt-Benachrichtigung -->
+        <div class="card">
+            <div class="card-header">
+                <h3>Bezahlt-Benachrichtigung</h3>
+                <span class="badge">sendAdminEmail</span>
+            </div>
+            <div class="card-body">
+                <p>Info an den Verein, dass eine Bestellung bezahlt wurde. Alle Felder ausgefüllt.</p>
+                <div class="card-actions">
+                    <button class="btn btn-preview" onclick="preview('paid-notify')">Vorschau</button>
+                    <button class="btn btn-send" onclick="sendTest('paid-notify')">Senden</button>
+                </div>
+                <div class="status" id="status-paid-notify"></div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- Preview Modal -->
+<div class="modal-overlay" id="previewModal">
+    <div class="modal">
+        <div class="modal-header">
+            <h3 id="previewTitle">Vorschau</h3>
+            <button class="modal-close" onclick="closePreview()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <iframe id="previewFrame" sandbox="allow-same-origin"></iframe>
+        </div>
+    </div>
+</div>
+
+<!-- Firebase SDK -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-functions.js";
+
+const app = initializeApp({
+    apiKey: "AIzaSyBERmhfCONMsl0Wt3KLwEZXWkFMbTJwwwI",
+    authDomain: "segelfliegen.firebaseapp.com",
+    projectId: "segelfliegen",
+    storageBucket: "segelfliegen.firebasestorage.app",
+    messagingSenderId: "509aborting",
+    appId: "1:509671498498:web:e7d8c7b9af9a2c60acb8fb"
+});
+
+const auth = getAuth(app);
+const functions = getFunctions(app, "europe-west1");
+const sendVoucherEmailFn = httpsCallable(functions, "sendVoucherEmail");
+
+// ========== Template-Funktionen (identisch zu functions/index.js) ==========
+
+const LOGO_URL = "https://raw.githubusercontent.com/profex1337/segelfliegen/main/images/LOGO%20SPN.png";
+
+function escapeHtml(str) {
+    if (!str) return "";
+    return str.replace(/&/g, "&amp;").replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#x27;");
+}
+
+function getFlugdauer(flugart, zusatzMin) {
+    const basis = {"Segelflug (Windenstart)": 20, "Segelflug (F-Schlepp)": 20, "Motorsegler": 15};
+    let base = basis[flugart];
+    if (!base) {
+        const key = Object.keys(basis).find(k => flugart.startsWith(k));
+        if (key) base = basis[key];
+    }
+    if (!base) return "pauschal";
+    let text = "bis zu " + base + " Min.";
+    if (zusatzMin > 0) text += " + " + zusatzMin + " Min. zusätzlich";
+    return text;
+}
+
+function buildEpcQrUrl(name, wert) {
+    const betrag = (wert || "").replace(",", ".");
+    const epcData = "BCD\n002\n1\nSCT\nGENODEF1HSB\nSegelflieger im Post SV Nürnberg\nDE20760614820004555554\nEUR" + betrag + "\n\n\nGutschein " + (name || "");
+    return "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=" + encodeURIComponent(epcData);
+}
+
+function buildPaymentInfoHtml(name, wert, zustellung, qrUrl) {
+    const istAbholung = (zustellung || "").indexOf("Abholung") !== -1;
+    if (istAbholung) {
+        return '<div style="background: #f3e5f5; border: 1px solid #ce93d8; border-radius: 8px; padding: 20px; margin-bottom: 25px;">'
+            + '<div style="font-weight: bold; color: #6a1b9a; font-size: 15px; margin-bottom: 10px;">Abholung &amp; Barzahlung</div>'
+            + '<div style="font-size: 14px; line-height: 1.6; color: #555;">'
+            + 'Bitte hole deinen Gutschein ab bei:<br>'
+            + '<strong>Jörg Sperber, Schulstraße 18, 90518 Altdorf</strong><br>'
+            + '<a href="https://maps.app.goo.gl/p4YEwmERAwFkmy479" style="color: #6a1b9a;">In Google Maps öffnen</a><br>'
+            + 'Bitte vorher anrufen:<br><a href="tel:+4915117250329" style="color: #6a1b9a; font-weight: bold;">+49 1511 7250329</a>'
+            + (wert ? '<br><br><strong>Betrag:</strong> ' + wert + ' € (Barzahlung vor Ort)' : '')
+            + '</div></div>';
+    }
+    return '<div style="background: #fff8e1; border: 1px solid #ffd54f; border-radius: 8px; padding: 20px; margin-bottom: 25px;">'
+        + '<div style="font-weight: bold; color: #f57f17; font-size: 15px; margin-bottom: 15px;">Bitte überweise den Betrag auf folgendes Konto:</div>'
+        + '<div style="margin-bottom: 10px;"><div style="font-size: 12px; color: #666; text-transform: uppercase; letter-spacing: 0.5px;">Kontoinhaber</div>'
+        + '<div style="font-weight: bold; font-size: 15px; margin-top: 2px;">Segelflieger im Post SV Nürnberg</div></div>'
+        + '<div style="margin-bottom: 10px;"><div style="font-size: 12px; color: #666; text-transform: uppercase; letter-spacing: 0.5px;">IBAN</div>'
+        + '<div style="font-weight: bold; font-family: monospace; font-size: 16px; margin-top: 2px;">DE20 7606 1482 0004 5555 54</div></div>'
+        + '<div style="margin-bottom: 10px;"><div style="font-size: 12px; color: #666; text-transform: uppercase; letter-spacing: 0.5px;">BIC</div>'
+        + '<div style="font-weight: bold; font-size: 15px; margin-top: 2px;">GENODEF1HSB</div></div>'
+        + '<div style="margin-bottom: 10px;"><div style="font-size: 12px; color: #666; text-transform: uppercase; letter-spacing: 0.5px;">Bank</div>'
+        + '<div style="font-size: 15px; margin-top: 2px;">Raiffeisenbank im Nürnberger Land</div></div>'
+        + '<div><div style="font-size: 12px; color: #666; text-transform: uppercase; letter-spacing: 0.5px;">Verwendungszweck</div>'
+        + '<div style="font-weight: bold; color: #e94560; font-size: 15px; margin-top: 2px;">Gutschein ' + escapeHtml(name) + '</div></div></div>'
+        + '<div style="text-align: center; margin-bottom: 25px;">'
+        + '<img src="' + (qrUrl || '') + '" alt="QR-Code für Überweisung" width="200" height="200" style="border-radius: 8px;">'
+        + '<div style="font-size: 12px; color: #888; margin-top: 8px;">QR-Code für deine Banking-App scannen</div></div>'
+        + '<div style="font-size: 14px; line-height: 1.7; color: #555; margin-bottom: 25px;">Nach Zahlungseingang erstellen wir deinen personalisierten Gutschein und senden ihn dir per E-Mail zu.</div>';
+}
+
+function buildNotificationHtml(subject, name, email, telefon, message, detailsHtml) {
+    return '<div style="font-family:system-ui,sans-serif,Arial; font-size:14px; color:#333; max-width:600px; margin:0 auto;">'
+        + '<div style="background:linear-gradient(135deg,#0f3460,#1a4a8a); padding:25px; border-radius:12px 12px 0 0; text-align:center;">'
+        + '<img src="' + LOGO_URL + '" alt="Logo" width="50" height="50" style="width:50px; max-width:50px; border-radius:50%; margin:0 auto 10px; display:block;">'
+        + '<div style="font-size:20px; color:#fff; font-weight:bold;">' + escapeHtml(subject) + '</div>'
+        + '<div style="font-size:13px; color:#a8c8f0; margin-top:5px;">Segelflugplatz Altdorf-Hagenhausen</div>'
+        + '</div>'
+        + '<div style="background:#fff; padding:25px; border:1px solid #e0e0e0; border-top:none;">'
+        + '<div style="margin-bottom:20px;">'
+        + '<div style="font-size:15px; font-weight:bold; color:#0f3460; margin-bottom:5px;">' + escapeHtml(name) + '</div>'
+        + '<div style="font-size:13px; color:#666;">' + escapeHtml(email) + (telefon ? ' · ' + escapeHtml(telefon) : '') + '</div>'
+        + '</div>'
+        + (detailsHtml ? '<table role="presentation" style="width:100%; border-collapse:collapse; margin-bottom:20px;">' + detailsHtml + '</table>' : '')
+        + (message ? '<div style="background:#f4f6f8; border-radius:8px; padding:16px; margin-bottom:20px; white-space:pre-wrap; line-height:1.6;">' + escapeHtml(message) + '</div>' : '')
+        + '</div>'
+        + '<div style="background:#0f3460; padding:12px; border-radius:0 0 12px 12px; text-align:center;">'
+        + '<div style="color:#a8c8f0; font-size:11px;">Segelflieger im Post-SV Nürnberg e.V. · segelfliegenaltdorf.de</div>'
+        + '</div></div>';
+}
+
+function buildCustomerReplyHtml(title, subtitle, intro, flugart, empfaenger, wert, flugdauer, zustellung, paymentInfoHtml) {
+    let detailRows = '';
+    if (flugart) detailRows += '<tr><td style="padding:8px 12px; color:#666; width:130px;">Flugart:</td><td style="padding:8px 12px; font-weight:bold;">' + escapeHtml(flugart) + '</td></tr>';
+    if (empfaenger) detailRows += '<tr><td style="padding:8px 12px; color:#666;">Empfänger:</td><td style="padding:8px 12px; font-weight:bold;">' + escapeHtml(empfaenger) + '</td></tr>';
+    if (wert) detailRows += '<tr><td style="padding:8px 12px; color:#666;">Gutscheinwert:</td><td style="padding:8px 12px; font-weight:bold; color:#e94560;">' + escapeHtml(wert) + ' €</td></tr>';
+    if (flugdauer && flugdauer !== "pauschal") detailRows += '<tr><td style="padding:8px 12px; color:#666;">Flugdauer:</td><td style="padding:8px 12px; font-weight:bold;">' + escapeHtml(flugdauer) + '</td></tr>';
+    if (zustellung) detailRows += '<tr><td style="padding:8px 12px; color:#666;">Zustellung:</td><td style="padding:8px 12px; font-weight:bold; color:#6a1b9a;">' + escapeHtml(zustellung) + '</td></tr>';
+
+    return '<div style="font-family:system-ui,sans-serif,Arial; font-size:14px; color:#333; max-width:600px; margin:0 auto;">'
+        + '<div style="background:linear-gradient(135deg,#0f3460,#1a4a8a); padding:25px; border-radius:12px 12px 0 0; text-align:center;">'
+        + '<img src="' + LOGO_URL + '" alt="Logo" width="50" height="50" style="width:50px; max-width:50px; border-radius:50%; margin:0 auto 10px; display:block;">'
+        + '<div style="font-size:22px; color:#fff; font-weight:bold;">' + escapeHtml(title) + '</div>'
+        + '<div style="font-size:13px; color:#a8c8f0; margin-top:5px;">' + escapeHtml(subtitle) + '</div>'
+        + '</div>'
+        + '<div style="background:#fff; padding:25px; border:1px solid #e0e0e0; border-top:none;">'
+        + '<div style="font-size:15px; line-height:1.7; margin-bottom:20px;">' + intro + '</div>'
+        + (detailRows ? '<div style="background:#f4f6f8; border-radius:8px; padding:16px; margin-bottom:20px;"><div style="font-weight:bold; color:#0f3460; font-size:14px; margin-bottom:10px;">Deine Bestellung</div><table role="presentation" style="width:100%; border-collapse:collapse;">' + detailRows + '</table></div>' : '')
+        + (paymentInfoHtml || '')
+        + '<hr style="border:none; border-top:1px solid #eee; margin:20px 0;">'
+        + '<div style="font-size:13px; color:#888; line-height:1.6;">'
+        + 'Viele Grüße<br><br>'
+        + '<strong style="color:#333;">Segelflieger im Post-SV Nürnberg e.V.</strong><br>'
+        + 'Segelflugplatz Altdorf-Hagenhausen<br>'
+        + 'Tel: <a href="tel:+499189310" style="color:#0f3460;">09189/310</a> <span style="font-size:12px;">(Wochenende)</span><br>'
+        + 'E-Mail: <a href="mailto:info@segelfliegen-altdorf.de" style="color:#0f3460;">info@segelfliegen-altdorf.de</a><br>'
+        + 'Web: <a href="https://www.segelfliegenaltdorf.de" style="color:#0f3460;">www.segelfliegenaltdorf.de</a>'
+        + '</div></div>'
+        + '<div style="background:#0f3460; padding:12px; border-radius:0 0 12px 12px; text-align:center;">'
+        + '<div style="color:#fff; font-size:12px; font-weight:bold;">Segelflieger im Post-SV Nürnberg e.V.</div>'
+        + '<div style="color:#a8c8f0; font-size:11px; margin-top:4px;">Segelflugplatz Altdorf-Hagenhausen · segelfliegenaltdorf.de</div>'
+        + '</div></div>';
+}
+
+function buildDetailRow(label, value, index, style) {
+    const bg = index % 2 === 0 ? '' : ' background: #f4f6f8;';
+    const valStyle = style ? ' ' + style : '';
+    return '<tr>'
+        + '<td style="padding: 10px 12px;' + bg + ' border-bottom: 1px solid #e8e8e8; width: 130px; font-weight: bold; color: #0f3460;">' + escapeHtml(label) + '</td>'
+        + '<td style="padding: 10px 12px;' + bg + ' border-bottom: 1px solid #e8e8e8;' + valStyle + '">' + escapeHtml(value) + '</td>'
+        + '</tr>';
+}
+
+// ========== Testdaten ==========
+
+const TEST = {
+    name: "Max Mustermann",
+    email: "max@example.de",
+    telefon: "0911 1234567",
+    empfaenger: "Anna Beispiel",
+    grusstext: "Alles Gute zum Geburtstag!\nViel Spaß beim Fliegen!",
+    wert: "120,00",
+    zusatzzeit: "10",
+};
+
+// ========== E-Mail-Templates generieren ==========
+
+function generateEmail(type) {
+    let subject, html;
+
+    if (type === "kontakt") {
+        subject = "Kontaktanfrage: Ausbildung";
+        let details = buildDetailRow("Betreff", "Ausbildung", 0);
+        html = buildNotificationHtml(subject, TEST.name, TEST.email, TEST.telefon, "Ich interessiere mich für die Segelflugausbildung.\nKönntet ihr mir mehr Infos schicken?", details);
+    }
+    else if (type === "gutschein-notify") {
+        subject = "Neue Gutschein-Bestellung";
+        let details = '', i = 0;
+        details += buildDetailRow("Flugart", "Segelflug (Windenstart)", i++);
+        details += buildDetailRow("Zusatzzeit", TEST.zusatzzeit + " Min.", i++);
+        details += buildDetailRow("Gutscheinwert", TEST.wert + " €", i++, "font-weight: bold; color: #e94560;");
+        details += buildDetailRow("Wert im Gutschein", "Ja", i++);
+        details += buildDetailRow("Empfänger", TEST.empfaenger, i++);
+        details += buildDetailRow("Zustellung", "E-Mail (Zahlung per Überweisung)", i++, "font-weight: bold; color: #6a1b9a;");
+        html = buildNotificationHtml(subject, TEST.name, TEST.email, TEST.telefon, TEST.grusstext, details);
+    }
+    else if (type === "gutschein-reply-bank") {
+        subject = "Deine Gutschein-Bestellung beim Segelflugplatz Altdorf";
+        const flugdauer = getFlugdauer("Segelflug (Windenstart)", 10);
+        const qrUrl = buildEpcQrUrl(TEST.name, TEST.wert);
+        const paymentHtml = buildPaymentInfoHtml(TEST.name, TEST.wert, "E-Mail (Zahlung per Überweisung)", qrUrl);
+        html = buildCustomerReplyHtml("Vielen Dank!", "Deine Gutschein-Bestellung ist bei uns eingegangen",
+            'Hallo <strong>' + escapeHtml(TEST.name) + '</strong>,<br><br>vielen Dank für deine Bestellung eines Flug-Gutscheins beim Segelflugplatz Altdorf-Hagenhausen!',
+            "Segelflug (Windenstart)", TEST.empfaenger, TEST.wert, flugdauer, "E-Mail (Zahlung per Überweisung)", paymentHtml);
+    }
+    else if (type === "gutschein-reply-pickup") {
+        subject = "Deine Gutschein-Bestellung beim Segelflugplatz Altdorf";
+        const flugdauer = getFlugdauer("Motorsegler", 0);
+        const paymentHtml = buildPaymentInfoHtml(TEST.name, "85,00", "Abholung (Barzahlung vor Ort)", "");
+        html = buildCustomerReplyHtml("Vielen Dank!", "Deine Gutschein-Bestellung ist bei uns eingegangen",
+            'Hallo <strong>' + escapeHtml(TEST.name) + '</strong>,<br><br>vielen Dank für deine Bestellung eines Flug-Gutscheins beim Segelflugplatz Altdorf-Hagenhausen!',
+            "Motorsegler", "Peter Geschenk", "85,00", flugdauer, "Abholung (Barzahlung vor Ort)", paymentHtml);
+    }
+    else if (type === "gutschein-reply-kunstflug") {
+        subject = "Deine Gutschein-Bestellung beim Segelflugplatz Altdorf";
+        const flugdauer = getFlugdauer("Kunstflug", 0);
+        const qrUrl = buildEpcQrUrl(TEST.name, "150,00");
+        const paymentHtml = buildPaymentInfoHtml(TEST.name, "150,00", "E-Mail (Zahlung per Überweisung)", qrUrl);
+        html = buildCustomerReplyHtml("Vielen Dank!", "Deine Gutschein-Bestellung ist bei uns eingegangen",
+            'Hallo <strong>' + escapeHtml(TEST.name) + '</strong>,<br><br>vielen Dank für deine Bestellung eines Flug-Gutscheins beim Segelflugplatz Altdorf-Hagenhausen!',
+            "Kunstflug", "Lukas Adrenalin", "150,00", flugdauer, "E-Mail (Zahlung per Überweisung)", paymentHtml);
+    }
+    else if (type === "gastflug") {
+        subject = "Neue Gastflug-Anfrage";
+        let details = buildDetailRow("Interesse an", "Segelflug", 0);
+        html = buildNotificationHtml(subject, TEST.name, TEST.email, TEST.telefon, "Wir würden gerne mal einen Gastflug machen.\nAm liebsten an einem Wochenende im April.", details);
+    }
+    else if (type === "reminder-bank") {
+        subject = "Zahlungserinnerung — Gutschein-Bestellung";
+        const flugdauer = getFlugdauer("Segelflug (F-Schlepp)", 5);
+        const qrUrl = buildEpcQrUrl(TEST.name, TEST.wert);
+        const paymentHtml = buildPaymentInfoHtml(TEST.name, TEST.wert, "E-Mail (Zahlung per Überweisung)", qrUrl);
+        html = buildCustomerReplyHtml("Erinnerung", "Deine Zahlung steht noch aus",
+            'Hallo <strong>' + escapeHtml(TEST.name) + '</strong>,<br><br>wir möchten dich freundlich daran erinnern, dass die Zahlung für deinen Flug-Gutschein beim Segelflugplatz Altdorf-Hagenhausen noch aussteht.',
+            "Segelflug (F-Schlepp)", TEST.empfaenger, TEST.wert, flugdauer, "E-Mail (Zahlung per Überweisung)", paymentHtml);
+    }
+    else if (type === "reminder-pickup") {
+        subject = "Erinnerung — Gutschein-Abholung";
+        const flugdauer = getFlugdauer("Motorsegler", 0);
+        const paymentHtml = buildPaymentInfoHtml(TEST.name, "85,00", "Abholung (Barzahlung vor Ort)", "");
+        html = buildCustomerReplyHtml("Erinnerung", "Dein Gutschein wartet auf Abholung",
+            'Hallo <strong>' + escapeHtml(TEST.name) + '</strong>,<br><br>wir möchten dich freundlich daran erinnern, dass dein Flug-Gutschein beim Segelflugplatz Altdorf-Hagenhausen noch auf Abholung wartet.',
+            "Motorsegler", "Peter Geschenk", "85,00", flugdauer, "Abholung (Barzahlung vor Ort)", paymentHtml);
+    }
+    else if (type === "paid-notify") {
+        subject = "Gutschein-Bestellung bezahlt: " + TEST.name;
+        const flugdauer = getFlugdauer("Segelflug (Windenstart)", 10);
+        let details = '', i = 0;
+        const rows = [
+            {label: "Name", value: TEST.name},
+            {label: "E-Mail", value: TEST.email},
+            {label: "Telefon", value: TEST.telefon},
+            {label: "Flugart", value: "Segelflug (Windenstart)"},
+            {label: "Gutscheinwert", value: TEST.wert + " €", style: "font-weight: bold; color: #e94560;"},
+            {label: "Empfänger", value: TEST.empfaenger},
+            {label: "Zustellung", value: "E-Mail (Zahlung per Überweisung)"},
+            {label: "Flugdauer", value: flugdauer},
+            {label: "Status", value: "BEZAHLT", style: "font-weight: bold; color: #2e7d32;"},
+        ];
+        rows.forEach((row) => { if (row.value) details += buildDetailRow(row.label, row.value, i++, row.style); });
+        html = buildNotificationHtml(subject, TEST.name, TEST.email, TEST.telefon, TEST.grusstext, details);
+    }
+
+    return { subject, html };
+}
+
+// ========== UI-Funktionen ==========
+
+window.handleLogin = async function() {
+    const pw = document.getElementById("loginPassword").value;
+    try {
+        await signInWithEmailAndPassword(auth, "info@segelfliegen-altdorf.de", pw);
+    } catch (e) {
+        document.getElementById("loginError").textContent = "Falsches Passwort.";
+    }
+};
+
+window.handleLogout = async function() {
+    await signOut(auth);
+};
+
+window.preview = function(type) {
+    const { subject, html } = generateEmail(type);
+    document.getElementById("previewTitle").textContent = subject;
+    const frame = document.getElementById("previewFrame");
+    frame.srcdoc = html;
+    document.getElementById("previewModal").classList.add("active");
+};
+
+window.closePreview = function() {
+    document.getElementById("previewModal").classList.remove("active");
+};
+
+window.sendTest = async function(type) {
+    const testEmail = document.getElementById("testEmail").value.trim();
+    if (!testEmail) {
+        alert("Bitte zuerst eine Test-E-Mail-Adresse eingeben.");
+        return;
+    }
+
+    const statusEl = document.getElementById("status-" + type);
+    statusEl.className = "status sending";
+    statusEl.textContent = "Wird gesendet...";
+
+    const { subject, html } = generateEmail(type);
+
+    try {
+        await sendVoucherEmailFn({
+            to: testEmail,
+            subject: "[TEST] " + subject,
+            html: html,
+        });
+        statusEl.className = "status success";
+        statusEl.textContent = "Gesendet!";
+    } catch (e) {
+        statusEl.className = "status error";
+        statusEl.textContent = "Fehler: " + (e.message || e);
+    }
+};
+
+// Auth State
+onAuthStateChanged(auth, (user) => {
+    if (user && user.email === "info@segelfliegen-altdorf.de") {
+        document.getElementById("loginSection").style.display = "none";
+        document.getElementById("mainContent").style.display = "block";
+    } else {
+        document.getElementById("loginSection").style.display = "block";
+        document.getElementById("mainContent").style.display = "none";
+    }
+});
+
+// Modal schließen mit Escape
+document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") window.closePreview();
+});
+document.getElementById("previewModal").addEventListener("click", (e) => {
+    if (e.target === e.currentTarget) window.closePreview();
+});
+</script>
+
+</body>
+</html>
