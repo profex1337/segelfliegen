@@ -488,7 +488,8 @@
             var flightType = document.getElementById('voucher-flight-type').value || 'Flugart';
             var value = document.getElementById('voucher-value').value.trim() || '\u2014';
             var validUntil = document.getElementById('voucher-valid-until').value.trim();
-            var flugdauer = document.getElementById('voucher-flugdauer').value || '';
+            var zusatzE = parseInt(document.getElementById('voucher-zusatzzeit').value || '0', 10);
+            var flugdauer = document.getElementById('voucher-flugdauer').value || getFlugdauer(flightType, zusatzE);
             var besteller = document.getElementById('voucher-besteller').value.trim();
             var anrede = besteller ? 'Hallo <strong>' + besteller + '</strong>,' : 'Hallo,';
 
@@ -730,8 +731,9 @@
 
             var hasWert = false;
             var showValue = document.getElementById('voucher-show-value').checked;
-            var flugdauer = document.getElementById('voucher-flugdauer').value || '';
-            var hasFlugdauer = !!flugdauer;
+            var zusatzzeit = parseInt(document.getElementById('voucher-zusatzzeit').value || '0', 10);
+            var flugdauer = document.getElementById('voucher-flugdauer').value || getFlugdauer(flightType, zusatzzeit);
+            var hasFlugdauer = flugdauer && flugdauer !== 'pauschal';
             if (voucherValue && showValue) {
                 hasWert = true;
                 doc.setFont('helvetica', 'bold');
