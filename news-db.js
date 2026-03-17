@@ -828,7 +828,10 @@ async function startPricesLogic() {
 }
 
 function renderPublicPrices(container, items) {
-    if (items.length === 0) return; // Statische Fallback-Preise beibehalten
+    if (items.length === 0) {
+        container.innerHTML = '<li style="color: var(--text-light);">Keine Preise vorhanden.</li>';
+        return;
+    }
     container.innerHTML = '';
     items.forEach(item => {
         const li = document.createElement('li');
