@@ -1649,7 +1649,7 @@ body.admin-mode .delete-btn { display: inline-block; }
         width: 100%;
         text-align: center;
     }
-    .nav-menu a:last-child { border-bottom: none; }
+    .nav-menu > a:last-of-type { border-bottom: none; }
     
     .nav-menu a::before, .nav-menu a::after { display: none; }
     
