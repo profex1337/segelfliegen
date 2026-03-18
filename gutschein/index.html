@@ -32,12 +32,14 @@
 
         .voucher-row { display: flex; align-items: center; gap: 12px; padding: 10px 14px; margin-bottom: 6px; border-radius: 8px; flex-wrap: wrap; transition: opacity 0.2s; }
         .voucher-row.open { background: #fff; border-left: 3px solid #2e7d32; }
+        .voucher-row.open.expired { background: #fff5f5; border-left: 3px solid #c62828; }
         .voucher-row.redeemed { background: #fff8e1; border-left: 3px solid #ffa000; opacity: 0.75; }
         .voucher-info { flex: 1; min-width: 180px; }
         .voucher-name { font-weight: 600; font-size: 0.95rem; }
         .voucher-name.redeemed { text-decoration: line-through; color: #999; }
         .voucher-meta { font-size: 0.78rem; color: #888; margin-top: 2px; }
         .voucher-valid { font-size: 0.75rem; color: #999; }
+        .expired-label { color: #c62828; font-weight: 700; margin-left: 6px; font-size: 0.75rem; }
         .badge { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 0.72rem; font-weight: 600; }
         .badge-open { background: #e8f5e9; color: #2e7d32; }
         .badge-redeemed { background: #fff3e0; color: #e65100; }
@@ -115,8 +117,17 @@
         auth.signOut();
     }
 
-    function toggleRedeemed(docId, current) {
+    function isExpired(validUntil) {
+        if (!validUntil) return false;
+        var parts = validUntil.split('.');
+        if (parts.length !== 3) return false;
+        var expiry = new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]), 23, 59, 59);
+        return new Date() > expiry;
+    }
+
+    function toggleRedeemed(docId, current, expired) {
         if (current && !confirm('Gutschein wirklich wieder \u00F6ffnen?')) return;
+        if (!current && expired && !confirm('Gutschein ist abgelaufen, trotzdem einl\u00F6sen?')) return;
         db.collection('vouchers').doc(docId).update({ redeemed: !current })
             .catch(function(e) { console.error('Fehler:', e); });
     }
@@ -168,13 +179,15 @@
 
     function renderRow(v) {
         var isR = !!v.redeemed;
+        var expired = !isR && isExpired(v.validUntil);
         var date = v.timestamp ? new Date(v.timestamp).toLocaleDateString('de-DE') : '\u2014';
-        var valid = v.validUntil ? '<div class="voucher-valid">G\u00FCltig bis: ' + v.validUntil + '</div>' : '';
+        var expiredLabel = expired ? '<span class="expired-label">abgelaufen</span>' : '';
+        var valid = v.validUntil ? '<div class="voucher-valid">G\u00FCltig bis: ' + v.validUntil + expiredLabel + '</div>' : '';
         var nameClass = isR ? 'voucher-name redeemed' : 'voucher-name';
-        var rowClass = isR ? 'voucher-row redeemed' : 'voucher-row open';
+        var rowClass = isR ? 'voucher-row redeemed' : 'voucher-row open' + (expired ? ' expired' : '');
         var badgeClass = isR ? 'badge badge-redeemed' : 'badge badge-open';
         var badgeText = isR ? 'Eingel\u00F6st' : 'Offen';
-        var btnText = isR ? 'Wieder \u00F6ffnen' : 'Eingel\u00F6st';
+        var btnText = isR ? 'Wieder \u00F6ffnen' : 'Einl\u00F6sen';
         var searchText = ((v.recipient || '') + ' ' + (v.number || '') + ' ' + (v.flightType || '') + ' ' + (v.ordererName || '')).toLowerCase();
 
         return '<div class="' + rowClass + '" data-search="' + searchText + '">'
@@ -184,7 +197,7 @@
             + (v.flightType || '') + (v.value ? ' &middot; ' + v.value + ' \u20AC' : '') + (v.number ? ' &middot; ' + v.number : '') + ' &middot; ' + date
             + '</div>' + valid + '</div>'
             + '<span class="' + badgeClass + '">' + badgeText + '</span> '
-            + '<button class="btn-toggle" onclick="toggleRedeemed(\'' + v.id + '\', ' + isR + ')">' + btnText + '</button>'
+            + '<button class="btn-toggle" onclick="toggleRedeemed(\'' + v.id + '\', ' + isR + ', ' + expired + ')">' + btnText + '</button>'
             + '</div>';
     }
 
