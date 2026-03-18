@@ -262,6 +262,7 @@ There is no test suite and no linter/formatter configuration. Validate changes b
 - **`.news-featured`** — full-width featured card for newest news (text left, image right; column-reverse on mobile).
 - **`.news-carousel`** — image carousel with prev/next buttons, dots, and touch-swipe.
 - **`.aircraft-card-grid`** — card layout for aircraft fleet (3 col / 2 col / 1 col).
+- **Nav hover animation** (desktop only) — `.nav-menu a::after` renders a glider (SVG mask) that flies in from left on hover; `.nav-menu a::before` is the trailing line. On mouse-leave, both **fade out in place** (opacity transition) rather than animating back. This is achieved by using `transition: left 0s 0.3s` (delayed reset after fadeout) in the default state, overridden by the real `left` transition in the `:hover` state.
 
 ### JavaScript
 
