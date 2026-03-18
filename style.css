@@ -116,10 +116,7 @@ html { scroll-padding-top: 120px; scroll-behavior: smooth; }
 main { flex: 1; position: relative; z-index: 15; } 
 
 header {
-    background-color: rgba(255, 255, 255, 0.9); 
-    backdrop-filter: blur(12px); 
-    -webkit-backdrop-filter: blur(12px);
-    
+    background-color: #ffffff;
     box-shadow: 0 2px 15px rgba(0,0,0,0.05);
     position: fixed;
     top: 0;
@@ -129,6 +126,14 @@ header {
     height: var(--header-height); 
     display: flex;
     align-items: center;
+}
+
+@media (min-width: 993px) {
+    header {
+        background-color: rgba(255, 255, 255, 0.9);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+    }
 }
 
 .header-inner {
