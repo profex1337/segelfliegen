@@ -1527,9 +1527,20 @@ async function startVoucherLogic() {
         }
     };
 
+    // Prüft ob Gutschein abgelaufen ist (validUntil im Format DD.MM.YYYY)
+    window.isVoucherExpired = (validUntil) => {
+        if (!validUntil) return false;
+        var parts = validUntil.split('.');
+        if (parts.length !== 3) return false;
+        var expiry = new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]), 23, 59, 59);
+        return new Date() > expiry;
+    };
+
     // Gutschein als eingelöst markieren
-    window.toggleVoucherRedeemed = async (docId, currentStatus) => {
+    window.toggleVoucherRedeemed = async (docId, currentStatus, expired) => {
         if (!auth.currentUser || auth.currentUser.isAnonymous) return;
+        if (currentStatus && !confirm('Gutschein wirklich wieder \u00F6ffnen?')) return;
+        if (!currentStatus && expired && !confirm('Gutschein ist abgelaufen, trotzdem einl\u00F6sen?')) return;
         try {
             await updateDoc(doc(db, 'vouchers', docId), { redeemed: !currentStatus });
         } catch (e) {
@@ -1863,8 +1874,9 @@ function renderVoucherList(container, items, orders) {
 
 function renderVoucherRow(item) {
     var row = document.createElement('div');
-    var bgColor = item.redeemed ? '#fff8e1' : '#f9f9f9';
-    var borderColor = item.redeemed ? '#ffa000' : '#2e7d32';
+    var expired = !item.redeemed && window.isVoucherExpired && window.isVoucherExpired(item.validUntil);
+    var bgColor = item.redeemed ? '#fff8e1' : (expired ? '#fff5f5' : '#f9f9f9');
+    var borderColor = item.redeemed ? '#ffa000' : (expired ? '#c62828' : '#2e7d32');
     var opacityVal = item.redeemed ? '0.75' : '1';
     row.style.cssText = 'display:flex; align-items:center; gap:16px; padding:14px 18px; margin-bottom:8px; border-radius:8px; flex-wrap:wrap; background:' + bgColor + '; border-left:4px solid ' + borderColor + '; opacity:' + opacityVal + ';';
 
@@ -1873,8 +1885,9 @@ function renderVoucherRow(item) {
     var statusBg = item.redeemed ? '#fff3e0' : '#e8f5e9';
     var statusColor = item.redeemed ? '#e65100' : '#2e7d32';
     var statusText = item.redeemed ? 'Eingelöst' : 'Offen';
-    var toggleText = item.redeemed ? 'Wieder \u00F6ffnen' : 'Eingelöst';
-    var validLine = item.validUntil ? '<div style="font-size:0.78rem; color:#888;">Gültig bis: ' + item.validUntil + '</div>' : '';
+    var toggleText = item.redeemed ? 'Wieder \u00F6ffnen' : 'Einl\u00F6sen';
+    var expiredLabel = expired ? '<span style="color:#c62828; font-weight:700; margin-left:6px;">abgelaufen</span>' : '';
+    var validLine = item.validUntil ? '<div style="font-size:0.78rem; color:#888;">Gültig bis: ' + item.validUntil + expiredLabel + '</div>' : '';
 
     row.innerHTML = '<div style="flex:1; min-width:200px;">'
         + '<strong style="font-size:1rem;' + nameStyle + '">' + (item.recipient || '\u2014') + '</strong>'
@@ -1883,7 +1896,7 @@ function renderVoucherRow(item) {
         + '</div>' + validLine + '</div>'
         + '<div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">'
         + '<button class="btn btn-secondary voucher-reprint-btn" style="padding:6px 12px; font-size:0.78rem; background:var(--primary); color:#fff; border-color:var(--primary);">PDF</button>'
-        + '<button onclick="toggleVoucherRedeemed(\'' + item.id + '\', ' + (!!item.redeemed) + ')" class="btn btn-secondary" style="padding:6px 12px; font-size:0.78rem;">' + toggleText + '</button>'
+        + '<button onclick="toggleVoucherRedeemed(\'' + item.id + '\', ' + (!!item.redeemed) + ', ' + (!!expired) + ')" class="btn btn-secondary" style="padding:6px 12px; font-size:0.78rem;">' + toggleText + '</button>'
         + '<button onclick="deleteVoucher(\'' + item.id + '\')" class="btn btn-secondary" style="padding:6px 12px; font-size:0.78rem; background:#c0392b; color:#fff; border-color:#c0392b;">L\u00F6schen</button>'
         + '</div>';
 
