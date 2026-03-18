@@ -252,24 +252,28 @@ header {
     mask-position: center;
 
     opacity: 0;
-    
-    transform: none; 
-    transition: left 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 0.2s;
+
+    transform: none;
+    transition: opacity 0.3s ease-out;
     pointer-events: none;
 }
 
 
-.nav-menu a:hover::before, .nav-menu a.active::before { 
-    
-    width: calc(100% - 15px); 
+.nav-menu a:hover::before, .nav-menu a.active::before {
+
+    width: calc(100% - 15px);
     opacity: 1;
 }
 
 .nav-menu a:hover::after, .nav-menu a.active::after {
-    
-    left: calc(100% - 30px); 
+
+    left: calc(100% - 30px);
     opacity: 1;
     transition: left 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 0.4s;
+}
+
+.nav-menu a:not(:hover):not(.active)::before {
+    transition: opacity 0.3s ease-out;
 }
 
 
