@@ -744,7 +744,7 @@ async function startNewsLogic() {
                     }
 
                     async function deleteNewsItem(docId, imageUrls) {
-                        if (confirm("Wirklich löschen?")) {
+                        if (confirm("⚠️ News-Beitrag unwiderruflich löschen?\n\nDieser Vorgang kann nicht rückgängig gemacht werden. Alle zugehörigen Bilder werden ebenfalls gelöscht.")) {
                             try {
                                 if (auth.currentUser?.isAnonymous) {
                                     alert("Fehlende Berechtigung.");
@@ -1020,7 +1020,7 @@ function renderAdminPrices(container, items, isAdmin) {
         };
 
         content.querySelector('.delete-price-btn').onclick = async () => {
-            if (confirm('"' + (item.label || 'Position') + '" wirklich löschen?')) {
+            if (confirm('⚠️ "' + (item.label || 'Position') + '" unwiderruflich löschen?\n\nDieser Vorgang kann nicht rückgängig gemacht werden.')) {
                 try {
                     await deleteDoc(doc(db, 'prices', item.id));
                 } catch (e) {
@@ -1349,7 +1349,7 @@ async function startAircraftLogic() {
                 delBtn.style.cssText = 'padding:5px 12px; font-size:0.85rem; background:#c0392b; color:#fff; border-color:#c0392b;';
                 delBtn.textContent = 'Löschen';
                 delBtn.onclick = async () => {
-                    if (!confirm(`"${item.name || 'Flugzeug'}" wirklich löschen?`)) return;
+                    if (!confirm('⚠️ "' + (item.name || 'Flugzeug') + '" unwiderruflich löschen?\n\nDieser Vorgang kann nicht rückgängig gemacht werden. Das zugehörige Bild wird ebenfalls gelöscht.')) return;
                     try {
                         await deleteDoc(doc(db, 'aircraft', item.id));
                         const token = localStorage.getItem('gh_pat');
@@ -1540,7 +1540,7 @@ async function startVoucherLogic() {
     // Gutschein löschen
     window.deleteVoucher = async (docId) => {
         if (!auth.currentUser || auth.currentUser.isAnonymous) return;
-        if (!confirm('Gutschein wirklich löschen?')) return;
+        if (!confirm('⚠️ Gutschein unwiderruflich löschen?\n\nDieser Vorgang kann nicht rückgängig gemacht werden.')) return;
         try {
             await deleteDoc(doc(db, 'vouchers', docId));
         } catch (e) {
@@ -1634,7 +1634,7 @@ async function startVoucherLogic() {
     // Bestellung löschen
     window.deleteVoucherOrder = async (docId) => {
         if (!auth.currentUser || auth.currentUser.isAnonymous) return;
-        if (!confirm('Bestellung wirklich löschen?')) return;
+        if (!confirm('⚠️ Bestellung unwiderruflich löschen?\n\nDieser Vorgang kann nicht rückgängig gemacht werden.')) return;
         try {
             await deleteDoc(doc(db, 'voucherOrders', docId));
         } catch (e) {
