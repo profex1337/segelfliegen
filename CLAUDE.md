@@ -397,7 +397,8 @@ Two standalone pages provide limited access to specific Firestore collections. T
 
 - Shows open and redeemed vouchers from the `vouchers` collection.
 - Login: `gutschein@segelfliegen-altdorf.de` (or admin).
-- Features: mark as redeemed, reopen, search, stats.
+- Features: mark as redeemed ("Einlösen"), reopen, search, stats.
+- **Expired vouchers**: Open vouchers past their `validUntil` date are highlighted with a red background/border and a red "abgelaufen" label. Clicking "Einlösen" on an expired voucher shows a confirmation dialog.
 - Hosted on GitHub Pages (same as main site).
 
 #### `bestellungen/index.html` — Order Management
