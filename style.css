@@ -1202,10 +1202,10 @@ select { height: auto; min-height: 48px; line-height: 1.4; background-image: url
     background: rgba(0, 0, 0, 0.45);
     color: #fff;
     border: none;
-    width: 36px;
-    height: 36px;
+    width: 44px;
+    height: 44px;
     border-radius: 50%;
-    font-size: 1.1rem;
+    font-size: 1.2rem;
     cursor: pointer;
     z-index: 2;
     display: flex;
@@ -1579,6 +1579,7 @@ footer {
     user-select: none;
     background-color: rgba(0,0,0,0.3);
     border: none;
+    -webkit-appearance: none;
     appearance: none;
     font-family: inherit;
 }

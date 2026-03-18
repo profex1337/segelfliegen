@@ -1,3 +1,5 @@
 User-agent: *
 Allow: /
+Disallow: /gutschein/
+Disallow: /bestellungen/
 Sitemap: https://www.segelfliegenaltdorf.de/sitemap.xml

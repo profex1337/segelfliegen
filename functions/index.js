@@ -125,7 +125,7 @@ function buildNotificationHtml(subject, name, email, telefon, message, detailsHt
       + (message ? '<div style="background:#f4f6f8; border-radius:8px; padding:16px; margin-bottom:20px; white-space:pre-wrap; line-height:1.6;">' + escapeHtml(message) + "</div>" : "")
       + "</div>"
       + '<div style="background:#0f3460; padding:12px; border-radius:0 0 12px 12px; text-align:center;">'
-      + '<div style="color:#a8c8f0; font-size:11px;">Segelflieger im Post-SV Nürnberg e.V. · segelfliegenaltdorf.de</div>'
+      + '<div style="color:#a8c8f0; font-size:11px;">Segelflieger im Post-SV Nürnberg e.V. · www.segelfliegenaltdorf.de</div>'
       + "</div></div>";
 }
 
@@ -169,7 +169,7 @@ function buildCustomerReplyHtml(title, subtitle, intro, flugart, empfaenger, wer
       + "</div></div>"
       + '<div style="background:#0f3460; padding:12px; border-radius:0 0 12px 12px; text-align:center;">'
       + '<div style="color:#fff; font-size:12px; font-weight:bold;">Segelflieger im Post-SV Nürnberg e.V.</div>'
-      + '<div style="color:#a8c8f0; font-size:11px; margin-top:4px;">Segelflugplatz Altdorf-Hagenhausen · segelfliegenaltdorf.de</div>'
+      + '<div style="color:#a8c8f0; font-size:11px; margin-top:4px;">Segelflugplatz Altdorf-Hagenhausen · www.segelfliegenaltdorf.de</div>'
       + "</div></div>";
 }
 
@@ -370,7 +370,7 @@ exports.sendAdminEmail = onCall(
         empfaenger: limitLength(sanitizeHeader(order.empfaenger), 200),
         zustellung: limitLength(sanitizeHeader(order.zustellung), 200),
         zusatzzeit: limitLength(sanitizeHeader(order.zusatzzeit), 10),
-        grusstext: limitLength(order.grusstext, 2000),
+        grusstext: limitLength(sanitizeHeader(order.grusstext), 2000),
         flugdauer: limitLength(sanitizeHeader(order.flugdauer), 200),
       };
 
