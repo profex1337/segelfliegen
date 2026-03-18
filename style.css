@@ -227,8 +227,8 @@ header {
     bottom: 0;
     left: 0;
     background: linear-gradient(to right, transparent 0%, var(--accent) 50%, var(--accent) 100%);
-    transition: width 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-    opacity: 0; 
+    transition: width 0s 0.3s, opacity 0.3s ease-out;
+    opacity: 0;
 }
 
 .nav-menu a::after {
@@ -254,7 +254,7 @@ header {
     opacity: 0;
 
     transform: none;
-    transition: opacity 0.3s ease-out;
+    transition: left 0s 0.3s, opacity 0.3s ease-out;
     pointer-events: none;
 }
 
@@ -263,6 +263,7 @@ header {
 
     width: calc(100% - 15px);
     opacity: 1;
+    transition: width 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 0.2s;
 }
 
 .nav-menu a:hover::after, .nav-menu a.active::after {
@@ -272,9 +273,6 @@ header {
     transition: left 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 0.4s;
 }
 
-.nav-menu a:not(:hover):not(.active)::before {
-    transition: opacity 0.3s ease-out;
-}
 
 
 .nav-menu .header-social-link::after,
