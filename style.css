@@ -1703,8 +1703,8 @@ body.admin-mode .delete-btn { display: inline-block; }
     .header-socials .header-social-link {
         width: auto !important;
         border-bottom: none !important;
-        margin: 0 5px; 
-        padding: 10px; 
+        margin: 0;
+        padding: 10px;
     }
 
     .header-social-link svg {
