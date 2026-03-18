@@ -309,8 +309,10 @@ async function startNewsLogic() {
                         dots.forEach(function(d, i) { d.classList.toggle('active', i === current); });
                     }
 
-                    carousel.querySelector('.news-carousel-btn.prev').addEventListener('click', function(e) { e.stopPropagation(); goTo(current - 1); });
-                    carousel.querySelector('.news-carousel-btn.next').addEventListener('click', function(e) { e.stopPropagation(); goTo(current + 1); });
+                    var prevBtn = carousel.querySelector('.news-carousel-btn.prev');
+                    if (prevBtn) prevBtn.addEventListener('click', function(e) { e.stopPropagation(); goTo(current - 1); });
+                    var nextBtn = carousel.querySelector('.news-carousel-btn.next');
+                    if (nextBtn) nextBtn.addEventListener('click', function(e) { e.stopPropagation(); goTo(current + 1); });
                     dots.forEach(function(d) { d.addEventListener('click', function(e) { e.stopPropagation(); goTo(parseInt(d.dataset.index)); }); });
 
                     // Keyboard-Navigation
@@ -1265,13 +1267,13 @@ async function startAircraftLogic() {
     let draggedAircraftItem = null;
     let draggedAircraftEl = null;
 
-    function renderAircraftAdmin(container, items, isAdmin) {
+    async function renderAircraftAdmin(container, items, isAdmin) {
         if (!isAdmin) { container.innerHTML = '<p style="color:#999;">Nur als Admin sichtbar.</p>'; return; }
 
         // Migration: alte Kategorie 'Motorsegler' → 'Motorflugzeuge'
         const legacyItems = items.filter(i => i.category === 'Motorsegler');
         if (legacyItems.length > 0) {
-            Promise.all(legacyItems.map(i =>
+            await Promise.all(legacyItems.map(i =>
                 updateDoc(doc(db, 'aircraft', i.id), { category: 'Motorflugzeuge' })
             ));
             return; // onSnapshot wird automatisch neu ausgelöst
@@ -1848,6 +1850,7 @@ function renderVoucherList(container, items, orders) {
                 var visibleOrders = 0;
                 Array.from(ordersContainer.children).forEach(function(row, i) {
                     var o = openOrders[i];
+                    if (!o) return;
                     var match = !q || (o.name || '').toLowerCase().indexOf(q) !== -1
                         || (o.empfaenger || '').toLowerCase().indexOf(q) !== -1
                         || (o.email || '').toLowerCase().indexOf(q) !== -1;
