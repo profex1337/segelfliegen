@@ -1701,10 +1701,14 @@ body.admin-mode .delete-btn { display: inline-block; }
     
     
     .header-socials .header-social-link {
+        flex: 1;
+        display: flex !important;
+        justify-content: center;
+        align-items: center;
         width: auto !important;
         border-bottom: none !important;
         margin: 0;
-        padding: 10px;
+        padding: 12px 0;
     }
 
     .header-social-link svg {
