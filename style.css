@@ -1868,13 +1868,15 @@ body.admin-mode .delete-btn { display: inline-block; }
     }
 }
 
-.header-socials {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    margin-left: 0px;
-    padding-left: 20px;
-    border-left: 1px solid #eee;
+@media (min-width: 993px) {
+    .header-socials {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        margin-left: 0px;
+        padding-left: 20px;
+        border-left: 1px solid #eee;
+    }
 }
 
 .header-social-link {
