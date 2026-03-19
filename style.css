@@ -626,11 +626,7 @@ header {
     text-align: center;
     background-size: cover;
     background-position: center;
-    background-attachment: fixed;
     position: relative;
-}
-@media (max-width: 992px) {
-    .page-header { background-attachment: scroll; }
 }
 .page-header::before {
     content: '';
