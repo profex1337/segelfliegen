@@ -2042,6 +2042,49 @@ body.admin-mode .delete-btn { display: inline-block; }
     text-decoration: underline;
 }
 
+/* Wetter-Widget (Hero Overlay) */
+.weather-widget {
+    margin-top: 20px;
+    background: rgba(0, 0, 0, 0.35);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    color: #fff;
+    padding: 10px 20px;
+    border-radius: 30px;
+    font-size: 0.85rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+.weather-widget .weather-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    white-space: nowrap;
+}
+.weather-widget .weather-icon {
+    font-size: 1.2rem;
+    line-height: 1;
+}
+.weather-widget .weather-value {
+    font-weight: 600;
+}
+.weather-widget .weather-separator {
+    width: 1px;
+    height: 16px;
+    background: rgba(255, 255, 255, 0.3);
+}
+@media (max-width: 600px) {
+    .weather-widget {
+        gap: 8px 14px;
+        font-size: 0.8rem;
+        padding: 8px 16px;
+    }
+    .weather-widget .weather-separator { display: none; }
+}
+
 /* Scroll-Reveal Animation */
 .reveal {
     opacity: 0;

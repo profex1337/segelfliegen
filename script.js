@@ -191,6 +191,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initBackToTop();
     initSlideshows();
     initScrollReveal();
+    initWeather();
     initCookieConsent();
     initReviews();
     initForms();
@@ -302,6 +303,58 @@ function initReviews() {
     trigger.addEventListener('click', openSidebar);
     if(closeBtn) closeBtn.addEventListener('click', closeSidebar);
     if(overlay) overlay.addEventListener('click', closeSidebar);
+}
+
+// Wetter-Widget (Open-Meteo API, Flugplatz Altdorf-Hagenhausen)
+function initWeather() {
+    const widget = document.getElementById('weather-widget');
+    if (!widget) return;
+
+    const LAT = 49.38;
+    const LON = 11.35;
+    const url = 'https://api.open-meteo.com/v1/forecast?latitude=' + LAT + '&longitude=' + LON
+        + '&current=temperature_2m,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m,cloud_cover'
+        + '&timezone=Europe/Berlin';
+
+    fetch(url)
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+            var c = data.current;
+            var temp = Math.round(c.temperature_2m);
+            var wind = Math.round(c.wind_speed_10m);
+            var gusts = Math.round(c.wind_gusts_10m);
+            var dir = getWindDirection(c.wind_direction_10m);
+            var cloud = c.cloud_cover;
+            var icon = getWeatherIcon(c.weather_code);
+
+            widget.innerHTML =
+                '<span class="weather-item"><span class="weather-icon">' + icon + '</span><span class="weather-value">' + temp + ' °C</span></span>'
+                + '<span class="weather-separator"></span>'
+                + '<span class="weather-item"><span class="weather-icon">💨</span><span class="weather-value">' + wind + ' km/h ' + dir + '</span>'
+                + (gusts > wind + 5 ? ' <span style="opacity:0.7;">(Böen ' + gusts + ')</span>' : '') + '</span>'
+                + '<span class="weather-separator"></span>'
+                + '<span class="weather-item"><span class="weather-icon">☁</span><span class="weather-value">' + cloud + ' %</span></span>';
+            widget.style.display = 'inline-flex';
+        })
+        .catch(function() { /* Widget bleibt unsichtbar bei Fehler */ });
+}
+
+function getWindDirection(deg) {
+    var dirs = ['N', 'NO', 'O', 'SO', 'S', 'SW', 'W', 'NW'];
+    return dirs[Math.round(deg / 45) % 8];
+}
+
+function getWeatherIcon(code) {
+    if (code === 0) return '☀️';
+    if (code <= 3) return '⛅';
+    if (code <= 48) return '🌫️';
+    if (code <= 57) return '🌧️';
+    if (code <= 67) return '🌧️';
+    if (code <= 77) return '❄️';
+    if (code <= 82) return '🌦️';
+    if (code <= 86) return '🌨️';
+    if (code >= 95) return '⛈️';
+    return '☁️';
 }
 
 function getAvatarColor() {
