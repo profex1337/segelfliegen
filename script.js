@@ -203,7 +203,6 @@ document.addEventListener('DOMContentLoaded', () => {
     initScrollReveal();
     initWeather();
     initDarkMode();
-    initPageTransitions();
     initStickyNav();
     initFaqAnimation();
     initCookieConsent();
@@ -784,38 +783,6 @@ function initDarkMode() {
             document.documentElement.setAttribute('data-theme', 'dark');
             localStorage.setItem('theme', 'dark');
         }
-    });
-}
-
-// Sanfte Seitenübergänge: Fadeout bei Klick auf Nav-Links, Fadein beim Laden
-function initPageTransitions() {
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-
-    // Overlay-Element erstellen
-    const overlay = document.createElement('div');
-    overlay.className = 'page-transition';
-    document.body.appendChild(overlay);
-
-    // Beim Laden: Overlay einblenden lassen (falls von anderer Seite kommend)
-    if (overlay.classList.contains('active')) {
-        overlay.classList.add('fade-in');
-        overlay.addEventListener('animationend', () => {
-            overlay.classList.remove('active', 'fade-in');
-        }, { once: true });
-    }
-
-    // Nav-Links abfangen
-    document.querySelectorAll('a').forEach(link => {
-        link.addEventListener('click', (e) => {
-            const href = link.getAttribute('href');
-            // Nur interne Seitenlinks (keine Anker, keine externen, keine Mailto etc.)
-            if (!href || href.startsWith('#') || href.startsWith('mailto:') || href.startsWith('tel:')
-                || link.target === '_blank' || href.startsWith('http') || href.startsWith('javascript:')) return;
-
-            e.preventDefault();
-            overlay.classList.add('active');
-            setTimeout(() => { window.location.href = href; }, 300);
-        });
     });
 }
 

@@ -2094,20 +2094,6 @@ body.admin-mode .delete-btn { display: inline-block; }
     .weather-widget .weather-separator { display: none; }
 }
 
-/* Page-Transition Overlay */
-.page-transition {
-    position: fixed;
-    top: 0; left: 0; width: 100%; height: 100%;
-    background: var(--primary);
-    z-index: 99999;
-    pointer-events: none;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-}
-.page-transition.active { opacity: 1; pointer-events: all; }
-.page-transition.fade-in { animation: pageFadeIn 0.4s ease forwards; }
-@keyframes pageFadeIn { from { opacity: 1; } to { opacity: 0; } }
-
 /* Dark-Mode Toggle */
 .theme-toggle {
     background: none;
