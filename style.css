@@ -1372,6 +1372,15 @@ footer {
     flex-wrap: wrap;
     margin-bottom: 50px;
     margin-top: -20px;
+    position: sticky;
+    top: var(--header-height);
+    z-index: 100;
+    background: var(--bg-light);
+    padding: 15px 0;
+    transition: box-shadow 0.3s ease;
+}
+.category-nav.stuck {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
 .btn-cat {
     background-color: #ffffff;
@@ -1386,7 +1395,7 @@ footer {
     transition: background-color 0.3s ease, color 0.3s ease, transform 0.3s ease;
     box-shadow: 0 4px 6px rgba(0,0,0,0.05);
 }
-.btn-cat:hover {
+.btn-cat:hover, .btn-cat.active {
     background-color: var(--primary);
     color: #ffffff;
     transform: translateY(-2px);
@@ -2085,11 +2094,98 @@ body.admin-mode .delete-btn { display: inline-block; }
     .weather-widget .weather-separator { display: none; }
 }
 
+/* Page-Transition Overlay */
+.page-transition {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: var(--primary);
+    z-index: 99999;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+.page-transition.active { opacity: 1; pointer-events: all; }
+.page-transition.fade-in { animation: pageFadeIn 0.4s ease forwards; }
+@keyframes pageFadeIn { from { opacity: 1; } to { opacity: 0; } }
+
+/* Dark-Mode Toggle */
+.theme-toggle {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--primary);
+    padding: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: background 0.3s ease, color 0.3s ease;
+    margin-left: 8px;
+}
+.theme-toggle:hover {
+    background: rgba(0,0,0,0.06);
+}
+.theme-toggle svg { width: 20px; height: 20px; }
+.theme-toggle .icon-moon { display: none; }
+[data-theme="dark"] .theme-toggle .icon-sun { display: none; }
+[data-theme="dark"] .theme-toggle .icon-moon { display: block; }
+
+/* Dark Mode */
+[data-theme="dark"] {
+    --text-main: #e0e0e0;
+    --text-light: #aaa;
+    --bg-light: #121826;
+    --white: #1a2234;
+    --shadow: 0 10px 30px rgba(0,0,0,0.25);
+}
+[data-theme="dark"] body { background-color: #0d1117; color: var(--text-main); }
+[data-theme="dark"] header { background-color: rgba(13, 17, 23, 0.95); }
+@media (min-width: 993px) {
+    [data-theme="dark"] header { background-color: rgba(13, 17, 23, 0.9); }
+}
+[data-theme="dark"] .nav-menu a { color: var(--text-main); }
+[data-theme="dark"] .theme-toggle { color: #e0e0e0; }
+[data-theme="dark"] .theme-toggle:hover { background: rgba(255,255,255,0.1); }
+[data-theme="dark"] .logo img { filter: brightness(1.3); }
+[data-theme="dark"] .content-block,
+[data-theme="dark"] .card,
+[data-theme="dark"] .news-card,
+[data-theme="dark"] .news-featured { background: var(--white); }
+[data-theme="dark"] .faq-item { border-color: #2d3748; }
+[data-theme="dark"] .faq-item summary { background: #1a2234; color: var(--text-main); }
+[data-theme="dark"] .faq-item[open] summary { background: var(--primary); color: #fff; }
+[data-theme="dark"] .faq-item p { color: var(--text-light); }
+[data-theme="dark"] .btn-cat { background-color: #1a2234; border-color: #3a5080; color: #c0d0e8; }
+[data-theme="dark"] .btn-cat:hover,
+[data-theme="dark"] .btn-cat.active { background-color: var(--primary); color: #fff; }
+[data-theme="dark"] .category-nav { background: #0d1117; }
+[data-theme="dark"] footer { background-color: #080c14; }
+[data-theme="dark"] .cookie-banner { background-color: #1a2234; border-left-color: var(--accent); }
+[data-theme="dark"] .cookie-content h3 { color: var(--text-main); }
+[data-theme="dark"] input, [data-theme="dark"] textarea, [data-theme="dark"] select {
+    background: #1a2234; color: var(--text-main); border-color: #2d3748;
+}
+[data-theme="dark"] .quote-wrapper { background: var(--white); }
+[data-theme="dark"] .section-title h2 { color: var(--text-main); }
+[data-theme="dark"] .hamburger span { background: var(--text-main); }
+[data-theme="dark"] .weather-widget { background: rgba(0,0,0,0.5); }
+
+/* FAQ Smooth Animation */
+.faq-item .faq-content {
+    overflow: hidden;
+    transition: max-height 0.35s ease, opacity 0.3s ease;
+    max-height: 0;
+    opacity: 0;
+}
+.faq-item[open] .faq-content {
+    opacity: 1;
+}
+
 /* Scroll-Reveal Animation */
 .reveal {
     opacity: 0;
-    transform: translateY(30px);
-    transition: opacity 0.7s ease, transform 0.7s ease;
+    transform: translateY(20px);
+    transition: opacity 0.4s ease, transform 0.4s ease;
 }
 .reveal.visible {
     opacity: 1;

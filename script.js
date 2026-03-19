@@ -22,6 +22,10 @@ const headerHTML = `
         <a href="veranstaltungen.html">Events</a>
         <a href="kontakt.html">Kontakt</a>
         
+        <button class="theme-toggle" id="theme-toggle" title="Dark/Light Mode umschalten" aria-label="Farbmodus umschalten">
+            <svg class="icon-sun" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+            <svg class="icon-moon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+        </button>
         <div class="header-socials">
             <a href="https://www.facebook.com/Segelflieger.PostSV/?locale=de_DE" target="_blank" rel="noopener noreferrer" title="Facebook" class="header-social-link" aria-label="Besuche uns auf Facebook">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg>
@@ -182,6 +186,12 @@ function injectLayout() {
 // Perform injection immediately since script is at the end of body
 injectLayout();
 
+// Dark Mode sofort anwenden (vor DOMContentLoaded), um Flash zu vermeiden
+(function() {
+    var saved = localStorage.getItem('theme');
+    if (saved === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+})();
+
 document.addEventListener('DOMContentLoaded', () => {
     initFavicon();
     // Re-check injection in case DOM was slow
@@ -192,6 +202,10 @@ document.addEventListener('DOMContentLoaded', () => {
     initSlideshows();
     initScrollReveal();
     initWeather();
+    initDarkMode();
+    initPageTransitions();
+    initStickyNav();
+    initFaqAnimation();
     initCookieConsent();
     initReviews();
     initForms();
@@ -752,6 +766,161 @@ function initSlideshows() {
 
 }
 
+// Dark Mode: Toggle + localStorage Persistenz
+function initDarkMode() {
+    // Gespeicherten Modus sofort anwenden (auch vor DOMContentLoaded, da script am Body-Ende liegt)
+    const saved = localStorage.getItem('theme');
+    if (saved === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+
+    const btn = document.getElementById('theme-toggle');
+    if (!btn) return;
+
+    btn.addEventListener('click', () => {
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        if (isDark) {
+            document.documentElement.removeAttribute('data-theme');
+            localStorage.setItem('theme', 'light');
+        } else {
+            document.documentElement.setAttribute('data-theme', 'dark');
+            localStorage.setItem('theme', 'dark');
+        }
+    });
+}
+
+// Sanfte Seitenübergänge: Fadeout bei Klick auf Nav-Links, Fadein beim Laden
+function initPageTransitions() {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    // Overlay-Element erstellen
+    const overlay = document.createElement('div');
+    overlay.className = 'page-transition';
+    document.body.appendChild(overlay);
+
+    // Beim Laden: Overlay einblenden lassen (falls von anderer Seite kommend)
+    if (overlay.classList.contains('active')) {
+        overlay.classList.add('fade-in');
+        overlay.addEventListener('animationend', () => {
+            overlay.classList.remove('active', 'fade-in');
+        }, { once: true });
+    }
+
+    // Nav-Links abfangen
+    document.querySelectorAll('a').forEach(link => {
+        link.addEventListener('click', (e) => {
+            const href = link.getAttribute('href');
+            // Nur interne Seitenlinks (keine Anker, keine externen, keine Mailto etc.)
+            if (!href || href.startsWith('#') || href.startsWith('mailto:') || href.startsWith('tel:')
+                || link.target === '_blank' || href.startsWith('http') || href.startsWith('javascript:')) return;
+
+            e.preventDefault();
+            overlay.classList.add('active');
+            setTimeout(() => { window.location.href = href; }, 300);
+        });
+    });
+}
+
+// Sticky Category-Nav: Aktive Sektion hervorheben beim Scrollen
+function initStickyNav() {
+    const nav = document.querySelector('.category-nav');
+    if (!nav) return;
+
+    const buttons = nav.querySelectorAll('.btn-cat');
+    if (!buttons.length) return;
+
+    // Stuck-Effekt: Schatten wenn sticky
+    const headerHeight = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--header-height')) || 80;
+    let ticking = false;
+    window.addEventListener('scroll', () => {
+        if (!ticking) {
+            window.requestAnimationFrame(() => {
+                const rect = nav.getBoundingClientRect();
+                nav.classList.toggle('stuck', rect.top <= headerHeight + 1);
+                ticking = false;
+            });
+            ticking = true;
+        }
+    });
+
+    // Aktive Sektion per Intersection Observer
+    const sections = [];
+    buttons.forEach(btn => {
+        const href = btn.getAttribute('onclick') || '';
+        // Buttons verwenden scrollToSection('id') oder href="#id"
+        const match = href.match(/scrollToSection\(['"]([^'"]+)['"]\)/) || href.match(/#([^'"]+)/);
+        if (match) {
+            const section = document.getElementById(match[1]);
+            if (section) sections.push({ el: section, btn: btn });
+        }
+    });
+
+    if (!sections.length) return;
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                buttons.forEach(b => b.classList.remove('active'));
+                const match = sections.find(s => s.el === entry.target);
+                if (match) match.btn.classList.add('active');
+            }
+        });
+    }, { rootMargin: '-20% 0px -60% 0px' });
+
+    sections.forEach(s => observer.observe(s.el));
+}
+
+// FAQ: Sanfte Öffnen/Schließen-Animation für <details>
+function initFaqAnimation() {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    document.querySelectorAll('.faq-item').forEach(details => {
+        const summary = details.querySelector('summary');
+        if (!summary) return;
+
+        // Inhalte in .faq-content Wrapper packen (falls noch nicht vorhanden)
+        let content = details.querySelector('.faq-content');
+        if (!content) {
+            content = document.createElement('div');
+            content.className = 'faq-content';
+            // Alle Kinder nach summary in den Wrapper verschieben
+            const children = Array.from(details.children).filter(c => c !== summary);
+            children.forEach(c => content.appendChild(c));
+            details.appendChild(content);
+        }
+
+        summary.addEventListener('click', (e) => {
+            e.preventDefault();
+
+            if (details.open) {
+                // Schließen: Animation abspielen, dann details.open = false
+                content.style.maxHeight = content.scrollHeight + 'px';
+                requestAnimationFrame(() => {
+                    content.style.maxHeight = '0';
+                    content.style.opacity = '0';
+                });
+                content.addEventListener('transitionend', function handler() {
+                    details.open = false;
+                    content.removeEventListener('transitionend', handler);
+                }, { once: true });
+            } else {
+                // Öffnen
+                details.open = true;
+                const h = content.scrollHeight;
+                content.style.maxHeight = '0';
+                content.style.opacity = '0';
+                requestAnimationFrame(() => {
+                    content.style.maxHeight = h + 'px';
+                    content.style.opacity = '1';
+                });
+                // Nach Animation max-height entfernen für dynamischen Inhalt
+                content.addEventListener('transitionend', function handler() {
+                    content.style.maxHeight = 'none';
+                    content.removeEventListener('transitionend', handler);
+                }, { once: true });
+            }
+        });
+    });
+}
+
 // Scroll-Reveal: Sektionen beim Scrollen einblenden
 function initScrollReveal() {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
@@ -775,7 +944,7 @@ function initScrollReveal() {
         if (parent) {
             const siblings = parent.querySelectorAll('.reveal');
             const idx = Array.from(siblings).indexOf(el);
-            if (idx > 0) el.style.transitionDelay = (idx * 0.1) + 's';
+            if (idx > 0) el.style.transitionDelay = (idx * 0.06) + 's';
         }
         observer.observe(el);
     });
