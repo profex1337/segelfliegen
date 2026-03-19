@@ -398,7 +398,7 @@ header {
 .hero-overlay {
     position: absolute;
     top: 0; left: 0; width: 100%; height: 100%;
-    background: linear-gradient(135deg, rgba(15, 52, 96, 0.8), rgba(15, 52, 96, 0.4));
+    background: linear-gradient(to top, rgba(15, 52, 96, 0.85) 0%, rgba(15, 52, 96, 0.4) 50%, rgba(15, 52, 96, 0.2) 100%);
     z-index: 1;
 }
 
@@ -626,13 +626,17 @@ header {
     text-align: center;
     background-size: cover;
     background-position: center;
+    background-attachment: fixed;
     position: relative;
+}
+@media (max-width: 992px) {
+    .page-header { background-attachment: scroll; }
 }
 .page-header::before {
     content: '';
     position: absolute;
     top:0; left:0; right:0; bottom:0;
-    background: rgba(15, 52, 96, 0.5);
+    background: linear-gradient(to top, rgba(15, 52, 96, 0.7) 0%, rgba(15, 52, 96, 0.3) 100%);
     z-index: 0;
 }
 .page-header .container { position: relative; z-index: 1; }
@@ -744,7 +748,7 @@ header {
 .page-hero-overlay {
     position: absolute;
     top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(15, 52, 96, 0.6);
+    background: linear-gradient(to top, rgba(15, 52, 96, 0.75) 0%, rgba(15, 52, 96, 0.25) 100%);
     z-index: 1;
 }
 .page-hero-content {
@@ -1562,8 +1566,45 @@ footer {
     overflow: hidden;
     min-height: 300px;
 }
-.mySlides { display: none; height: 350px; width: 100%; }
+.mySlides { display: none; height: 450px; width: 100%; }
 .mySlides img { width: 100%; height: 100%; object-fit: cover; }
+
+.slideshow-counter {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    background: rgba(0, 0, 0, 0.5);
+    color: #fff;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    z-index: 2;
+    backdrop-filter: blur(4px);
+}
+
+.slideshow-dots {
+    position: absolute;
+    bottom: 14px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 8px;
+    z-index: 2;
+}
+.slideshow-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.4);
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    transition: background 0.2s, transform 0.2s;
+}
+.slideshow-dot.active {
+    background: #fff;
+    transform: scale(1.2);
+}
 .prev, .next {
     cursor: pointer;
     position: absolute;
@@ -1587,7 +1628,7 @@ footer {
 .prev:hover, .next:hover { background-color: var(--accent); }
 .fade { animation-name: fade; animation-duration: 1.5s; }
 @keyframes fade { from {opacity: .4} to {opacity: 1} }
-@media (max-width: 600px) { .mySlides { height: 250px; } }
+@media (max-width: 600px) { .mySlides { height: 280px; } }
 
 .admin-login-link { font-size: 0.8rem; color: #e0e0e0; cursor: pointer; margin-left: 10px; text-decoration: none; transition: color 0.3s; }
 .admin-login-link:hover { color: var(--accent); }
@@ -2003,6 +2044,17 @@ body.admin-mode .delete-btn { display: inline-block; }
     color: var(--primary);
     font-weight: 600;
     text-decoration: underline;
+}
+
+/* Scroll-Reveal Animation */
+.reveal {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.7s ease, transform 0.7s ease;
+}
+.reveal.visible {
+    opacity: 1;
+    transform: translateY(0);
 }
 
 /* Barrierefreiheit: Animationen für Nutzer mit Bewegungsempfindlichkeit deaktivieren */

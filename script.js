@@ -190,6 +190,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initLightbox();
     initBackToTop();
     initSlideshows();
+    initScrollReveal();
     initCookieConsent();
     initReviews();
     initForms();
@@ -645,11 +646,31 @@ function initSlideshows() {
 
         if(slides.length === 0) return;
 
+        // Zähler-Anzeige (z.B. "3 / 10")
+        const counter = document.createElement('div');
+        counter.className = 'slideshow-counter';
+        slideshow.appendChild(counter);
+
+        // Dot-Navigation
+        const dotsContainer = document.createElement('div');
+        dotsContainer.className = 'slideshow-dots';
+        for (let i = 0; i < slides.length; i++) {
+            const dot = document.createElement('button');
+            dot.className = 'slideshow-dot';
+            dot.setAttribute('aria-label', 'Bild ' + (i + 1));
+            dot.addEventListener('click', () => { slideIndex = i; showSlides(slideIndex); resetTimer(); });
+            dotsContainer.appendChild(dot);
+        }
+        slideshow.appendChild(dotsContainer);
+        const dots = dotsContainer.querySelectorAll('.slideshow-dot');
+
         const showSlides = (n) => {
             if (n >= slides.length) slideIndex = 0;
             if (n < 0) slideIndex = slides.length - 1;
             for (let i = 0; i < slides.length; i++) slides[i].style.display = "none";
             slides[slideIndex].style.display = "block";
+            counter.textContent = (slideIndex + 1) + ' / ' + slides.length;
+            dots.forEach((d, i) => d.classList.toggle('active', i === slideIndex));
         };
 
         const startAutoPlay = () => {
@@ -676,5 +697,34 @@ function initSlideshows() {
         startAutoPlay();
     });
 
+}
+
+// Scroll-Reveal: Sektionen beim Scrollen einblenden
+function initScrollReveal() {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    const targets = document.querySelectorAll('.section-title, .content-block, .card, .news-card, .news-featured, .slideshow-container, .accordion');
+    if (!targets.length) return;
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('visible');
+                observer.unobserve(entry.target);
+            }
+        });
+    }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+
+    targets.forEach((el, i) => {
+        el.classList.add('reveal');
+        // Gestaffelte Verzögerung für Elemente im gleichen Grid
+        const parent = el.parentElement;
+        if (parent) {
+            const siblings = parent.querySelectorAll('.reveal');
+            const idx = Array.from(siblings).indexOf(el);
+            if (idx > 0) el.style.transitionDelay = (idx * 0.1) + 's';
+        }
+        observer.observe(el);
+    });
 }
 
