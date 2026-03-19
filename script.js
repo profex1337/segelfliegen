@@ -337,7 +337,7 @@ function initWeather() {
                 + (gusts > wind + 5 ? ' <span style="opacity:0.7;">(Böen ' + gusts + ')</span>' : '') + '</span>'
                 + '<span class="weather-separator"></span>'
                 + '<span class="weather-item"><span class="weather-icon">☁</span><span class="weather-value">' + cloud + ' %</span></span>';
-            widget.style.display = 'inline-flex';
+            widget.style.visibility = 'visible';
         })
         .catch(function() { /* Widget bleibt unsichtbar bei Fehler */ });
 }
