@@ -2106,16 +2106,6 @@ body.admin-mode .delete-btn { display: inline-block; }
     opacity: 1;
 }
 
-/* Scroll-Reveal Animation */
-.reveal {
-    opacity: 0;
-    transform: translateY(20px);
-    transition: opacity 0.4s ease, transform 0.4s ease;
-}
-.reveal.visible {
-    opacity: 1;
-    transform: translateY(0);
-}
 
 /* Barrierefreiheit: Animationen für Nutzer mit Bewegungsempfindlichkeit deaktivieren */
 @media (prefers-reduced-motion: reduce) {

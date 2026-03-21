@@ -191,7 +191,6 @@ document.addEventListener('DOMContentLoaded', () => {
     initLightbox();
     initBackToTop();
     initSlideshows();
-    initScrollReveal();
     initWeather();
     initStickyNav();
     initFaqAnimation();
@@ -857,32 +856,4 @@ function initFaqAnimation() {
     });
 }
 
-// Scroll-Reveal: Sektionen beim Scrollen einblenden
-function initScrollReveal() {
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-
-    const targets = document.querySelectorAll('.section-title, .content-block, .card, .news-card, .news-featured, .slideshow-container, .accordion');
-    if (!targets.length) return;
-
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach((entry) => {
-            if (entry.isIntersecting) {
-                entry.target.classList.add('visible');
-                observer.unobserve(entry.target);
-            }
-        });
-    }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
-
-    targets.forEach((el, i) => {
-        el.classList.add('reveal');
-        // Gestaffelte Verzögerung für Elemente im gleichen Grid
-        const parent = el.parentElement;
-        if (parent) {
-            const siblings = parent.querySelectorAll('.reveal');
-            const idx = Array.from(siblings).indexOf(el);
-            if (idx > 0) el.style.transitionDelay = (idx * 0.06) + 's';
-        }
-        observer.observe(el);
-    });
-}
 
