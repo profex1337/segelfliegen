@@ -25,11 +25,11 @@
 
         /* Tab Navigation */
         .intern-tabs {
-            display: flex;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
             gap: 4px;
             border-bottom: 3px solid #e0e0e0;
             margin-bottom: 30px;
-            flex-wrap: wrap;
         }
         .intern-tab-btn {
             background: none;
@@ -44,17 +44,29 @@
             margin-bottom: -3px;
             transition: all 0.2s ease;
             border-radius: 6px 6px 0 0;
+            text-align: center;
+        }
+        @media (max-width: 600px) {
+            .intern-tabs { grid-template-columns: repeat(2, 1fr); }
         }
         .intern-tab-btn:hover { color: var(--primary); background: var(--bg-light); }
         .intern-tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); background: var(--bg-light); }
         .intern-tab-panels {
-            position: relative;
+            display: grid;
         }
         .intern-tab-panel {
-            display: none;
+            grid-row: 1;
+            grid-column: 1;
+            visibility: hidden;
+            max-height: 0;
+            overflow: hidden;
+            pointer-events: none;
         }
         .intern-tab-panel.active {
-            display: block;
+            visibility: visible;
+            max-height: none;
+            overflow: visible;
+            pointer-events: auto;
         }
 
         .dashboard-card {
