@@ -167,14 +167,14 @@ voucherOrders/  — top-level, sorted descending by timestamp (create: any auth,
 
 ### Image Upload Pipeline
 
-Images for news posts and aircraft are **not** stored on a third-party service. The admin uploads a file through the admin panel and the following happens client-side:
+Images for news posts and aircraft are **not** stored on a third-party service. The admin uploads a file through the admin panel and the following happens:
 
-1. `compressImage()` resizes the image to max 1200 px wide and encodes it as **WebP at 80% quality**.
-2. `uploadToGitHub()` uploads the blob to `images/news_<timestamp>.webp` (or `images/aircraft_<timestamp>.webp`) in the repository via the GitHub Contents API (`PUT /repos/profex1337/segelfliegen/contents/...`).
+1. `compressImage()` (client-side) resizes the image to max 1200 px wide and encodes it as **WebP at 80% quality**.
+2. `uploadToGitHub()` (client-side) sends the base64-encoded blob to the `uploadImage` Cloud Function, which uploads it to `images/news_<timestamp>.webp` (or `images/aircraft_<timestamp>.webp`) via the GitHub Contents API.
 3. The resulting `https://raw.githubusercontent.com/...` URL is stored in Firestore.
-4. When an item is deleted, `deleteFromGitHub()` removes the corresponding file from the repository. The regex matches both `news_*.webp` and `aircraft_*.webp` patterns.
+4. When an item is deleted, `deleteFromGitHub()` (client-side) calls the `deleteImage` Cloud Function, which removes the corresponding file from the repository.
 
-**GitHub Personal Access Token (PAT)**: The admin must provide a PAT with `contents: write` permission. It is stored in `localStorage` under the key `gh_pat` and persists across sessions. The admin panel on `intern.html` has a UI to enter, update, or remove the token.
+**GitHub Personal Access Token (PAT)**: Stored as Firebase Secret `GH_PAT`. The Cloud Functions `uploadImage` and `deleteImage` use this server-side — no client-side token needed. Admins no longer need to enter a PAT in the admin panel.
 
 ### News Layout
 
@@ -312,8 +312,8 @@ There is no test suite and no linter/formatter configuration. Validate changes b
 | `renderAircraftAdmin(container, items, isAdmin)` | Renders aircraft admin list grouped by category; supports drag & drop reordering within categories; shows import button when collection is empty; auto-migrates legacy category names |
 | `handleLogin()` | Authenticates admin with `info@segelfliegen-altdorf.de` and entered password |
 | `compressImage(file, maxWidth, quality)` | Resizes image to max 1200 px, encodes as WebP at 80% quality; returns a Blob |
-| `uploadToGitHub(blob, filename, token)` | Uploads WebP blob to `images/<filename>` via GitHub Contents API; returns raw URL |
-| `deleteFromGitHub(imageUrl, token)` | Deletes `images/news_*.webp` or `images/aircraft_*.webp` from the repository |
+| `uploadToGitHub(blob, filename)` | Calls `uploadImage` Cloud Function; returns raw GitHub URL |
+| `deleteFromGitHub(imageUrl)` | Calls `deleteImage` Cloud Function to remove the file from GitHub |
 | `sendPaymentReminder(order)` | Sends payment/pickup reminder email to customer via Cloud Function `sendAdminEmail` (with confirm dialog) |
 | `loadVoucherOrder(order)` | Populates the voucher PDF form with order data (only available after order is marked as paid) |
 | `fillUnpersonalized()` | Fills voucher form with generic recipient ("Jemand Besonderes") and standard greeting text |
@@ -334,9 +334,9 @@ There is no test suite and no linter/formatter configuration. Validate changes b
 
 | Service | Config location | Notes |
 |---|---|---|
-| **Firebase** | `news-db.js` lines 5–13, `functions/index.js` | Project ID: `segelfliegen`. SDK version: `11.6.1`. Cloud Functions (europe-west1): `sendPublicEmail` (onRequest, public forms), `sendAdminEmail` (onCall, admin), `sendVoucherEmail` (onCall, PDF). All use Strato-SMTP via Nodemailer. Secrets: `SMTP_USER`, `SMTP_PASS`. |
-| **GitHub API** | `news-db.js` `uploadToGitHub()` / `deleteFromGitHub()` | Used for news & aircraft image storage. Requires admin to supply a PAT with `contents: write`; stored in `localStorage`. |
-| **Cloud Functions** | `functions/index.js`, `script.js`, `news-db.js`, `bestellungen/index.html` | `sendPublicEmail` (onRequest, public forms via `fetch()`), `sendAdminEmail` (onCall, admin actions via `httpsCallable()`), `sendVoucherEmail` (onCall, PDF email). All use Strato-SMTP via Nodemailer. HTML templates built server-side. All customer emails use "Du" form. **CC-Logik**: dan@ always; kassier@ on gutschein; joergsperber@ only on Abholung orders; Jeremy on Ausbildung. |
+| **Firebase** | `news-db.js` lines 5–13, `functions/index.js` | Project ID: `segelfliegen`. SDK version: `11.6.1`. Cloud Functions (europe-west1): `sendPublicEmail` (onRequest, public forms), `sendAdminEmail` (onCall, admin), `sendVoucherEmail` (onCall, PDF), `uploadImage` (onCall, GitHub upload), `deleteImage` (onCall, GitHub delete). Secrets: `SMTP_USER`, `SMTP_PASS`, `GH_PAT`. |
+| **GitHub API** | `functions/index.js` `uploadImage()` / `deleteImage()` | Used for news & aircraft image storage. PAT stored as Firebase Secret `GH_PAT` — no client-side token needed. Client calls Cloud Functions via `httpsCallable()`. |
+| **Cloud Functions** | `functions/index.js`, `script.js`, `news-db.js`, `bestellungen/index.html` | `sendPublicEmail` (onRequest, public forms via `fetch()`), `sendAdminEmail` (onCall, admin actions via `httpsCallable()`), `sendVoucherEmail` (onCall, PDF email), `uploadImage` (onCall, image upload to GitHub), `deleteImage` (onCall, image delete from GitHub). SMTP functions use Strato-SMTP via Nodemailer; image functions use GitHub Contents API. All customer emails use "Du" form. **CC-Logik**: dan@ always; kassier@ on gutschein; joergsperber@ only on Abholung orders; Jeremy on Ausbildung. |
 | **Google Maps** | Embed `<iframe>` in `kontakt.html` | Uses consent overlay pattern; iframe only loads after cookie accept. |
 | **Flatpickr** | Self-hosted in `lib/flatpickr/` | Loaded locally in `mitfliegen.html` and `kontakt.html`. No CDN requests. |
 | **Fonts** | Self-hosted in `fonts/` | Montserrat, Open Sans, Tangerine as WOFF2. `@font-face` in `style.css`. No Google server contact. |
@@ -374,9 +374,10 @@ The panel is organised in **three tabs**:
 - Changes are immediately visible on `flugzeugpark.html` (real-time `onSnapshot` listener).
 - When an aircraft with an image is deleted, the image is also removed from the repository automatically.
 
-### Voucher Orders & PDF Generation (within Tab 1 — News)
+### Voucher Orders & PDF Generation (Tab 4 — Gutscheine)
 
-- Incoming voucher orders from `mitfliegen.html` are stored in Firestore (`voucherOrders` collection) and displayed as a list below the news admin.
+- The voucher form shows **Besteller** (read-only info) and **E-Mail** (editable, used for "PDF per E-Mail senden") as visible fields. Both are auto-filled when loading an order via "Übernehmen", but the email can also be entered manually for standalone vouchers.
+- Incoming voucher orders from `mitfliegen.html` are stored in Firestore (`voucherOrders` collection) and displayed as a list below the voucher form.
 - Order workflow: **Neu** → mark as **Bezahlt** → **Übernehmen** (loads into PDF form) → **PDF generieren** → manually send PDF to customer → **Abschließen**.
 - The "Übernehmen" button and click-to-load only appear **after** the order is marked as paid.
 - **Payment Reminder**: Unpaid orders show a "Reminder" button that sends a reminder email to the customer via Cloud Function `sendAdminEmail`. The reminder dynamically adapts to the payment method (bank transfer vs. pickup).
@@ -388,7 +389,7 @@ The panel is organised in **three tabs**:
 - "Standardtext einsetzen" link (next to "Persönlicher Grußtext" label) fills the form with generic text ("Jemand Besonderes" + standard greeting).
 - Voucher images per flight type are mapped in `gutscheinImageMap` (e.g., `'Motorsegler': 'images/Gutschein_Motorflug.jpg'`).
 
-**GitHub PAT**: A PAT with `contents: write` must be entered once in the News tab; it is shared by both the news and aircraft image upload pipelines (stored in `localStorage` under `gh_pat`).
+**GitHub PAT**: Stored as Firebase Secret `GH_PAT` — no manual token entry needed. The `uploadImage` and `deleteImage` Cloud Functions handle all GitHub API communication server-side.
 
 ### Standalone Pages
 
@@ -457,7 +458,7 @@ Rules use helper functions (`isAdmin()`, `isGutscheinUser()`, `isBestellungUser(
 
 ### Update the News Feed
 
-News is managed through the admin panel at `/intern.html` → Tab **News**. Admins log in with their Firebase credentials and create/edit/delete posts through the UI. A GitHub PAT must be stored to enable image uploads. No code changes are needed.
+News is managed through the admin panel at `/intern.html` → Tab **News**. Admins log in with their Firebase credentials and create/edit/delete posts through the UI. Image uploads are handled automatically via Cloud Functions (no token setup needed). No code changes are needed.
 
 ### Manage the Aircraft Fleet (Flugzeugpark)
 

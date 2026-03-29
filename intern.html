@@ -22,36 +22,6 @@
         #intern-content { display: none; width: 100%; }
         #login-required { display: block; }
 
-        /* GitHub Token in der Kopfzeile */
-        .github-token-inline {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
-        .github-token-inline label {
-            font-size: 0.8rem;
-            color: var(--text-light);
-            font-weight: 600;
-            white-space: nowrap;
-        }
-        .github-token-inline input[type="text"] {
-            padding: 7px 10px;
-            font-size: 0.82rem;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            width: 200px;
-        }
-        .github-token-inline .btn {
-            padding: 7px 12px;
-            font-size: 0.82rem;
-            white-space: nowrap;
-        }
-        #github-pat-status-inline {
-            font-size: 0.78rem;
-            color: #888;
-            white-space: nowrap;
-        }
 
         /* Tab Navigation */
         .intern-tabs {
@@ -154,16 +124,6 @@
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; flex-wrap:wrap; gap:12px;">
                     <h2 style="margin-bottom:0;">Mitgliederbereich</h2>
                     <div style="display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
-                        <!-- GitHub Token — global für alle Tabs -->
-                        <div id="github-token-section" class="github-token-inline">
-                            <label for="github-pat-input">GitHub Token:</label>
-                            <input type="text" id="github-pat-input" placeholder="ghp_..."
-                                autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
-                                data-lpignore="true" data-1p-ignore>
-                            <button type="button" id="github-pat-save-btn" class="btn btn-secondary">Speichern</button>
-                            <button type="button" id="github-pat-remove-btn" class="btn btn-secondary" style="display:none; background:#c0392b; color:#fff; border-color:#c0392b;">Entfernen</button>
-                            <span id="github-pat-status" style="font-size:0.78rem; color:#888;"></span>
-                        </div>
                         <button id="admin-logout-btn" class="btn btn-secondary">Abmelden</button>
                     </div>
                 </div>
@@ -293,8 +253,16 @@
                         <h3>Gutschein erstellen</h3>
                         <p style="color: var(--text-light); margin-bottom: 20px;">Erstelle einen personalisierten Gutschein als PDF zum Versand per E-Mail.</p>
                         <form id="gutschein-form">
-                            <input type="hidden" id="voucher-besteller" value="">
-                            <input type="hidden" id="voucher-order-email" value="">
+                            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px;">
+                                <div>
+                                    <label style="display:block; margin-bottom:6px; font-weight:600; font-size:0.9rem;">Besteller</label>
+                                    <input type="text" id="voucher-besteller" placeholder="Name des Bestellers" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:6px; background:#f4f6f8;">
+                                </div>
+                                <div>
+                                    <label style="display:block; margin-bottom:6px; font-weight:600; font-size:0.9rem;">E-Mail (für PDF-Versand)</label>
+                                    <input type="email" id="voucher-order-email" placeholder="kunde@beispiel.de" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:6px;">
+                                </div>
+                            </div>
                             <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px;">
                                 <div>
                                     <label style="display:block; margin-bottom:6px; font-weight:600; font-size:0.9rem;">Empfänger-Name *</label>
@@ -904,7 +872,7 @@
         document.getElementById('gutschein-send-btn')?.addEventListener('click', async () => {
             const email = document.getElementById('voucher-order-email').value.trim();
             if (!email) {
-                alert('Keine E-Mail-Adresse vorhanden. Bitte zuerst eine Bestellung \u00FCbernehmen.');
+                alert('Bitte eine E-Mail-Adresse eingeben.');
                 return;
             }
 

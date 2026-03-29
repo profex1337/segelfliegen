@@ -49,11 +49,11 @@ async function compressImage(file, maxWidth = 1200, quality = 0.80) {
     });
 }
 
-async function uploadToGitHub(blob, filename, token) {
-    const owner = 'profex1337';
-    const repo = 'segelfliegen';
-    const branch = 'main';
-    const path = `images/${filename}`;
+async function uploadToGitHub(blob, filename) {
+    const { getFunctions, httpsCallable } = await import('https://www.gstatic.com/firebasejs/11.6.1/firebase-functions.js');
+    const { getApp } = await import('https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js');
+    const functions = getFunctions(getApp(), 'europe-west1');
+    const uploadFn = httpsCallable(functions, 'uploadImage');
 
     const base64 = await new Promise((resolve) => {
         const reader = new FileReader();
@@ -61,34 +61,17 @@ async function uploadToGitHub(blob, filename, token) {
         reader.readAsDataURL(blob);
     });
 
-    // Prüfen ob Datei bereits existiert (SHA für Update benötigt)
-    let sha = null;
-    try {
-        const check = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}`, {
-            headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/vnd.github+json' }
-        });
-        if (check.ok) sha = (await check.json()).sha;
-    } catch {}
+    const result = await uploadFn({ base64, filename });
+    if (!result.data.success) throw new Error('Upload fehlgeschlagen');
+    return result.data.url;
+}
 
-    const body = { message: `News-Bild: ${filename}`, content: base64, branch };
-    if (sha) body.sha = sha;
-
-    const resp = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}`, {
-        method: 'PUT',
-        headers: {
-            'Authorization': `Bearer ${token}`,
-            'Accept': 'application/vnd.github+json',
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(body)
-    });
-
-    if (!resp.ok) {
-        const err = await resp.json();
-        throw new Error(err.message || 'GitHub Upload fehlgeschlagen');
-    }
-
-    return `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${path}`;
+async function deleteFromGitHub(imageUrl) {
+    const { getFunctions, httpsCallable } = await import('https://www.gstatic.com/firebasejs/11.6.1/firebase-functions.js');
+    const { getApp } = await import('https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js');
+    const functions = getFunctions(getApp(), 'europe-west1');
+    const deleteFn = httpsCallable(functions, 'deleteImage');
+    await deleteFn({ imageUrl });
 }
 
 async function initFirebase() {
@@ -174,42 +157,6 @@ async function startNewsLogic() {
     const passwordInput = document.getElementById('admin-password-input');
     const loginError = document.getElementById('login-error');
     const loginFormTag = document.getElementById('admin-login-form');
-
-    // GitHub PAT Setup (wird in localStorage dauerhaft gespeichert)
-    const patInput = document.getElementById('github-pat-input');
-    const patSaveBtn = document.getElementById('github-pat-save-btn');
-    const patRemoveBtn = document.getElementById('github-pat-remove-btn');
-    const patStatus = document.getElementById('github-pat-status');
-
-    const updatePatUI = () => {
-        const stored = localStorage.getItem('gh_pat');
-        if (stored) {
-            if (patInput) { patInput.value = ''; patInput.placeholder = '(Token gespeichert)'; }
-            if (patStatus) patStatus.textContent = 'Token gespeichert – bleibt bis zur manuellen Entfernung erhalten.';
-            if (patRemoveBtn) patRemoveBtn.style.display = 'inline-block';
-        } else {
-            if (patInput) patInput.placeholder = 'ghp_...';
-            if (patStatus) patStatus.textContent = '';
-            if (patRemoveBtn) patRemoveBtn.style.display = 'none';
-        }
-    };
-    updatePatUI();
-
-    if (patSaveBtn) {
-        patSaveBtn.onclick = () => {
-            const val = patInput ? patInput.value.trim() : '';
-            if (val) {
-                localStorage.setItem('gh_pat', val);
-                updatePatUI();
-            }
-        };
-    }
-    if (patRemoveBtn) {
-        patRemoveBtn.onclick = () => {
-            localStorage.removeItem('gh_pat');
-            updatePatUI();
-        };
-    }
 
     // Bild-Vorschau beim Datei-Auswählen (mehrere Dateien)
     const fileInputEl = document.getElementById('news-image-file');
@@ -456,11 +403,6 @@ async function startNewsLogic() {
                 }
 
                 if (fileEl && fileEl.files.length > 0) {
-                    const token = localStorage.getItem('gh_pat') || '';
-                    if (!token) {
-                        alert('Bitte zuerst einen GitHub Token eingeben, um Bilder hochzuladen.');
-                        return;
-                    }
                     const statusEl = document.getElementById('image-upload-status');
                     if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Bilder werden hochgeladen…'; }
                     try {
@@ -468,7 +410,7 @@ async function startNewsLogic() {
                             if (statusEl) statusEl.textContent = 'Lade Bild ' + (i + 1) + ' von ' + fileEl.files.length + ' hoch…';
                             const compressed = await compressImage(fileEl.files[i]);
                             const safeName = 'news_' + Date.now() + '_' + i + '.webp';
-                            const url = await uploadToGitHub(compressed, safeName, token);
+                            const url = await uploadToGitHub(compressed, safeName);
                             existingUrls.push(url);
                         }
                         if (imageUrlsHidden) imageUrlsHidden.value = JSON.stringify(existingUrls);
@@ -717,34 +659,6 @@ async function startNewsLogic() {
                         };
                     }
                     
-                    async function deleteFromGitHub(imageUrl, token) {
-                        // Nur GitHub-Raw-URLs löschen (news_*.webp im images/-Ordner)
-                        const match = imageUrl && imageUrl.match(/raw\.githubusercontent\.com\/profex1337\/segelfliegen\/main\/(images\/(?:news|aircraft)_[^?]+)/);
-                        if (!match) return;
-                        const path = match[1];
-                        const owner = 'profex1337';
-                        const repo = 'segelfliegen';
-                        const branch = 'main';
-
-                        try {
-                            const checkResp = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}`, {
-                                headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/vnd.github+json' }
-                            });
-                            if (!checkResp.ok) return; // Datei existiert nicht mehr
-                            const { sha } = await checkResp.json();
-
-                            await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}`, {
-                                method: 'DELETE',
-                                headers: {
-                                    'Authorization': `Bearer ${token}`,
-                                    'Accept': 'application/vnd.github+json',
-                                    'Content-Type': 'application/json'
-                                },
-                                body: JSON.stringify({ message: `News-Bild entfernt: ${path}`, sha, branch })
-                            });
-                        } catch {}
-                    }
-
                     async function deleteNewsItem(docId, imageUrls) {
                         if (confirm("⚠️ News-Beitrag unwiderruflich löschen?\n\nDieser Vorgang kann nicht rückgängig gemacht werden. Alle zugehörigen Bilder werden ebenfalls gelöscht.")) {
                             try {
@@ -762,10 +676,9 @@ async function startNewsLogic() {
                                 }
 
                                 // Alle Bilder aus GitHub löschen
-                                const token = localStorage.getItem('gh_pat');
-                                if (token && imageUrls && imageUrls.length > 0) {
+                                if (imageUrls && imageUrls.length > 0) {
                                     for (const url of imageUrls) {
-                                        await deleteFromGitHub(url, token);
+                                        await deleteFromGitHub(url);
                                     }
                                 }
                             } catch (e) {
@@ -1175,15 +1088,13 @@ async function startAircraftLogic() {
 
             const fileEl = document.getElementById('aircraft-image-file');
             if (fileEl && fileEl.files.length > 0) {
-                const token = localStorage.getItem('gh_pat') || '';
-                if (!token) { alert('Bitte zuerst einen GitHub Token eingeben.'); return; }
                 const statusEl = document.getElementById('aircraft-image-upload-status');
                 if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Bild wird hochgeladen…'; }
                 if (statusEl) statusEl.textContent = 'Komprimiere und lade hoch…';
                 try {
                     const compressed = await compressImage(fileEl.files[0]);
                     const safeName = `aircraft_${Date.now()}.webp`;
-                    imageVal = await uploadToGitHub(compressed, safeName, token);
+                    imageVal = await uploadToGitHub(compressed, safeName);
                     if (imageUrlHidden) imageUrlHidden.value = imageVal;
                 } catch (uploadErr) {
                     alert('Bild-Upload fehlgeschlagen: ' + uploadErr.message);
@@ -1354,8 +1265,7 @@ async function startAircraftLogic() {
                     if (!confirm('⚠️ "' + (item.name || 'Flugzeug') + '" unwiderruflich löschen?\n\nDieser Vorgang kann nicht rückgängig gemacht werden. Das zugehörige Bild wird ebenfalls gelöscht.')) return;
                     try {
                         await deleteDoc(doc(db, 'aircraft', item.id));
-                        const token = localStorage.getItem('gh_pat');
-                        if (token && item.imageUrl) await deleteFromGitHub(item.imageUrl, token);
+                        if (item.imageUrl) await deleteFromGitHub(item.imageUrl);
                     } catch (e) { alert('Löschen fehlgeschlagen: ' + e.message); }
                 };
                 btns.appendChild(editBtn);

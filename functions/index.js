@@ -508,6 +508,138 @@ exports.sendVoucherEmail = onCall(
     },
 );
 
+// ========== uploadImage (onCall — Bild auf GitHub hochladen) ==========
+
+const GH_OWNER = "profex1337";
+const GH_REPO = "segelfliegen";
+const GH_BRANCH = "main";
+
+exports.uploadImage = onCall(
+    {
+      secrets: ["GH_PAT"],
+      cors: [
+        "https://www.segelfliegenaltdorf.de",
+        "https://segelfliegenaltdorf.de",
+      ],
+    },
+    async (request) => {
+      // Nur Admin darf Bilder hochladen
+      if (!request.auth) {
+        throw new HttpsError("unauthenticated", "Nicht eingeloggt.");
+      }
+      if (request.auth.token.email !== VEREINS_EMAIL) {
+        throw new HttpsError("permission-denied", "Nur Admin darf Bilder hochladen.");
+      }
+
+      const {base64, filename} = request.data;
+      if (!base64 || !filename) {
+        throw new HttpsError("invalid-argument", "base64 und filename sind Pflichtfelder.");
+      }
+
+      // Nur erlaubte Dateinamen (news_*.webp oder aircraft_*.webp)
+      if (!/^(?:news|aircraft)_[\d_]+\.webp$/.test(filename)) {
+        throw new HttpsError("invalid-argument", "Ungültiger Dateiname.");
+      }
+
+      const token = process.env.GH_PAT;
+      const path = `images/${filename}`;
+      const apiUrl = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${path}`;
+      const headers = {
+        "Authorization": `Bearer ${token}`,
+        "Accept": "application/vnd.github+json",
+        "Content-Type": "application/json",
+      };
+
+      try {
+        // Prüfen ob Datei existiert (SHA für Update)
+        let sha = null;
+        const checkResp = await fetch(apiUrl, {headers});
+        if (checkResp.ok) {
+          const checkData = await checkResp.json();
+          sha = checkData.sha;
+        }
+
+        const body = {message: `Bild: ${filename}`, content: base64, branch: GH_BRANCH};
+        if (sha) body.sha = sha;
+
+        const resp = await fetch(apiUrl, {
+          method: "PUT",
+          headers,
+          body: JSON.stringify(body),
+        });
+
+        if (!resp.ok) {
+          const err = await resp.json();
+          throw new Error(err.message || "GitHub Upload fehlgeschlagen");
+        }
+
+        const url = `https://raw.githubusercontent.com/${GH_OWNER}/${GH_REPO}/${GH_BRANCH}/${path}`;
+        return {success: true, url};
+      } catch (error) {
+        if (error instanceof HttpsError) throw error;
+        console.error("uploadImage Fehler:", error);
+        throw new HttpsError("internal", "Bild-Upload fehlgeschlagen: " + error.message);
+      }
+    },
+);
+
+// ========== deleteImage (onCall — Bild aus GitHub löschen) ==========
+
+exports.deleteImage = onCall(
+    {
+      secrets: ["GH_PAT"],
+      cors: [
+        "https://www.segelfliegenaltdorf.de",
+        "https://segelfliegenaltdorf.de",
+      ],
+    },
+    async (request) => {
+      // Nur Admin darf Bilder löschen
+      if (!request.auth) {
+        throw new HttpsError("unauthenticated", "Nicht eingeloggt.");
+      }
+      if (request.auth.token.email !== VEREINS_EMAIL) {
+        throw new HttpsError("permission-denied", "Nur Admin darf Bilder löschen.");
+      }
+
+      const {imageUrl} = request.data;
+      if (!imageUrl) return {success: true, skipped: true};
+
+      // Nur GitHub-Raw-URLs mit erlaubtem Pattern
+      const match = imageUrl.match(
+          /raw\.githubusercontent\.com\/profex1337\/segelfliegen\/main\/(images\/(?:news|aircraft)_[^?]+)/,
+      );
+      if (!match) return {success: true, skipped: true};
+
+      const path = match[1];
+      const token = process.env.GH_PAT;
+      const apiUrl = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${path}`;
+      const headers = {
+        "Authorization": `Bearer ${token}`,
+        "Accept": "application/vnd.github+json",
+        "Content-Type": "application/json",
+      };
+
+      try {
+        const checkResp = await fetch(apiUrl, {headers});
+        if (!checkResp.ok) return {success: true, skipped: true}; // Datei existiert nicht
+        const {sha} = await checkResp.json();
+
+        await fetch(apiUrl, {
+          method: "DELETE",
+          headers,
+          body: JSON.stringify({message: `Bild entfernt: ${path}`, sha, branch: GH_BRANCH}),
+        });
+
+        return {success: true};
+      } catch (error) {
+        console.error("deleteImage Fehler:", error);
+        // Löschfehler nicht propagieren — soll restlichen Ablauf nicht blockieren
+        return {success: false, error: error.message};
+      }
+    },
+);
+
 // ========== Google Reviews (Places API → Firestore Cache) ==========
 
 const PLACE_ID = "ChIJy0SiW22fDEERyio73FxdAI0";
