@@ -453,13 +453,18 @@
 
         // E-Mail-Vorlage generieren
         window.generateEmailTemplate = function() {
+            var besteller = document.getElementById('voucher-besteller').value.trim();
+            var orderEmail = document.getElementById('voucher-order-email').value.trim();
+            if (!besteller || !orderEmail) {
+                alert('Bitte Besteller und E-Mail-Adresse eingeben.');
+                return;
+            }
             var recipient = document.getElementById('voucher-recipient').value.trim() || 'Empf\u00E4nger';
             var flightType = document.getElementById('voucher-flight-type').value || 'Flugart';
             var value = document.getElementById('voucher-value').value.trim() || '\u2014';
             var validUntil = document.getElementById('voucher-valid-until').value.trim();
             var zusatzE = parseInt(document.getElementById('voucher-zusatzzeit').value || '0', 10);
             var flugdauer = document.getElementById('voucher-flugdauer').value || getFlugdauer(flightType, zusatzE);
-            var besteller = document.getElementById('voucher-besteller').value.trim();
             var anrede = besteller ? 'Hallo <strong>' + besteller + '</strong>,' : 'Hallo,';
 
             var detailRows = ''
@@ -870,9 +875,10 @@
 
         // Button 2: PDF per E-Mail senden (Cloud Function)
         document.getElementById('gutschein-send-btn')?.addEventListener('click', async () => {
+            const besteller = document.getElementById('voucher-besteller').value.trim();
             const email = document.getElementById('voucher-order-email').value.trim();
-            if (!email) {
-                alert('Bitte eine E-Mail-Adresse eingeben.');
+            if (!besteller || !email) {
+                alert('Bitte Besteller und E-Mail-Adresse eingeben.');
                 return;
             }
 
