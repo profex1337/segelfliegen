@@ -18,6 +18,7 @@
     <meta name="geo.position" content="49.3899;11.4267">
     <meta name="ICBM" content="49.3899, 11.4267">
     <script type="application/ld+json">
+    [
     {
       "@context": "https://schema.org",
       "@type": "SportsClub",
@@ -45,7 +46,34 @@
         "contactType": "customer service",
         "availableLanguage": "German"
       }
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Wann ist der Flugplatz geöffnet?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Unser Flugbetrieb findet von April bis Oktober an Wochenenden und Feiertagen statt — in der Regel von morgens bis zum Sonnenuntergang, wetterabhängig." }
+        },
+        {
+          "@type": "Question",
+          "name": "Kann ich spontan vorbeikommen?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Grundsätzlich ja! Besucher sind an Flugtagen immer willkommen. Für einen Gastflug empfehlen wir aber eine kurze Voranmeldung." }
+        },
+        {
+          "@type": "Question",
+          "name": "Wie erreiche ich den Flugplatz?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Über die A3 Richtung Regensburg, Ausfahrt nach dem Kreuz Altdorf (Oberölsbach). Nach der Ausfahrt rechts, nach 200 m am Kreisverkehr der Beschilderung Flugplatz folgen." }
+        },
+        {
+          "@type": "Question",
+          "name": "Wie kann ich Mitglied werden?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Schreib uns einfach über das Kontaktformular oder komm an einem Flugtag vorbei. Wir zeigen dir gerne alles und besprechen die Möglichkeiten." }
+        }
+      ]
     }
+    ]
     </script>
     <link rel="icon" href="favicon.ico" type="image/x-icon">
     <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -71,9 +99,14 @@
     </div>
 
     <main id="main-content" class="container section">
-        
-        
-        <div class="content-block" style="border-left: 5px solid var(--accent); margin-bottom: 40px;">
+
+        <div class="category-nav">
+            <a href="#anschrift" class="btn-cat">Anschrift</a>
+            <a href="#kontakt-formular" class="btn-cat">Kontakt</a>
+            <a href="#faq" class="btn-cat">FAQ</a>
+        </div>
+
+        <div class="content-block" id="anschrift" style="border-left: 5px solid var(--accent); margin-bottom: 40px;">
             <div class="news-wrapper">
                 <div>
                     <h2 style="margin-top: 0;">Anschrift & Telefon</h2>
@@ -157,6 +190,37 @@
                     <button type="submit" class="btn" style="min-width: 250px;">Nachricht senden</button>
                 </div>
             </form>
+        </div>
+
+        <div class="content-block" id="faq">
+            <h2>Häufige Fragen</h2>
+
+            <div class="faq-list">
+                <details class="faq-item">
+                    <summary>Wann ist der Flugplatz geöffnet?</summary>
+                    <p>Unser Flugbetrieb findet von April bis Oktober an Wochenenden und Feiertagen statt — in der Regel von morgens bis zum Sonnenuntergang, wetterabhängig.</p>
+                </details>
+                <details class="faq-item">
+                    <summary>Kann ich spontan vorbeikommen?</summary>
+                    <p>Grundsätzlich ja! Besucher sind an Flugtagen immer willkommen. Für einen Gastflug empfehlen wir aber eine kurze Voranmeldung, damit wir alles für dich vorbereiten können.</p>
+                </details>
+                <details class="faq-item">
+                    <summary>Wie erreiche ich den Flugplatz?</summary>
+                    <p>Über die A3 Richtung Regensburg, Ausfahrt nach dem Kreuz Altdorf (Oberölsbach). Nach der Ausfahrt rechts, nach 200 m am Kreisverkehr der Beschilderung "Flugplatz" folgen. Navi-Adresse: Hagenhausener Str, 92348 Berg. Mehr Details auf unserer <a href="uber-uns.html#Anfahrt">Über-uns-Seite</a>.</p>
+                </details>
+                <details class="faq-item">
+                    <summary>Gibt es Parkmöglichkeiten?</summary>
+                    <p>Ja, direkt am Flugplatz stehen kostenlose Parkplätze zur Verfügung.</p>
+                </details>
+                <details class="faq-item">
+                    <summary>Wie kann ich Mitglied werden?</summary>
+                    <p>Schreib uns einfach über das Kontaktformular oder komm an einem Flugtag vorbei. Wir zeigen dir gerne alles und besprechen die Möglichkeiten — ob Ausbildung oder als bereits lizenzierter Pilot.</p>
+                </details>
+                <details class="faq-item">
+                    <summary>Kann ich auch unter der Woche fliegen?</summary>
+                    <p>Der reguläre Flugbetrieb findet an Wochenenden statt. Unter der Woche ist Fliegen nach individueller Absprache möglich, wenn genügend Vereinsmitglieder vor Ort sind.</p>
+                </details>
+            </div>
         </div>
     </main>
 
