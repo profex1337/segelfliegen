@@ -286,11 +286,13 @@ async function startNewsLogic() {
             if (newsItems.length === 0) {
                 newsContainer.innerHTML = '<p style="text-align:center;">Keine Nachrichten gefunden.</p>';
             } else {
+                const isPublicPage = !document.getElementById('intern-content');
+                const maxVisible = (isCardMode && isPublicPage) ? 4 : Infinity;
+
                 newsItems.forEach(function(item, index) {
                     const div = document.createElement('div');
                     const adminDisplay = isAdmin ? 'flex' : 'none';
                     const images = getImages(item);
-                    const isPublicPage = !document.getElementById('intern-content');
                     const isFeatured = isCardMode && isPublicPage && index === 0 && images.length > 0;
 
                     if (isCardMode) {
@@ -372,8 +374,30 @@ async function startNewsLogic() {
                         loadIntoForm(item);
                     }
 
+                    // Auf der öffentlichen Startseite: Items ab Position 4 ausblenden
+                    if (index >= maxVisible) {
+                        div.classList.add('news-hidden');
+                        div.style.display = 'none';
+                    }
+
                     newsContainer.appendChild(div);
                 });
+
+                // "Alle Neuigkeiten anzeigen"-Button auf der Startseite
+                if (isCardMode && isPublicPage && newsItems.length > maxVisible) {
+                    const showMoreBtn = document.createElement('div');
+                    showMoreBtn.className = 'news-show-more';
+                    showMoreBtn.style.cssText = 'grid-column: 1 / -1; text-align: center; margin-top: 10px;';
+                    showMoreBtn.innerHTML = '<button class="btn" style="background: transparent; color: var(--primary); border: 2px solid var(--primary);">Alle Neuigkeiten anzeigen ↓</button>';
+                    showMoreBtn.querySelector('button').addEventListener('click', function() {
+                        newsContainer.querySelectorAll('.news-hidden').forEach(function(el) {
+                            el.style.display = '';
+                            el.classList.remove('news-hidden');
+                        });
+                        showMoreBtn.remove();
+                    });
+                    newsContainer.appendChild(showMoreBtn);
+                }
 
                 // Karussell-Interaktivität initialisieren
                 initCarousels(newsContainer);

@@ -95,9 +95,21 @@
             <p style="font-size: 1.5rem; font-weight: bold; margin-bottom: 20px; color: #fff;">Dein Ziel für unvergessliche Flugerlebnisse</p>
             <p>Gastflüge im Motor- oder Segelflugzeug<br>Professionelle Flugausbildung mit engagierten Fluglehrern</p>
             
-            <div style="margin-top: 15px; margin-bottom: 30px; background: rgba(0,0,0,0.3); padding: 15px; border-radius: 8px; display: inline-block; backdrop-filter: blur(5px);">
-                <p style="margin: 0;"><strong>Komm am Wochenende vorbei!</strong><br>Für kühle Getränke, Eis, Kaffee und Kuchen ist in den Sommermonaten immer gesorgt!</p>
+            <div id="hero-seasonal-box" style="margin-top: 15px; margin-bottom: 30px; background: rgba(0,0,0,0.3); padding: 15px; border-radius: 8px; display: inline-block; backdrop-filter: blur(5px);">
+                <p style="margin: 0;" id="hero-seasonal-text"><strong>Komm am Wochenende vorbei!</strong><br>Für kühle Getränke, Eis, Kaffee und Kuchen ist in den Sommermonaten immer gesorgt!</p>
             </div>
+            <script>
+                (function() {
+                    var m = new Date().getMonth(); // 0=Jan, 11=Dez
+                    var el = document.getElementById('hero-seasonal-text');
+                    if (m >= 3 && m <= 9) return; // Apr–Okt: Standard-Text beibehalten
+                    if (m === 2) { // März
+                        el.innerHTML = '<strong>Die Saison steht vor der Tür!</strong><br>Ab April heben wir wieder ab — komm vorbei!';
+                    } else { // Nov–Feb
+                        el.innerHTML = '<strong>Vorfreude auf die neue Saison!</strong><br>Wir starten wieder ab April — halte dich auf dem Laufenden!';
+                    }
+                })();
+            </script>
             <br>
             
             <div style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; align-items: center;">
