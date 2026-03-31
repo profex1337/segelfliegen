@@ -749,7 +749,7 @@ function initSlideshows() {
         }, { passive: true });
 
         showSlides(slideIndex);
-        startAutoPlay();
+        if (slideshow.dataset.autoplay !== 'false') startAutoPlay();
     });
 
 }
