@@ -102,12 +102,9 @@
                 (function() {
                     var m = new Date().getMonth(); // 0=Jan, 11=Dez
                     var el = document.getElementById('hero-seasonal-text');
-                    if (m >= 3 && m <= 9) return; // Apr–Okt: Standard-Text beibehalten
-                    if (m === 2) { // März
-                        el.innerHTML = '<strong>Die Saison steht vor der Tür!</strong><br>Ab April heben wir wieder ab — komm vorbei!';
-                    } else { // Nov–Feb
-                        el.innerHTML = '<strong>Vorfreude auf die neue Saison!</strong><br>Wir starten wieder ab April — halte dich auf dem Laufenden!';
-                    }
+                    if (m >= 2 && m <= 9) return; // Mär–Okt: Standard-Text beibehalten (bei gutem Wetter fliegen wir auch schon im März)
+                    // Nov–Feb
+                    el.innerHTML = '<strong>Vorfreude auf die neue Saison!</strong><br>Ab März starten wir bei gutem Wetter wieder durch — halte dich auf dem Laufenden!';
                 })();
             </script>
             <br>

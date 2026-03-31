@@ -367,9 +367,16 @@
                                     <input type="text" id="event-dateLabel" placeholder="z.B. September 2026" required>
                                 </div>
                             </div>
-                            <div class="form-group">
-                                <label for="event-description">Beschreibung</label>
-                                <textarea id="event-description" rows="3" placeholder="Kurze Beschreibung des Termins..."></textarea>
+                            <div class="form-responsive">
+                                <div class="form-group">
+                                    <label for="event-description">Beschreibung</label>
+                                    <textarea id="event-description" rows="3" placeholder="Kurze Beschreibung des Termins..."></textarea>
+                                </div>
+                                <div class="form-group">
+                                    <label for="event-validUntil">Gültig bis (optional)</label>
+                                    <input type="date" id="event-validUntil">
+                                    <small style="color: var(--text-light);">Termin wird nach diesem Datum automatisch ausgeblendet</small>
+                                </div>
                             </div>
                             <div style="display: flex; align-items: center; gap: 10px;">
                                 <input type="checkbox" id="event-active" checked style="width: auto;">

@@ -137,6 +137,7 @@ voucherOrders/  — top-level, sorted descending by timestamp (create: any auth,
   dateLabel:   string,        // Free-text date label, e.g. "September 2026" or "01.–04.05.2026"
   description: string,        // Short description text
   active:      boolean,       // If true, shown on public veranstaltungen.html
+  validUntil:  string,        // Optional expiry date (YYYY-MM-DD); event auto-hidden on public page after this date
   order:       number         // Sort order (Date.now() on create; used for drag & drop)
 }
 ```

@@ -1883,9 +1883,17 @@ async function startEventsLogic() {
         });
     });
 
+    // Prüft ob ein Termin abgelaufen ist (validUntil im Format YYYY-MM-DD)
+    function isExpired(item) {
+        if (!item.validUntil) return false;
+        var today = new Date(); today.setHours(0,0,0,0);
+        var until = new Date(item.validUntil + 'T23:59:59');
+        return today > until;
+    }
+
     // Öffentliche Darstellung
     function renderEventsPublic(container, items) {
-        const activeItems = items.filter(i => i.active !== false);
+        const activeItems = items.filter(i => i.active !== false && !isExpired(i));
         if (activeItems.length === 0) {
             // Abschnitt ausblenden wenn keine aktiven Termine
             const section = container.closest('.content-block');
@@ -1930,12 +1938,20 @@ async function startEventsLogic() {
             row.draggable = true;
             row.dataset.id = item.id;
             row.dataset.index = idx;
+            var expired = isExpired(item);
             row.style.cssText = 'display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: var(--white); border-radius: 8px; margin-bottom: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); cursor: grab;'
-                + (item.active === false ? ' opacity: 0.5;' : '');
+                + (item.active === false || expired ? ' opacity: 0.5;' : '');
 
-            const statusDot = item.active !== false
-                ? '<span title="Aktiv" style="color: #27ae60; font-size: 1.2rem;">●</span>'
-                : '<span title="Inaktiv" style="color: #999; font-size: 1.2rem;">○</span>';
+            var statusDot;
+            if (expired) {
+                statusDot = '<span title="Abgelaufen" style="color: #c0392b; font-size: 0.8rem; font-weight: bold;">abgelaufen</span>';
+            } else if (item.active !== false) {
+                statusDot = '<span title="Aktiv" style="color: #27ae60; font-size: 1.2rem;">●</span>';
+            } else {
+                statusDot = '<span title="Inaktiv" style="color: #999; font-size: 1.2rem;">○</span>';
+            }
+
+            var validUntilLabel = item.validUntil ? '<span style="color: var(--text-light); margin-left: 8px; font-size: 0.8rem;">bis ' + escapeHTML(item.validUntil) + '</span>' : '';
 
             row.innerHTML =
                 '<span style="cursor:grab; font-size:1.2rem; color:#aaa;">☰</span>'
@@ -1943,6 +1959,7 @@ async function startEventsLogic() {
                 + '<div style="flex:1;">'
                     + '<strong>' + escapeHTML(item.title || '') + '</strong>'
                     + '<span style="color: var(--text-light); margin-left: 10px; font-size: 0.9rem;">' + escapeHTML(item.dateLabel || '') + '</span>'
+                    + validUntilLabel
                 + '</div>'
                 + '<button class="edit-event-btn" style="background:var(--accent); color:white; border:none; padding:5px 12px; cursor:pointer; border-radius:4px; font-size:0.85rem;">Ändern</button>'
                 + '<button class="delete-event-btn" style="background:#c0392b; color:white; border:none; padding:5px 12px; cursor:pointer; border-radius:4px; font-size:0.85rem;">Löschen</button>';
@@ -1954,6 +1971,7 @@ async function startEventsLogic() {
                 document.getElementById('event-title').value = item.title || '';
                 document.getElementById('event-dateLabel').value = item.dateLabel || '';
                 document.getElementById('event-description').value = item.description || '';
+                document.getElementById('event-validUntil').value = item.validUntil || '';
                 document.getElementById('event-active').checked = item.active !== false;
                 if (cancelBtn) cancelBtn.style.display = '';
                 if (submitBtn) submitBtn.textContent = 'Speichern';
@@ -2007,6 +2025,7 @@ async function startEventsLogic() {
                 title: document.getElementById('event-title').value.trim(),
                 dateLabel: document.getElementById('event-dateLabel').value.trim(),
                 description: document.getElementById('event-description').value.trim(),
+                validUntil: document.getElementById('event-validUntil').value || '',
                 active: document.getElementById('event-active').checked
             };
 
