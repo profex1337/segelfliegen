@@ -42,6 +42,11 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    match /events/{doc} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
     // Gutscheine — Admin + Gutschein-User
     match /vouchers/{doc} {
       allow read: if isGutscheinUser();

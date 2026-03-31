@@ -25,7 +25,7 @@ segelfliegen/
 ├── mitfliegen.html       # Scenic flights & gift vouchers (with booking form)
 ├── ausbildung.html       # Pilot training & licensing (zoomable images, no booking form)
 ├── flugzeugpark.html     # Aircraft fleet showcase (fully dynamic via Firestore, no static cards)
-├── veranstaltungen.html  # Events & photo galleries (slideshows, no booking form)
+├── veranstaltungen.html  # Events & photo galleries (dynamic upcoming events via Firestore, slideshows)
 ├── kontakt.html          # Contact page (map, contact form)
 ├── impressum.html        # Legal notice (Impressum — German legal requirement)
 ├── datenschutz.html      # Privacy policy & cookie consent
@@ -84,7 +84,7 @@ The footer contains links to `impressum.html`, `datenschutz.html`, and `intern.h
 
 The module is loaded as an **ES module** (`type="module"`) and handles:
 
-1. `initFirebase()` — initialises Firebase app (`v11.6.1`), chooses collection path, calls `startNewsLogic()`, `startPricesLogic()`, and/or `startAircraftLogic()` depending on which containers exist on the page
+1. `initFirebase()` — initialises Firebase app (`v11.6.1`), chooses collection path, calls `startNewsLogic()`, `startPricesLogic()`, `startAircraftLogic()`, and/or `startEventsLogic()` depending on which containers exist on the page
 2. `startNewsLogic()` — sets up `onAuthStateChanged` listener; renders news and admin UI accordingly
 3. `startPricesLogic()` — real-time listener for the `prices` collection; renders public price list and admin edit UI
 4. `startAircraftLogic()` — real-time listener for the `aircraft` collection; renders fleet cards on `flugzeugpark.html` and CRUD admin UI on `intern.html`
@@ -97,6 +97,7 @@ The module is loaded as an **ES module** (`type="module"`) and handles:
 news/           — top-level, sorted descending by timestamp (public read, admin write)
 prices/         — top-level, sorted ascending by order field (public read, admin write)
 aircraft/       — top-level, sorted ascending by order field (public read, admin write)
+events/         — top-level, sorted ascending by order field (public read, admin write)
 vouchers/       — top-level, sorted descending by timestamp (admin + gutschein@ user)
 voucherOrders/  — top-level, sorted descending by timestamp (create: any auth, read/update: admin + bestellung@ user)
 ```
@@ -126,6 +127,17 @@ voucherOrders/  — top-level, sorted descending by timestamp (create: any auth,
   highlight:    boolean,       // If true, rendered with accent border and ★ badge
   imageUrl:     string | null, // GitHub raw URL (images/aircraft_<timestamp>.webp) or null
   order:        number         // Sort order (set to Date.now() on create; used for drag & drop)
+}
+```
+
+**`events` document schema**:
+```js
+{
+  title:       string,        // Event title, e.g. "Hallenfest 2026"
+  dateLabel:   string,        // Free-text date label, e.g. "September 2026" or "01.–04.05.2026"
+  description: string,        // Short description text
+  active:      boolean,       // If true, shown on public veranstaltungen.html
+  order:       number         // Sort order (Date.now() on create; used for drag & drop)
 }
 ```
 
@@ -229,7 +241,7 @@ There is no test suite and no linter/formatter configuration. Validate changes b
   <script src="script.js"></script>
   ```
   `script.js` does not use ES module syntax (`import`/`export`) and must not be loaded as a module.
-- **Pages with dynamic Firestore content** (news, prices, aircraft) also include `news-db.js` as `type="module"`. Currently: `index.html`, `mitfliegen.html`, `intern.html`, `flugzeugpark.html`.
+- **Pages with dynamic Firestore content** (news, prices, aircraft, events) also include `news-db.js` as `type="module"`. Currently: `index.html`, `mitfliegen.html`, `intern.html`, `flugzeugpark.html`, `veranstaltungen.html`.
 - **External links** (`target="_blank"`) must always have `rel="noopener noreferrer"`.
 - **Favicon**: `<link rel="icon" href="favicon.ico" type="image/x-icon">` on every page.
 - **Canonical URL**: `<link rel="canonical" href="https://www.segelfliegenaltdorf.de/...">` on every public page. Always use `www.` prefix.
@@ -303,6 +315,7 @@ There is no test suite and no linter/formatter configuration. Validate changes b
 | `startNewsLogic()` | Sets up `onAuthStateChanged` listener; signs in anonymously if no user; sets up real-time `onSnapshot` listener for news |
 | `startPricesLogic()` | Real-time listener for `prices` collection; renders public list and admin CRUD |
 | `startAircraftLogic()` | Real-time listener for `aircraft` collection; renders fleet on `flugzeugpark.html` and CRUD admin UI on `intern.html` |
+| `startEventsLogic()` | Real-time listener for `events` collection; renders upcoming events on `veranstaltungen.html` and CRUD admin UI on `intern.html` |
 | `toggleAdminUI(isAdmin)` | Shows/hides edit+delete buttons on news items based on auth state |
 | `handleInternPageVisibility(isAdmin)` | Shows admin dashboard or login prompt on `intern.html` based on auth state |
 | `loadIntoForm(item)` | Populates the news edit form with an existing document's data |
@@ -351,7 +364,7 @@ There is no test suite and no linter/formatter configuration. Validate changes b
 - `intern.html` is linked in the footer of every page (not in the main nav). Clicking it opens a login modal if the user is not authenticated.
 - When logged in, `body.admin-mode` CSS class is added to the page — used for admin-only styling.
 
-The panel is organised in **three tabs**:
+The panel is organised in **five tabs**:
 
 ### Tab 1 — News
 - Create, edit, and delete news posts (Firestore `news` collection).
@@ -373,6 +386,13 @@ The panel is organised in **three tabs**:
 - **Auto-migration**: on admin load, any documents with the legacy category `'Motorsegler'` are automatically updated to `'Motorflugzeuge'`.
 - Changes are immediately visible on `flugzeugpark.html` (real-time `onSnapshot` listener).
 - When an aircraft with an image is deleted, the image is also removed from the repository automatically.
+
+### Tab 5 — Termine
+- Full CRUD for upcoming events (Firestore `events` collection).
+- Fields: Titel, Datum-Label (free text), Beschreibung, Aktiv-Checkbox.
+- Admin list with drag & drop reordering (updates `order` field in Firestore).
+- Active events are displayed on `veranstaltungen.html` as card-grid (real-time `onSnapshot` listener).
+- When no active events exist, the "Nächste Termine" section is hidden on the public page.
 
 ### Voucher Orders & PDF Generation (Tab 4 — Gutscheine)
 

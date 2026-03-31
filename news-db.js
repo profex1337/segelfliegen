@@ -81,12 +81,14 @@ async function initFirebase() {
     const aircraftAdminList = document.getElementById('aircraft-admin-list');
     const aircraftPublicList = document.getElementById('dynamic-aircraft-list');
     const voucherList = document.getElementById('voucher-list');
+    const eventsAdminList = document.getElementById('events-admin-list');
+    const eventsPublicList = document.getElementById('dynamic-events-list');
 
     // Gutschein-Bestellformular auf mitfliegen.html erkennen
     const gutscheinForm = document.querySelector('form[data-emailjs="gutschein"]');
     const hasGutscheinForm = !!gutscheinForm;
 
-    if (!newsContainer && !pricesContainer && !pricesAdmin && !aircraftAdminList && !aircraftPublicList && !voucherList && !hasGutscheinForm) return;
+    if (!newsContainer && !pricesContainer && !pricesAdmin && !aircraftAdminList && !aircraftPublicList && !voucherList && !hasGutscheinForm && !eventsAdminList && !eventsPublicList) return;
 
     try {
         if (firebaseConfig && Object.keys(firebaseConfig).length > 0) {
@@ -123,6 +125,7 @@ async function initFirebase() {
         if (pricesContainer || pricesAdmin) await startPricesLogic();
         if (aircraftAdminList || aircraftPublicList) await startAircraftLogic();
         if (voucherList) await startVoucherLogic();
+        if (eventsAdminList || eventsPublicList) await startEventsLogic();
 
     } catch (e) {
         if(newsContainer) {
@@ -1846,6 +1849,198 @@ function renderVoucherRow(item) {
     });
 
     return row;
+}
+
+// === Veranstaltungen / Termine ===
+
+async function startEventsLogic() {
+    const adminList = document.getElementById('events-admin-list');
+    const publicList = document.getElementById('dynamic-events-list');
+    const eventsForm = document.getElementById('events-form');
+    const submitBtn = document.getElementById('events-submit-btn');
+    const cancelBtn = document.getElementById('events-cancel-btn');
+    const formHeadline = document.getElementById('events-form-headline');
+
+    let editingEventId = null;
+
+    onAuthStateChanged(auth, (user) => {
+        if (!user) {
+            if (!document.getElementById('dynamic-news-list')) {
+                signInAnonymously(auth).catch(() => {});
+            }
+            return;
+        }
+        const isAdmin = user && !user.isAnonymous;
+        const eventsRef = collection(db, 'events');
+
+        onSnapshot(eventsRef, (snapshot) => {
+            const items = [];
+            snapshot.forEach(d => items.push({ id: d.id, ...d.data() }));
+            items.sort((a, b) => (a.order || 0) - (b.order || 0));
+
+            if (publicList) renderEventsPublic(publicList, items);
+            if (adminList) renderEventsAdmin(adminList, items, isAdmin);
+        });
+    });
+
+    // Öffentliche Darstellung
+    function renderEventsPublic(container, items) {
+        const activeItems = items.filter(i => i.active !== false);
+        if (activeItems.length === 0) {
+            // Abschnitt ausblenden wenn keine aktiven Termine
+            const section = container.closest('.content-block');
+            if (section) section.style.display = 'none';
+            return;
+        }
+        const section = container.closest('.content-block');
+        if (section) section.style.display = '';
+
+        container.innerHTML = '';
+        const grid = document.createElement('div');
+        grid.className = 'card-grid';
+        grid.style.marginTop = '20px';
+
+        activeItems.forEach(item => {
+            const card = document.createElement('div');
+            card.style.cssText = 'background: var(--white); border-radius: var(--radius); padding: 24px; box-shadow: var(--shadow);';
+            card.innerHTML =
+                '<span style="background-color: var(--accent); color: white; padding: 5px 15px; border-radius: 50px; font-weight: bold; font-size: 0.9rem; display: inline-block; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(233, 69, 96, 0.3);">'
+                    + escapeHTML(item.dateLabel || '') + '</span>'
+                + '<h3 style="margin-top: 10px;">' + escapeHTML(item.title || '') + '</h3>'
+                + '<p>' + escapeHTML(item.description || '') + '</p>';
+            grid.appendChild(card);
+        });
+        container.innerHTML = '';
+        container.appendChild(grid);
+    }
+
+    // Admin-Darstellung
+    function renderEventsAdmin(container, items, isAdmin) {
+        if (!isAdmin) { container.innerHTML = ''; return; }
+        container.innerHTML = '';
+
+        if (items.length === 0) {
+            container.innerHTML = '<p style="color:#999;">Noch keine Termine vorhanden.</p>';
+            return;
+        }
+
+        items.forEach((item, idx) => {
+            const row = document.createElement('div');
+            row.className = 'price-row';
+            row.draggable = true;
+            row.dataset.id = item.id;
+            row.dataset.index = idx;
+            row.style.cssText = 'display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: var(--white); border-radius: 8px; margin-bottom: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); cursor: grab;'
+                + (item.active === false ? ' opacity: 0.5;' : '');
+
+            const statusDot = item.active !== false
+                ? '<span title="Aktiv" style="color: #27ae60; font-size: 1.2rem;">●</span>'
+                : '<span title="Inaktiv" style="color: #999; font-size: 1.2rem;">○</span>';
+
+            row.innerHTML =
+                '<span style="cursor:grab; font-size:1.2rem; color:#aaa;">☰</span>'
+                + statusDot
+                + '<div style="flex:1;">'
+                    + '<strong>' + escapeHTML(item.title || '') + '</strong>'
+                    + '<span style="color: var(--text-light); margin-left: 10px; font-size: 0.9rem;">' + escapeHTML(item.dateLabel || '') + '</span>'
+                + '</div>'
+                + '<button class="edit-event-btn" style="background:var(--accent); color:white; border:none; padding:5px 12px; cursor:pointer; border-radius:4px; font-size:0.85rem;">Ändern</button>'
+                + '<button class="delete-event-btn" style="background:#c0392b; color:white; border:none; padding:5px 12px; cursor:pointer; border-radius:4px; font-size:0.85rem;">Löschen</button>';
+
+            // Bearbeiten
+            row.querySelector('.edit-event-btn').onclick = () => {
+                editingEventId = item.id;
+                if (formHeadline) formHeadline.textContent = 'Termin bearbeiten';
+                document.getElementById('event-title').value = item.title || '';
+                document.getElementById('event-dateLabel').value = item.dateLabel || '';
+                document.getElementById('event-description').value = item.description || '';
+                document.getElementById('event-active').checked = item.active !== false;
+                if (cancelBtn) cancelBtn.style.display = '';
+                if (submitBtn) submitBtn.textContent = 'Speichern';
+            };
+
+            // Löschen
+            row.querySelector('.delete-event-btn').onclick = async () => {
+                if (!confirm('Termin "' + (item.title || '') + '" wirklich löschen?')) return;
+                try {
+                    await deleteDoc(doc(db, 'events', item.id));
+                } catch (e) { alert('Fehler: ' + e.message); }
+            };
+
+            // Drag & Drop
+            row.addEventListener('dragstart', (e) => {
+                e.dataTransfer.setData('text/plain', idx.toString());
+                row.style.opacity = '0.4';
+            });
+            row.addEventListener('dragend', () => { row.style.opacity = ''; });
+            row.addEventListener('dragover', (e) => { e.preventDefault(); row.style.borderTop = '3px solid var(--accent)'; });
+            row.addEventListener('dragleave', () => { row.style.borderTop = ''; });
+            row.addEventListener('drop', async (e) => {
+                e.preventDefault();
+                row.style.borderTop = '';
+                const fromIdx = parseInt(e.dataTransfer.getData('text/plain'));
+                const toIdx = idx;
+                if (fromIdx === toIdx) return;
+                // Reihenfolge neu berechnen
+                const reordered = [...items];
+                const [moved] = reordered.splice(fromIdx, 1);
+                reordered.splice(toIdx, 0, moved);
+                for (let i = 0; i < reordered.length; i++) {
+                    await updateDoc(doc(db, 'events', reordered[i].id), { order: i });
+                }
+            });
+
+            container.appendChild(row);
+        });
+    }
+
+    // Formular: Hinzufügen / Bearbeiten
+    if (eventsForm) {
+        eventsForm.onsubmit = async (e) => {
+            e.preventDefault();
+            if (!auth.currentUser || auth.currentUser.isAnonymous) {
+                alert('Keine Berechtigung.');
+                return;
+            }
+
+            const data = {
+                title: document.getElementById('event-title').value.trim(),
+                dateLabel: document.getElementById('event-dateLabel').value.trim(),
+                description: document.getElementById('event-description').value.trim(),
+                active: document.getElementById('event-active').checked
+            };
+
+            if (!data.title) { alert('Bitte Titel eingeben.'); return; }
+
+            try {
+                if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Speichern...'; }
+                if (editingEventId) {
+                    await updateDoc(doc(db, 'events', editingEventId), data);
+                } else {
+                    data.order = Date.now();
+                    await addDoc(collection(db, 'events'), data);
+                }
+                resetEventsForm();
+            } catch (err) {
+                alert('Fehler: ' + err.message);
+            } finally {
+                if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Veröffentlichen'; }
+            }
+        };
+    }
+
+    if (cancelBtn) {
+        cancelBtn.onclick = () => resetEventsForm();
+    }
+
+    function resetEventsForm() {
+        editingEventId = null;
+        if (eventsForm) eventsForm.reset();
+        if (formHeadline) formHeadline.textContent = 'Neuer Termin';
+        if (cancelBtn) cancelBtn.style.display = 'none';
+        if (submitBtn) submitBtn.textContent = 'Veröffentlichen';
+        document.getElementById('event-active').checked = true;
+    }
 }
 
                     if (document.readyState === 'loading') {

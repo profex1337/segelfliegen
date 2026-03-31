@@ -26,7 +26,7 @@
         /* Tab Navigation */
         .intern-tabs {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
+            grid-template-columns: repeat(5, 1fr);
             gap: 4px;
             border-bottom: 3px solid #e0e0e0;
             margin-bottom: 30px;
@@ -146,6 +146,7 @@
                     <button class="intern-tab-btn" data-tab="tab-preise">💰 Gastfluggebühren</button>
                     <button class="intern-tab-btn" data-tab="tab-flugzeugpark">✈️ Flugzeugpark</button>
                     <button class="intern-tab-btn" data-tab="tab-gutscheine">🎁 Gutscheine</button>
+                    <button class="intern-tab-btn" data-tab="tab-termine">📅 Termine</button>
                 </div>
 
                 <div class="intern-tab-panels">
@@ -347,6 +348,43 @@
                         <h3>Gutschein-Bestellungen</h3>
                         <div id="voucher-list">
                             <p style="color:#999;">Lade Gutscheine...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 5: TERMINE -->
+                <div id="tab-termine" class="intern-tab-panel">
+                    <div class="dashboard-card" style="border-top-color: var(--accent);">
+                        <h3 id="events-form-headline">Neuer Termin</h3>
+                        <form id="events-form" style="display: grid; gap: 16px;">
+                            <div class="form-responsive">
+                                <div class="form-group">
+                                    <label for="event-title">Titel *</label>
+                                    <input type="text" id="event-title" placeholder="z.B. Hallenfest 2026" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="event-dateLabel">Datum-Label *</label>
+                                    <input type="text" id="event-dateLabel" placeholder="z.B. September 2026" required>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="event-description">Beschreibung</label>
+                                <textarea id="event-description" rows="3" placeholder="Kurze Beschreibung des Termins..."></textarea>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <input type="checkbox" id="event-active" checked style="width: auto;">
+                                <label for="event-active" style="margin: 0; cursor: pointer;">Auf der Webseite anzeigen</label>
+                            </div>
+                            <div style="display: flex; gap: 10px;">
+                                <button type="submit" id="events-submit-btn" class="btn">Veröffentlichen</button>
+                                <button type="button" id="events-cancel-btn" class="btn btn-secondary" style="display: none;">Abbrechen</button>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="dashboard-card">
+                        <h3>Vorhandene Termine</h3>
+                        <div id="events-admin-list">
+                            <p style="color:#999;">Lade Termine...</p>
                         </div>
                     </div>
                 </div>
