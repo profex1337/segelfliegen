@@ -83,7 +83,7 @@ h1, h2, h3, h4 {
 
 a { text-decoration: none; color: inherit; transition: color 0.3s ease; }
 img { width: 100%; height: auto; display: block; }
-html { scroll-padding-top: 120px; scroll-behavior: smooth; }
+html { scroll-padding-top: 170px; scroll-behavior: smooth; }
 
 .container {
     width: 100%;
