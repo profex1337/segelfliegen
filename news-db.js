@@ -1530,7 +1530,19 @@ async function startVoucherLogic() {
         const greeting = document.getElementById('voucher-greeting');
         const value = document.getElementById('voucher-value');
         if (recipient) recipient.value = order.empfaenger || '';
-        if (flightType) flightType.value = order.flugart || '';
+        if (flightType) {
+            var targetFlugart = order.flugart || '';
+            if (targetFlugart) {
+                var exists = Array.prototype.some.call(flightType.options, function(o) { return o.value === targetFlugart; });
+                if (!exists) {
+                    var opt = document.createElement('option');
+                    opt.value = targetFlugart;
+                    opt.textContent = targetFlugart;
+                    flightType.appendChild(opt);
+                }
+            }
+            flightType.value = targetFlugart;
+        }
         if (greeting) greeting.value = order.grusstext || '';
         if (value) value.value = order.wert || '';
         var bestellerField = document.getElementById('voucher-besteller');
