@@ -1509,7 +1509,19 @@ async function startVoucherLogic() {
         var zusatzField = document.getElementById('voucher-zusatzzeit');
         var showValueField = document.getElementById('voucher-show-value');
         if (recipient) recipient.value = item.recipient || '';
-        if (flightType) flightType.value = item.flightType || '';
+        if (flightType) {
+            var targetFlugart = item.flightType || '';
+            if (targetFlugart) {
+                var exists = Array.prototype.some.call(flightType.options, function(o) { return o.value === targetFlugart; });
+                if (!exists) {
+                    var opt = document.createElement('option');
+                    opt.value = targetFlugart;
+                    opt.textContent = targetFlugart;
+                    flightType.appendChild(opt);
+                }
+            }
+            flightType.value = targetFlugart;
+        }
         if (greeting) greeting.value = item.greeting || '';
         if (value) value.value = item.value || '';
         if (voucherNr) voucherNr.value = item.number || '';
