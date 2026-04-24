@@ -101,7 +101,7 @@ function buildPaymentInfoHtml(name, wert, zustellung, qrUrl) {
       + '<div style="margin-bottom: 10px;"><div style="font-size: 12px; color: #666; text-transform: uppercase; letter-spacing: 0.5px;">Bank</div>'
       + '<div style="font-size: 15px; margin-top: 2px;">Raiffeisenbank im Nürnberger Land</div></div>'
       + '<div><div style="font-size: 12px; color: #666; text-transform: uppercase; letter-spacing: 0.5px;">Verwendungszweck</div>'
-      + '<div style="font-weight: bold; color: #e94560; font-size: 15px; margin-top: 2px;">Gutschein ' + escapeHtml(name) + "</div></div></div>"
+      + '<div style="font-weight: bold; color: #0ea5e9; font-size: 15px; margin-top: 2px;">Gutschein ' + escapeHtml(name) + "</div></div></div>"
       + '<div style="text-align: center; margin-bottom: 25px;">'
       + '<img src="' + (qrUrl || "") + '" alt="QR-Code für Überweisung" width="200" height="200" style="border-radius: 8px;">'
       + '<div style="font-size: 12px; color: #888; margin-top: 8px;">QR-Code für deine Banking-App scannen</div></div>'
@@ -139,7 +139,7 @@ function buildCustomerReplyHtml(title, subtitle, intro, flugart, empfaenger, wer
     detailRows += '<tr><td style="padding:8px 12px; color:#666;">Empfänger:</td><td style="padding:8px 12px; font-weight:bold;">' + escapeHtml(empfaenger) + "</td></tr>";
   }
   if (wert) {
-    detailRows += '<tr><td style="padding:8px 12px; color:#666;">Gutscheinwert:</td><td style="padding:8px 12px; font-weight:bold; color:#e94560;">' + escapeHtml(wert) + " €</td></tr>";
+    detailRows += '<tr><td style="padding:8px 12px; color:#666;">Gutscheinwert:</td><td style="padding:8px 12px; font-weight:bold; color:#0ea5e9;">' + escapeHtml(wert) + " €</td></tr>";
   }
   if (flugdauer && flugdauer !== "pauschal") {
     detailRows += '<tr><td style="padding:8px 12px; color:#666;">Flugdauer:</td><td style="padding:8px 12px; font-weight:bold;">' + escapeHtml(flugdauer) + "</td></tr>";
@@ -275,7 +275,7 @@ exports.sendPublicEmail = onRequest(
           subject = "Neue Gutschein-Bestellung";
           if (data.flugart) detailsHtml += buildDetailRow("Flugart", data.flugart, rowIndex++);
           detailsHtml += buildDetailRow("Zusatzzeit", (data.zusatzzeit || "0") + " Min.", rowIndex++);
-          detailsHtml += buildDetailRow("Gutscheinwert", (data.wert || "") + " €", rowIndex++, "font-weight: bold; color: #e94560;");
+          detailsHtml += buildDetailRow("Gutscheinwert", (data.wert || "") + " €", rowIndex++, "font-weight: bold; color: #0ea5e9;");
           const wertAnzeigen = data.wertAnzeigen ? "Ja" : "Nein";
           detailsHtml += buildDetailRow("Wert im Gutschein", wertAnzeigen, rowIndex++);
           if (data.empfaenger) detailsHtml += buildDetailRow("Empfänger", data.empfaenger, rowIndex++);
@@ -416,7 +416,7 @@ exports.sendAdminEmail = onCall(
             {label: "E-Mail", value: safeOrder.email || ""},
             {label: "Telefon", value: safeOrder.telefon || ""},
             {label: "Flugart", value: safeOrder.flugart || ""},
-            {label: "Gutscheinwert", value: (safeOrder.wert || "") + " €", style: "font-weight: bold; color: #e94560;"},
+            {label: "Gutscheinwert", value: (safeOrder.wert || "") + " €", style: "font-weight: bold; color: #0ea5e9;"},
             {label: "Empfänger", value: safeOrder.empfaenger || ""},
             {label: "Zustellung", value: safeOrder.zustellung || ""},
             {label: "Flugdauer", value: flugdauer},

@@ -19,7 +19,7 @@
         .test-email-bar { display: flex; gap: 10px; align-items: center; background: #fff; padding: 15px 20px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.06); margin-bottom: 25px; flex-wrap: wrap; }
         .test-email-bar label { font-weight: bold; color: #0f3460; white-space: nowrap; }
         .test-email-bar input { flex: 1; min-width: 250px; padding: 10px 14px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; }
-        .test-email-bar .btn-logout { padding: 10px 20px; background: #e94560; color: #fff; border: none; border-radius: 8px; cursor: pointer; font-size: 13px; }
+        .test-email-bar .btn-logout { padding: 10px 20px; background: #0ea5e9; color: #fff; border: none; border-radius: 8px; cursor: pointer; font-size: 13px; }
 
         .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 20px; }
         .card { background: #fff; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.06); overflow: hidden; }
@@ -59,7 +59,7 @@
     <p style="font-size: 13px; color: #666; margin-bottom: 15px;">Anmelden um E-Mail-Funktionen zu testen.</p>
     <input type="password" id="loginPassword" placeholder="Admin-Passwort">
     <button onclick="handleLogin()">Anmelden</button>
-    <div id="loginError" style="color: #e94560; font-size: 13px; margin-top: 10px;"></div>
+    <div id="loginError" style="color: #0ea5e9; font-size: 13px; margin-top: 10px;"></div>
 </div>
 
 <!-- Main Content -->
@@ -307,7 +307,7 @@ function buildPaymentInfoHtml(name, wert, zustellung, qrUrl) {
         + '<div style="margin-bottom: 10px;"><div style="font-size: 12px; color: #666; text-transform: uppercase; letter-spacing: 0.5px;">Bank</div>'
         + '<div style="font-size: 15px; margin-top: 2px;">Raiffeisenbank im Nürnberger Land</div></div>'
         + '<div><div style="font-size: 12px; color: #666; text-transform: uppercase; letter-spacing: 0.5px;">Verwendungszweck</div>'
-        + '<div style="font-weight: bold; color: #e94560; font-size: 15px; margin-top: 2px;">Gutschein ' + escapeHtml(name) + '</div></div></div>'
+        + '<div style="font-weight: bold; color: #0ea5e9; font-size: 15px; margin-top: 2px;">Gutschein ' + escapeHtml(name) + '</div></div></div>'
         + '<div style="text-align: center; margin-bottom: 25px;">'
         + '<img src="' + (qrUrl || '') + '" alt="QR-Code für Überweisung" width="200" height="200" style="border-radius: 8px;">'
         + '<div style="font-size: 12px; color: #888; margin-top: 8px;">QR-Code für deine Banking-App scannen</div></div>'
@@ -338,7 +338,7 @@ function buildCustomerReplyHtml(title, subtitle, intro, flugart, empfaenger, wer
     let detailRows = '';
     if (flugart) detailRows += '<tr><td style="padding:8px 12px; color:#666; width:130px;">Flugart:</td><td style="padding:8px 12px; font-weight:bold;">' + escapeHtml(flugart) + '</td></tr>';
     if (empfaenger) detailRows += '<tr><td style="padding:8px 12px; color:#666;">Empfänger:</td><td style="padding:8px 12px; font-weight:bold;">' + escapeHtml(empfaenger) + '</td></tr>';
-    if (wert) detailRows += '<tr><td style="padding:8px 12px; color:#666;">Gutscheinwert:</td><td style="padding:8px 12px; font-weight:bold; color:#e94560;">' + escapeHtml(wert) + ' €</td></tr>';
+    if (wert) detailRows += '<tr><td style="padding:8px 12px; color:#666;">Gutscheinwert:</td><td style="padding:8px 12px; font-weight:bold; color:#0ea5e9;">' + escapeHtml(wert) + ' €</td></tr>';
     if (flugdauer && flugdauer !== "pauschal") detailRows += '<tr><td style="padding:8px 12px; color:#666;">Flugdauer:</td><td style="padding:8px 12px; font-weight:bold;">' + escapeHtml(flugdauer) + '</td></tr>';
     if (zustellung) detailRows += '<tr><td style="padding:8px 12px; color:#666;">Zustellung:</td><td style="padding:8px 12px; font-weight:bold; color:#6a1b9a;">' + escapeHtml(zustellung) + '</td></tr>';
 
@@ -403,7 +403,7 @@ function generateEmail(type) {
         let details = '', i = 0;
         details += buildDetailRow("Flugart", "Segelflug (Windenstart)", i++);
         details += buildDetailRow("Zusatzzeit", TEST.zusatzzeit + " Min.", i++);
-        details += buildDetailRow("Gutscheinwert", TEST.wert + " €", i++, "font-weight: bold; color: #e94560;");
+        details += buildDetailRow("Gutscheinwert", TEST.wert + " €", i++, "font-weight: bold; color: #0ea5e9;");
         details += buildDetailRow("Wert im Gutschein", "Ja", i++);
         details += buildDetailRow("Empfänger", TEST.empfaenger, i++);
         details += buildDetailRow("Zustellung", "E-Mail (Zahlung per Überweisung)", i++, "font-weight: bold; color: #6a1b9a;");
@@ -466,7 +466,7 @@ function generateEmail(type) {
             {label: "E-Mail", value: TEST.email},
             {label: "Telefon", value: TEST.telefon},
             {label: "Flugart", value: "Segelflug (Windenstart)"},
-            {label: "Gutscheinwert", value: TEST.wert + " €", style: "font-weight: bold; color: #e94560;"},
+            {label: "Gutscheinwert", value: TEST.wert + " €", style: "font-weight: bold; color: #0ea5e9;"},
             {label: "Empfänger", value: TEST.empfaenger},
             {label: "Zustellung", value: "E-Mail (Zahlung per Überweisung)"},
             {label: "Flugdauer", value: flugdauer},

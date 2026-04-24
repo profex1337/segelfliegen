@@ -527,7 +527,7 @@
             var detailRows = ''
                 + '<tr><td style="padding:8px 12px; color:#666; width:120px;">Empf\u00E4nger:</td><td style="padding:8px 12px; font-weight:bold;">' + recipient + '</td></tr>'
                 + '<tr><td style="padding:8px 12px; color:#666;">Flugart:</td><td style="padding:8px 12px; font-weight:bold;">' + flightType + '</td></tr>'
-                + '<tr><td style="padding:8px 12px; color:#666;">Gutscheinwert:</td><td style="padding:8px 12px; font-weight:bold; color:#e94560; font-size:16px;">' + value + ' \u20AC</td></tr>';
+                + '<tr><td style="padding:8px 12px; color:#666;">Gutscheinwert:</td><td style="padding:8px 12px; font-weight:bold; color:#0ea5e9; font-size:16px;">' + value + ' \u20AC</td></tr>';
             if (flugdauer) detailRows += '<tr><td style="padding:8px 12px; color:#666;">Flugdauer:</td><td style="padding:8px 12px; font-weight:bold;">' + flugdauer + '</td></tr>';
             if (validUntil) detailRows += '<tr><td style="padding:8px 12px; color:#666;">G\u00FCltig bis:</td><td style="padding:8px 12px; font-weight:bold;">' + validUntil + '</td></tr>';
 
@@ -767,7 +767,7 @@
             doc.setTextColor(120, 120, 120);
             doc.text('SEGELFLIEGER IM POST-SV N\u00DCRNBERG E.V.', textCenterX, 42, { align: 'center' });
 
-            doc.setDrawColor(233, 69, 96);
+            doc.setDrawColor(14, 165, 233);
             doc.setLineWidth(0.6);
             doc.line(textCenterX - 30, 46, textCenterX + 30, 46);
 
@@ -778,7 +778,7 @@
 
             doc.setFont('helvetica', 'bold');
             doc.setFontSize(11);
-            doc.setTextColor(233, 69, 96);
+            doc.setTextColor(14, 165, 233);
             doc.text(flightType, textCenterX, 71, { align: 'center' });
 
             var hasWert = false;
