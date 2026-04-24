@@ -712,25 +712,51 @@ header {
 
 
 /* === VIDEO-HERO (Unterseiten) === */
+/* Auslaufender Hero: Video blendet per mask-image in den Seiten-Hintergrund
+   aus; die sticky Category-Nav wird in diese Fade-Zone hochgezogen. */
 .video-header {
     position: relative;
     overflow: hidden;
-    background-color: var(--primary);
+    background-color: var(--bg-light);
+    padding: 120px 0 200px;
+    min-height: clamp(460px, 62vh, 680px);
+    text-align: center;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
 }
 .page-hero-video {
     position: absolute;
-    top: 0; left: 0; width: 100%; height: 100%;
+    inset: 0;
+    width: 100%; height: 100%;
     object-fit: cover; z-index: 0;
+    -webkit-mask-image: linear-gradient(to bottom,
+        #000 0%,
+        #000 55%,
+        rgba(0,0,0,0.75) 78%,
+        rgba(0,0,0,0.25) 92%,
+        transparent 100%);
+            mask-image: linear-gradient(to bottom,
+        #000 0%,
+        #000 55%,
+        rgba(0,0,0,0.75) 78%,
+        rgba(0,0,0,0.25) 92%,
+        transparent 100%);
 }
 .page-hero-overlay {
     position: absolute;
-    top: 0; left: 0; width: 100%; height: 100%;
-    background: linear-gradient(to top, rgba(15, 52, 96, 0.75) 0%, rgba(15, 52, 96, 0.25) 100%);
+    inset: 0;
+    background: linear-gradient(to bottom,
+        rgba(15, 52, 96, 0.55) 0%,
+        rgba(15, 52, 96, 0.55) 40%,
+        rgba(15, 52, 96, 0.25) 78%,
+        rgba(15, 52, 96, 0) 100%);
     z-index: 1;
 }
 .page-hero-content {
     position: relative;
     z-index: 2;
+    width: 100%;
 }
 
 /* === FORMULARE (Kontakt, Mitfliegen) === */
@@ -1355,15 +1381,16 @@ footer {
     gap: 15px;
     flex-wrap: wrap;
     margin-bottom: 50px;
-    margin-top: -20px;
+    margin-top: -130px;
     position: sticky;
     top: var(--header-height);
     z-index: 100;
-    background: var(--bg-light);
+    background: transparent;
     padding: 15px 0;
-    transition: box-shadow 0.3s ease;
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
 }
 .category-nav.stuck {
+    background: var(--bg-light);
     box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
 .btn-cat {
@@ -1696,6 +1723,13 @@ body.admin-mode .delete-btn { display: inline-block; }
 
     .hero h1, .page-header h1 { font-size: 2.2rem; }
     .hero p { font-size: 1rem; }
+
+    .video-header {
+        padding: 90px 0 150px;
+        min-height: clamp(380px, 58vh, 560px);
+    }
+    .category-nav { margin-top: -95px; }
+
     .section { padding: 40px 0; }
     .content-block { padding: 25px; }
     .section-image { min-height: 200px; }
@@ -1782,6 +1816,12 @@ body.admin-mode .delete-btn { display: inline-block; }
 @media (max-width: 500px) {
     .hero h1, .page-header h1 { font-size: 1.8rem; }
     .header-inner { padding: 0 15px; }
+
+    .video-header {
+        padding: 70px 0 120px;
+        min-height: clamp(340px, 52vh, 480px);
+    }
+    .category-nav { margin-top: -75px; }
 }
 
 .modal {
