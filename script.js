@@ -360,7 +360,7 @@ function getWeatherIcon(code) {
 }
 
 function getAvatarColor() {
-    const colors = ['#e94560', '#0f3460', '#16213e', '#533483', '#009688', '#ff5722'];
+    const colors = ['#0ea5e9', '#0f3460', '#16213e', '#533483', '#009688', '#0284c7'];
     return colors[Math.floor(Math.random() * colors.length)];
 }
 

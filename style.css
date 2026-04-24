@@ -30,16 +30,17 @@
 }
 
 :root {
-    --primary: #0f3460;      
-    --accent: #e94560;       
-    --accent-hover: #d1344f;
+    --primary: #0f3460;
+    --accent: #0ea5e9;
+    --accent-hover: #0284c7;
+    --accent-rgb: 14, 165, 233;
     --text-main: #333333;
     --text-light: #666666;
     --bg-light: #f4f6f8;
     --white: #ffffff;
     --shadow: 0 10px 30px rgba(0,0,0,0.08);
     --radius: 12px;
-    --header-height: 80px;   
+    --header-height: 80px;
 }
 
 * { box-sizing: border-box; }
@@ -644,7 +645,7 @@ header {
     cursor: pointer;
     text-transform: uppercase;
     letter-spacing: 1px;
-    box-shadow: 0 5px 15px rgba(233, 69, 96, 0.4);
+    box-shadow: 0 5px 15px rgba(var(--accent-rgb), 0.4);
     transform: translateY(0);
 }
 .btn:hover {
@@ -857,7 +858,7 @@ select { height: auto; min-height: 48px; line-height: 1.4; background-image: url
     font-size: 0.85rem;
     border: none;
     cursor: pointer;
-    box-shadow: 0 4px 12px rgba(233, 69, 96, 0.4);
+    box-shadow: 0 4px 12px rgba(var(--accent-rgb), 0.4);
     transition: background-color 0.3s, transform 0.2s;
 }
 .btn-consent:hover {
@@ -1000,7 +1001,7 @@ select { height: auto; min-height: 48px; line-height: 1.4; background-image: url
 .aircraft-admin-row[draggable="true"]:active, .price-admin-row[draggable="true"]:active { cursor: grabbing; }
 .aircraft-admin-row.drag-over, .price-admin-row.drag-over-price {
     outline: 2px dashed var(--accent);
-    background: rgba(233, 69, 96, 0.07) !important;
+    background: rgba(var(--accent-rgb), 0.08) !important;
 }
 
 /* --- NEWS CARD GRID --- */
@@ -1410,7 +1411,7 @@ footer {
 .quote-text::before {
     content: '“';
     font-size: 5rem;
-    color: rgba(233, 69, 96, 0.1);
+    color: rgba(var(--accent-rgb), 0.15);
     position: absolute;
     top: -40px;
     left: -20px;
@@ -1853,7 +1854,7 @@ body.admin-mode .delete-btn { display: inline-block; }
 
 
 .edit-btn:hover {
-    background-color: #d1344f !important;
+    background-color: var(--accent-hover) !important;
 }
 
 .cookie-banner {
