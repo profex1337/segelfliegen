@@ -717,7 +717,7 @@ header {
 .video-header {
     position: relative;
     overflow: hidden;
-    background-color: var(--white);
+    background-color: var(--bg-light);
     padding: 120px 0 260px;
     min-height: clamp(540px, 72vh, 780px);
     text-align: center;
@@ -741,22 +741,22 @@ header {
         rgba(15, 52, 96, 0) 75%);
     z-index: 1;
 }
-/* Weicher Weiss-Auslauf: deckt die untere Hero-Haelfte mit steigender
-   Weiss-Opazitaet ab, sodass das Video am Boden zuverlaessig in Weiss
-   uebergeht - unabhaengig von mask-image-Support. */
+/* Weicher Auslauf: deckt die untere Hero-Haelfte mit steigender
+   Opazitaet in der Seitenhintergrundfarbe (--bg-light) ab, sodass das
+   Video am Boden zuverlaessig in den Seitenhintergrund uebergeht. */
 .video-header::after {
     content: '';
     position: absolute;
     left: 0; right: 0; bottom: 0;
     height: 65%;
     background: linear-gradient(to bottom,
-        rgba(255, 255, 255, 0) 0%,
-        rgba(255, 255, 255, 0.12) 22%,
-        rgba(255, 255, 255, 0.35) 45%,
-        rgba(255, 255, 255, 0.65) 65%,
-        rgba(255, 255, 255, 0.88) 82%,
-        rgba(255, 255, 255, 0.98) 94%,
-        #ffffff 100%);
+        rgba(244, 246, 248, 0) 0%,
+        rgba(244, 246, 248, 0.12) 22%,
+        rgba(244, 246, 248, 0.35) 45%,
+        rgba(244, 246, 248, 0.65) 65%,
+        rgba(244, 246, 248, 0.88) 82%,
+        rgba(244, 246, 248, 0.98) 94%,
+        var(--bg-light) 100%);
     z-index: 2;
     pointer-events: none;
 }
@@ -1397,7 +1397,7 @@ footer {
     transition: background-color 0.3s ease, box-shadow 0.3s ease;
 }
 .category-nav.stuck {
-    background: var(--white);
+    background: var(--bg-light);
     box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
 .btn-cat {
