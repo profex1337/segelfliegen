@@ -1397,7 +1397,7 @@ footer {
     transition: background-color 0.3s ease, box-shadow 0.3s ease;
 }
 .category-nav.stuck {
-    background: var(--bg-light);
+    background: var(--white);
     box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
 .btn-cat {
