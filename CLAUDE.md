@@ -305,6 +305,7 @@ There is no test suite and no linter/formatter configuration. Validate changes b
 | `buildPaymentInfoHtml()` | Builds payment/pickup HTML block for customer emails (bank details + QR or pickup address) |
 | `getFlugdauer()` | Calculates flight duration string from flight type + extra time (e.g., "bis zu 20 Min. + 10 Min. zusätzlich") |
 | `initForms()` | Intercepts all `form[data-emailjs]` submit events and sends via Cloud Function (`sendPublicEmail`) |
+| `initSwipeNavigation()` | Mobile-only horizontal swipe between the 7 main pages (index/uber-uns/mitfliegen/flugzeugpark/ausbildung/veranstaltungen/kontakt). Prefetches neighbours via `<link rel="prefetch">`, fades `#main-content` on transition, respects `prefers-reduced-motion`, and ignores swipes inside slideshows, news-carousels, the lightbox, the reviews sidebar, form inputs, and when the mobile menu is open. |
 | `getAvatarColor()` | Returns a random brand colour for review avatar backgrounds |
 
 ### `news-db.js` Function & Constant Inventory

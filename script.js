@@ -197,6 +197,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initCookieConsent();
     initReviews();
     initForms();
+    initSwipeNavigation();
 
     // Einzelner Consent-Button (pro Einbettung)
     document.addEventListener('click', (e) => {
@@ -801,6 +802,93 @@ function initStickyNav() {
     }, { rootMargin: '-20% 0px -60% 0px' });
 
     sections.forEach(s => observer.observe(s.el));
+}
+
+// Swipe-Navigation: auf Mobil per Wischen zwischen den Hauptseiten wechseln
+function initSwipeNavigation() {
+    const pages = [
+        'index.html',
+        'uber-uns.html',
+        'mitfliegen.html',
+        'flugzeugpark.html',
+        'ausbildung.html',
+        'veranstaltungen.html',
+        'kontakt.html'
+    ];
+
+    const currentPage = (window.location.pathname.split('/').pop() || 'index.html').toLowerCase();
+    const currentIdx = pages.indexOf(currentPage);
+    if (currentIdx === -1) return; // Seite nicht in der Swipe-Reihenfolge (z. B. intern, impressum, /gutschein/)
+
+    // Nachbarseiten vorladen, damit der Wechsel quasi instant ist
+    const prefetch = (href) => {
+        const link = document.createElement('link');
+        link.rel = 'prefetch';
+        link.href = href;
+        link.as = 'document';
+        document.head.appendChild(link);
+    };
+    if (currentIdx > 0) prefetch(pages[currentIdx - 1]);
+    if (currentIdx < pages.length - 1) prefetch(pages[currentIdx + 1]);
+
+    // Bereiche, in denen Swipes nicht zur Seitennavigation führen sollen
+    const BLOCK_SELECTOR = '.slideshow-container, .news-carousel, .lightbox, .reviews-sidebar, input, textarea, select';
+
+    let startX = 0, startY = 0, startT = 0, tracking = false;
+
+    document.addEventListener('touchstart', (e) => {
+        if (window.innerWidth > 768) return;
+        if (e.touches.length !== 1) return;
+
+        // Mobiles Menü offen? → kein Seiten-Swipe
+        const navMenu = document.getElementById('nav-menu');
+        if (navMenu && navMenu.classList.contains('active')) return;
+        // Sichtbare Modals? (Login, Lightbox)
+        const lightbox = document.getElementById('lightbox');
+        if (lightbox && lightbox.style.display === 'block') return;
+        const reviews = document.getElementById('reviews-sidebar');
+        if (reviews && reviews.classList.contains('active')) return;
+
+        if (e.target.closest && e.target.closest(BLOCK_SELECTOR)) return;
+
+        startX = e.touches[0].clientX;
+        startY = e.touches[0].clientY;
+        startT = Date.now();
+        tracking = true;
+    }, { passive: true });
+
+    document.addEventListener('touchend', (e) => {
+        if (!tracking) return;
+        tracking = false;
+        if (window.innerWidth > 768) return;
+
+        const dx = e.changedTouches[0].clientX - startX;
+        const dy = e.changedTouches[0].clientY - startY;
+        const dt = Date.now() - startT;
+
+        const SWIPE_DIST = 80;
+        if (Math.abs(dx) < SWIPE_DIST) return;        // zu kurz
+        if (Math.abs(dy) > Math.abs(dx) * 0.7) return; // zu sehr vertikal
+        if (dt > 800) return;                          // zu langsam
+
+        if (dx < 0 && currentIdx < pages.length - 1) {
+            navigateWithSlide(pages[currentIdx + 1], 'left');
+        } else if (dx > 0 && currentIdx > 0) {
+            navigateWithSlide(pages[currentIdx - 1], 'right');
+        }
+    }, { passive: true });
+
+    function navigateWithSlide(href, direction) {
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+            window.location.href = href;
+            return;
+        }
+        const main = document.getElementById('main-content') || document.body;
+        main.style.transition = 'transform 200ms ease-out, opacity 200ms ease-out';
+        main.style.transform = direction === 'left' ? 'translateX(-30px)' : 'translateX(30px)';
+        main.style.opacity = '0';
+        setTimeout(() => { window.location.href = href; }, 190);
+    }
 }
 
 // FAQ: Sanfte Öffnen/Schließen-Animation für <details>
