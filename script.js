@@ -155,6 +155,7 @@ function injectLayout() {
                 const isOpen = hamburger.classList.toggle('open');
                 navMenu.classList.toggle('active');
                 hamburger.setAttribute('aria-expanded', isOpen);
+                document.body.classList.toggle('menu-open', isOpen);
             });
 
             navMenu.querySelectorAll('a').forEach(link => {
@@ -162,6 +163,7 @@ function injectLayout() {
                     hamburger.classList.remove('open');
                     navMenu.classList.remove('active');
                     hamburger.setAttribute('aria-expanded', 'false');
+                    document.body.classList.remove('menu-open');
                 });
             });
         }
@@ -198,6 +200,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initReviews();
     initForms();
     initSwipeNavigation();
+    initTransparentHeader();
 
     // Einzelner Consent-Button (pro Einbettung)
     document.addEventListener('click', (e) => {
@@ -802,6 +805,29 @@ function initStickyNav() {
     }, { rootMargin: '-20% 0px -60% 0px' });
 
     sections.forEach(s => observer.observe(s.el));
+}
+
+// Transparenter Header über Hero-Video (Mobil): blendet beim Scrollen
+// in einen weißen, opaken Header über. Der Hamburger-Button ist
+// am Hero-Anfang weiß, ab Scroll wieder dunkelblau.
+function initTransparentHeader() {
+    const hasHero = document.querySelector('.hero, .video-header');
+    if (!hasHero) return;
+
+    document.body.classList.add('has-hero');
+
+    let ticking = false;
+    const update = () => {
+        document.body.classList.toggle('scrolled', window.scrollY > 20);
+        ticking = false;
+    };
+    window.addEventListener('scroll', () => {
+        if (!ticking) {
+            requestAnimationFrame(update);
+            ticking = true;
+        }
+    }, { passive: true });
+    update();
 }
 
 // Swipe-Navigation: auf Mobil per Wischen zwischen den Hauptseiten wechseln

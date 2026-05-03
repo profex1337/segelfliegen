@@ -1665,15 +1665,13 @@ body.admin-mode .delete-btn { display: inline-block; }
 @media (max-width: 992px) {
     
     .logo {
-        position: relative; 
+        position: relative;
         top: auto; left: auto;
-        
-        
-        background-color: var(--white);
-        box-shadow: none; 
+
+        background-color: transparent;
+        box-shadow: none;
         padding: 5px 10px;
-        border-radius: 0 0 10px 10px;
-        
+        border-radius: 0;
     }
     .logo img { height: 50px;  }
     
@@ -1816,6 +1814,48 @@ body.admin-mode .delete-btn { display: inline-block; }
     
     .swap-mobile > div:last-child {
         order: -1;
+    }
+
+    /* Transparenter Header über Hero-Video — Hero startet ganz oben.
+       Beim Scrollen oder bei geöffnetem Menü wird der Header wieder
+       weiß. Nur Mobil (≤ 992 px), da der Desktop-Header bereits
+       seinen eigenen Glas-Look hat. */
+    body.has-hero {
+        padding-top: 0;
+    }
+    header {
+        transition: background-color 0.3s ease, box-shadow 0.3s ease;
+    }
+    body.has-hero header {
+        background-color: transparent;
+        box-shadow: none;
+    }
+    body.has-hero .logo img {
+        filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.55));
+        transition: filter 0.3s ease;
+    }
+    body.has-hero .hamburger span {
+        background: var(--white);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
+        transition: background-color 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    /* Ab Scroll oder bei offenem Menü: Header wieder opak weiß */
+    body.has-hero.scrolled header,
+    body.has-hero.menu-open header {
+        background-color: rgba(255, 255, 255, 0.95);
+        box-shadow: 0 2px 15px rgba(0, 0, 0, 0.05);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+    }
+    body.has-hero.scrolled .logo img,
+    body.has-hero.menu-open .logo img {
+        filter: none;
+    }
+    body.has-hero.scrolled .hamburger span,
+    body.has-hero.menu-open .hamburger span {
+        background: var(--primary);
+        box-shadow: none;
     }
 }
 
