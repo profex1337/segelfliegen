@@ -632,6 +632,7 @@ header {
     border-radius: var(--radius);
     box-shadow: var(--shadow);
     margin-bottom: 40px;
+    overflow-wrap: anywhere;
 }
 
 .btn {
