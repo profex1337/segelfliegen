@@ -327,9 +327,10 @@ function initReviews() {
 }
 
 // Wetter-Widget (Open-Meteo API, Flugplatz Altdorf-Hagenhausen)
-function initWeather() {
+// IP-Übermittlung in die Schweiz (Open-Meteo) — daher nur nach Cookie-Consent laden.
+function loadWeatherData() {
     const widget = document.getElementById('weather-widget');
-    if (!widget) return;
+    if (!widget || widget.dataset.loaded === '1') return;
 
     const LAT = 49.38;
     const LON = 11.35;
@@ -337,6 +338,7 @@ function initWeather() {
         + '&current=temperature_2m,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m,cloud_cover'
         + '&timezone=Europe/Berlin';
 
+    widget.dataset.loaded = '1';
     fetch(url)
         .then(function(res) { return res.json(); })
         .then(function(data) {
@@ -357,7 +359,14 @@ function initWeather() {
                 + '<span class="weather-item"><span class="weather-icon">☁</span><span class="weather-value">' + cloud + ' %</span></span>';
             widget.style.visibility = 'visible';
         })
-        .catch(function() { /* Widget bleibt unsichtbar bei Fehler */ });
+        .catch(function() { widget.dataset.loaded = ''; /* Bei Fehler später erneut versuchen können */ });
+}
+
+function initWeather() {
+    if (localStorage.getItem('dsgvo-consent') === 'accepted') {
+        loadWeatherData();
+    }
+    // Bei nachträglichem Cookie-Accept wird loadWeatherData() aus initCookieConsent() aufgerufen.
 }
 
 function getWindDirection(deg) {
@@ -413,10 +422,10 @@ function initCookieConsent() {
             <h3>Datenschutzeinstellungen</h3>
             <p>
                 Zur Bereitstellung der Inhalte nutzt diese Website technisch erforderliche Dienste:
-                <strong>Google Firebase</strong> (Datenbank &amp; Anmeldung),
-                <strong>GitHub</strong> (Hosting &amp; Bilder) und auf der Startseite die
-                <strong>Open-Meteo Wetter-API</strong>. Dabei wird Ihre IP-Adresse an die jeweiligen Server übertragen.
-                Optionale Inhalte (<strong>Google Maps</strong>, <strong>YouTube</strong>) werden erst nach Ihrer ausdrücklichen Zustimmung geladen.
+                <strong>Google Firebase</strong> (Datenbank &amp; Anmeldung) und
+                <strong>GitHub</strong> (Hosting &amp; Bilder). Dabei wird Ihre IP-Adresse an die jeweiligen Server übertragen.
+                Optionale Inhalte (<strong>Google Maps</strong>, <strong>YouTube</strong>, Wetter-Widget über <strong>Open-Meteo</strong>)
+                werden erst nach Ihrer ausdrücklichen Zustimmung geladen.
                 <a href="datenschutz.html" style="text-decoration: underline;">Mehr erfahren</a>.
             </p>
             <div class="cookie-buttons">
@@ -434,6 +443,7 @@ function initCookieConsent() {
         localStorage.setItem('dsgvo-consent', 'accepted');
         banner.style.display = 'none';
         embedConsentContent();
+        if (typeof loadWeatherData === 'function') loadWeatherData();
     };
 
     document.getElementById('cookie-decline').onclick = () => {
