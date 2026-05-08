@@ -508,6 +508,17 @@
             }).catch(() => {});
         });
 
+        // HTML-Sonderzeichen escapen (XSS-Schutz f\u00FCr User-Eingaben in HTML-Vorlage)
+        function escapeHtml(s) {
+            if (s === null || s === undefined) return '';
+            return String(s)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#x27;');
+        }
+
         // E-Mail-Vorlage generieren
         window.generateEmailTemplate = function() {
             var besteller = document.getElementById('voucher-besteller').value.trim();
@@ -522,14 +533,23 @@
             var validUntil = document.getElementById('voucher-valid-until').value.trim();
             var zusatzE = parseInt(document.getElementById('voucher-zusatzzeit').value || '0', 10);
             var flugdauer = document.getElementById('voucher-flugdauer').value || getFlugdauer(flightType, zusatzE);
-            var anrede = besteller ? 'Hallo <strong>' + besteller + '</strong>,' : 'Hallo,';
+
+            // HTML-escapte Versionen f\u00FCr die HTML-Vorlage
+            var bestellerH = escapeHtml(besteller);
+            var recipientH = escapeHtml(recipient);
+            var flightTypeH = escapeHtml(flightType);
+            var valueH = escapeHtml(value);
+            var validUntilH = escapeHtml(validUntil);
+            var flugdauerH = escapeHtml(flugdauer);
+
+            var anrede = bestellerH ? 'Hallo <strong>' + bestellerH + '</strong>,' : 'Hallo,';
 
             var detailRows = ''
-                + '<tr><td style="padding:8px 12px; color:#666; width:120px;">Empf\u00E4nger:</td><td style="padding:8px 12px; font-weight:bold;">' + recipient + '</td></tr>'
-                + '<tr><td style="padding:8px 12px; color:#666;">Flugart:</td><td style="padding:8px 12px; font-weight:bold;">' + flightType + '</td></tr>'
-                + '<tr><td style="padding:8px 12px; color:#666;">Gutscheinwert:</td><td style="padding:8px 12px; font-weight:bold; color:#0ea5e9; font-size:16px;">' + value + ' \u20AC</td></tr>';
-            if (flugdauer) detailRows += '<tr><td style="padding:8px 12px; color:#666;">Flugdauer:</td><td style="padding:8px 12px; font-weight:bold;">' + flugdauer + '</td></tr>';
-            if (validUntil) detailRows += '<tr><td style="padding:8px 12px; color:#666;">G\u00FCltig bis:</td><td style="padding:8px 12px; font-weight:bold;">' + validUntil + '</td></tr>';
+                + '<tr><td style="padding:8px 12px; color:#666; width:120px;">Empf\u00E4nger:</td><td style="padding:8px 12px; font-weight:bold;">' + recipientH + '</td></tr>'
+                + '<tr><td style="padding:8px 12px; color:#666;">Flugart:</td><td style="padding:8px 12px; font-weight:bold;">' + flightTypeH + '</td></tr>'
+                + '<tr><td style="padding:8px 12px; color:#666;">Gutscheinwert:</td><td style="padding:8px 12px; font-weight:bold; color:#0ea5e9; font-size:16px;">' + valueH + ' \u20AC</td></tr>';
+            if (flugdauer) detailRows += '<tr><td style="padding:8px 12px; color:#666;">Flugdauer:</td><td style="padding:8px 12px; font-weight:bold;">' + flugdauerH + '</td></tr>';
+            if (validUntil) detailRows += '<tr><td style="padding:8px 12px; color:#666;">G\u00FCltig bis:</td><td style="padding:8px 12px; font-weight:bold;">' + validUntilH + '</td></tr>';
 
             var html = '<div style="font-family:system-ui,sans-serif,Arial; font-size:14px; color:#333; max-width:600px; margin:0 auto;">'
                 + '<div style="background:linear-gradient(135deg,#0f3460,#1a4a8a); padding:25px; border-radius:12px 12px 0 0; text-align:center;">'
@@ -540,19 +560,19 @@
                 + '<div style="background:#fff; padding:25px; border:1px solid #e0e0e0; border-top:none;">'
                 + '<div style="font-size:15px; line-height:1.7; margin-bottom:20px;">'
                 + anrede + '<br><br>anbei erh\u00E4ltst du den bestellten Flug-Gutschein f\u00FCr den Segelflugplatz Altdorf-Hagenhausen. '
-                + 'Wir hoffen, du machst <strong>' + recipient + '</strong> damit eine gro\u00DFe Freude!'
+                + 'Wir hoffen, du machst <strong>' + recipientH + '</strong> damit eine gro\u00DFe Freude!'
                 + '</div>'
                 + '<div style="background:#f4f6f8; border-radius:8px; padding:16px; margin-bottom:20px;">'
                 + '<div style="font-weight:bold; color:#0f3460; font-size:14px; margin-bottom:10px;">Gutschein-Details</div>'
                 + '<table role="presentation" style="width:100%; border-collapse:collapse;">' + detailRows + '</table>'
                 + '</div>'
                 + '<div style="font-size:14px; line-height:1.7; margin-bottom:20px; color:#555;">'
-                + 'Damit <strong>' + recipient + '</strong> abheben kann, bitten wir darum, den Wunschtermin vorab telefonisch unter '
+                + 'Damit <strong>' + recipientH + '</strong> abheben kann, bitten wir darum, den Wunschtermin vorab telefonisch unter '
                 + '<a href="tel:+499189310" style="color:#0f3460; font-weight:600;">09189/310</a> zu vereinbaren '
                 + '(am Wochenende ab 9 Uhr erreichbar). Wir fliegen in unserer Saison von April bis Oktober, jeweils an den Wochenenden und Feiertagen.'
                 + '</div>'
                 + '<div style="font-size:14px; line-height:1.7; margin-bottom:20px; color:#555;">'
-                + 'Wir freuen uns schon darauf, <strong>' + recipient + '</strong> bei uns begr\u00FC\u00DFen zu d\u00FCrfen \u2013 '
+                + 'Wir freuen uns schon darauf, <strong>' + recipientH + '</strong> bei uns begr\u00FC\u00DFen zu d\u00FCrfen \u2013 '
                 + 'und du bist als Zuschauer am Flugplatz nat\u00FCrlich ebenfalls jederzeit herzlich willkommen!'
                 + '</div>'
                 + '<hr style="border:none; border-top:1px solid #eee; margin:20px 0;">'
