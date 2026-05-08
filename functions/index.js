@@ -747,3 +747,113 @@ exports.getGoogleReviews = onRequest(
 );
 
 // Kein Scheduled Job nötig — getGoogleReviews aktualisiert den Cache bei Ablauf (24h) automatisch
+
+// ========== Gemini-Grußtext-Generator ==========
+
+const SCHREIBSTIL_WHITELIST = new Set([
+  "",
+  "herzlich und warmherzig",
+  "lustig und humorvoll",
+  "förmlich und elegant",
+  "als gereimtes Gedicht",
+  "mit bayerischem Dialekt/Slang",
+  "mit fränkischem Dialekt",
+  "episch und dramatisch, wie ein Filmtrailer",
+  "kurz und knackig, maximal 2-3 Sätze",
+]);
+
+exports.generateGreetingText = onCall(
+    {
+      secrets: ["GEMINI_API_KEY"],
+      cors: [
+        "https://www.segelfliegenaltdorf.de",
+        "https://segelfliegenaltdorf.de",
+      ],
+    },
+    async (request) => {
+      if (!request.auth) {
+        throw new HttpsError("unauthenticated", "Nicht eingeloggt.");
+      }
+
+      const data = request.data || {};
+      const empfaenger = limitLength(String(data.empfaenger || "").trim(), 200);
+      const flugart = limitLength(String(data.flugart || "").trim(), 100);
+      const anlassRaw = limitLength(String(data.anlass || "").trim(), 200);
+      const schreibstilRaw = String(data.schreibstil || "").trim();
+      const besteller = limitLength(String(data.besteller || "").trim(), 200);
+
+      if (!empfaenger || !flugart) {
+        throw new HttpsError("invalid-argument", "empfaenger und flugart sind Pflichtfelder.");
+      }
+
+      const schreibstil = SCHREIBSTIL_WHITELIST.has(schreibstilRaw) ? schreibstilRaw : "";
+      const anlass = anlassRaw || "ohne bestimmten Anlass";
+
+      const stilAnweisung = schreibstil ?
+        "Schreibe den Text im folgenden Stil: " + schreibstil + ". " :
+        "Schreibe 3-5 begeisternde Sätze. Verwende gerne Metaphern rund ums Fliegen, Freiheit und Abenteuer. ";
+
+      const prompt = "Erstelle einen kreativen Gutscheintext für einen Flug-Gutschein mit folgenden Daten:\n" +
+        "- Name des Beschenkten: " + empfaenger + "\n" +
+        "- Flugart: " + flugart + "\n" +
+        "- Anlass: " + anlass + "\n" +
+        (besteller ? "- Geschenk von: " + besteller + "\n" : "") +
+        "\nDer Gutschein ist vom Segelflugplatz Altdorf-Hagenhausen (Segelfliegen). " +
+        stilAnweisung +
+        "Gehe auf den Anlass und den Namen ein. " +
+        "Beginne mit einer persönlichen Anrede (z.B. \"Lieber Hans,\"). " +
+        (besteller ? "Ende mit einer persönlichen Grußformel vom Schenkenden (z.B. \"Dein " + besteller + "\"). " : "") +
+        "Schreibe NUR den Grußtext — keine Überschrift. " +
+        "WICHTIG: Der Text darf MAXIMAL 600 Zeichen und MAXIMAL 8 Zeilen haben. Halte dich strikt an dieses Limit! Verwende Zeilenumbrüche sparsam. Sprache: Deutsch.";
+
+      try {
+        const apiKey = process.env.GEMINI_API_KEY;
+        const url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" + apiKey;
+        const response = await fetch(url, {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({
+            contents: [{parts: [{text: prompt}]}],
+            generationConfig: {
+              temperature: 0.9,
+              maxOutputTokens: 1024,
+              thinkingConfig: {thinkingBudget: 0},
+            },
+          }),
+        });
+
+        if (response.status === 429) {
+          throw new HttpsError("resource-exhausted", "Zu viele Anfragen. Bitte einen Moment warten.");
+        }
+
+        const result = await response.json();
+        if (!response.ok) {
+          const msg = (result.error && result.error.message) || "Unbekannter Fehler";
+          console.error("Gemini API Fehler:", msg);
+          throw new HttpsError("internal", "Textgenerierung fehlgeschlagen.");
+        }
+
+        let text = result.candidates &&
+          result.candidates[0] &&
+          result.candidates[0].content &&
+          result.candidates[0].content.parts &&
+          result.candidates[0].content.parts[0] &&
+          result.candidates[0].content.parts[0].text;
+
+        if (!text) {
+          throw new HttpsError("internal", "Kein Text generiert.");
+        }
+
+        text = text.trim();
+        const lines = text.split("\n");
+        if (lines.length > 10) text = lines.slice(0, 10).join("\n");
+        if (text.length > 800) text = text.substring(0, 800);
+
+        return {text: text};
+      } catch (e) {
+        if (e instanceof HttpsError) throw e;
+        console.error("generateGreetingText Fehler:", e);
+        throw new HttpsError("internal", "Textgenerierung fehlgeschlagen.");
+      }
+    },
+);

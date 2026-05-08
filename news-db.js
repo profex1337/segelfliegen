@@ -121,6 +121,16 @@ async function initFirebase() {
             }
         };
 
+        // Globale Funktion: KI-Grußtext über Cloud Function generieren (auch für anonyme User)
+        window.callGenerateGreeting = async (params) => {
+            const { getFunctions, httpsCallable } = await import('https://www.gstatic.com/firebasejs/11.6.1/firebase-functions.js');
+            const { getApp } = await import('https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js');
+            const functions = getFunctions(getApp(), 'europe-west1');
+            const fn = httpsCallable(functions, 'generateGreetingText');
+            const result = await fn(params);
+            return result.data;
+        };
+
         if (newsContainer) await startNewsLogic();
         if (pricesContainer || pricesAdmin) await startPricesLogic();
         if (aircraftAdminList || aircraftPublicList) await startAircraftLogic();

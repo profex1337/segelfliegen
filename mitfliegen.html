@@ -527,70 +527,40 @@
                 return;
             }
 
-            var anlass = document.getElementById('ki-anlass').value.trim() || 'ohne bestimmten Anlass';
-            var schreibstil = document.getElementById('ki-schreibstil').value;
-            var empfaenger = empfaengerVal;
-            var besteller = nameVal;
-            var flugart = flugartVal;
-
             var btn = document.getElementById('ki-toggle-btn');
             var originalText = btn.textContent;
             btn.textContent = '...';
             btn.disabled = true;
 
-            var stilAnweisung = schreibstil
-                ? 'Schreibe den Text im folgenden Stil: ' + schreibstil + '. '
-                : 'Schreibe 3-5 begeisternde Sätze. Verwende gerne Metaphern rund ums Fliegen, Freiheit und Abenteuer. ';
-
-            var prompt = 'Erstelle einen kreativen Gutscheintext für einen Flug-Gutschein mit folgenden Daten:\n'
-                + '- Name des Beschenkten: ' + empfaenger + '\n'
-                + '- Flugart: ' + flugart + '\n'
-                + '- Anlass: ' + anlass + '\n'
-                + (besteller ? '- Geschenk von: ' + besteller + '\n' : '')
-                + '\nDer Gutschein ist vom Segelflugplatz Altdorf-Hagenhausen (Segelfliegen). '
-                + stilAnweisung
-                + 'Gehe auf den Anlass und den Namen ein. '
-                + 'Beginne mit einer persönlichen Anrede (z.B. "Lieber Hans,"). '
-                + (besteller ? 'Ende mit einer persönlichen Grußformel vom Schenkenden (z.B. "Dein ' + besteller + '"). ' : '')
-                + 'Schreibe NUR den Grußtext — keine Überschrift. '
-                + 'WICHTIG: Der Text darf MAXIMAL 600 Zeichen und MAXIMAL 8 Zeilen haben. Halte dich strikt an dieses Limit! Verwende Zeilenumbrüche sparsam. Sprache: Deutsch.';
-
             try {
-                var _k = atob('ENTFERNTER-API-KEY-B64');
-                var response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' + _k, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        contents: [{ parts: [{ text: prompt }] }],
-                        generationConfig: { temperature: 0.9, maxOutputTokens: 1024, thinkingConfig: { thinkingBudget: 0 } }
-                    })
+                if (typeof window.callGenerateGreeting !== 'function') {
+                    alert('Funktion noch nicht verfügbar. Bitte Seite neu laden.');
+                    btn.textContent = originalText;
+                    btn.disabled = false;
+                    return;
+                }
+                var data = await window.callGenerateGreeting({
+                    empfaenger: empfaengerVal,
+                    flugart: flugartVal,
+                    anlass: document.getElementById('ki-anlass').value.trim(),
+                    schreibstil: document.getElementById('ki-schreibstil').value,
+                    besteller: nameVal
                 });
-                if (response.status === 429) {
-                    alert('Zu viele Anfragen. Bitte warte einen Moment und versuche es erneut.');
-                    btn.textContent = originalText;
-                    btn.disabled = false;
-                    return;
-                }
-                var data = await response.json();
-                if (!response.ok) {
-                    alert('Fehler: ' + (data.error && data.error.message || 'Unbekannter Fehler'));
-                    btn.textContent = originalText;
-                    btn.disabled = false;
-                    return;
-                }
-                var text = data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts[0].text;
+                var text = data && data.text;
                 if (text) {
-                    text = text.trim();
-                    var lines = text.split('\n');
-                    if (lines.length > 10) text = lines.slice(0, 10).join('\n');
-                    if (text.length > 800) text = text.substring(0, 800);
                     document.getElementById('gutschein-grusstext').value = text;
                     document.getElementById('gruss-counter').textContent = text.length + ' / 800';
                 } else {
                     alert('Kein Text generiert. Bitte erneut versuchen.');
                 }
             } catch (e) {
-                alert('Fehler bei der Textgenerierung. Bitte versuche es später erneut.');
+                if (e && e.code === 'functions/resource-exhausted') {
+                    alert('Zu viele Anfragen. Bitte warte einen Moment und versuche es erneut.');
+                } else if (e && e.code === 'functions/unauthenticated') {
+                    alert('Sitzung abgelaufen. Bitte Seite neu laden.');
+                } else {
+                    alert('Fehler bei der Textgenerierung. Bitte versuche es später erneut.');
+                }
             }
 
             btn.textContent = originalText;
