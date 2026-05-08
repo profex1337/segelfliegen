@@ -18,8 +18,13 @@ let editingId = null;
 
 // === XSS-Schutz: HTML-Sonderzeichen escapen ===
 function escapeHTML(str) {
-    if (!str) return '';
-    return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    if (str === null || str === undefined) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#x27;');
 }
 
 // === Bild-Upload: Komprimierung & GitHub ===
@@ -1381,12 +1386,21 @@ function renderAircraftPublic(container, items) {
         'Winde':          'Unser Kraftpaket am Boden.',
     };
 
+    // Aircraft-Bilder müssen aus dem GitHub-Repo kommen (verhindert javascript:/data: URLs etc.)
+    function safeImageUrl(url) {
+        if (!url) return 'images/hero.jpg';
+        var s = String(url);
+        if (s.indexOf('https://raw.githubusercontent.com/profex1337/segelfliegen/') === 0) return s;
+        return 'images/hero.jpg';
+    }
+
     cats.forEach(cat => {
         const section = document.createElement('div');
         section.id = cat;
         section.style.cssText = 'margin-bottom: 60px;';
-        const desc = categoryDescriptions[cat] ? `<p style="color:var(--text-light); margin-bottom:20px;">${categoryDescriptions[cat]}</p>` : '';
-        section.innerHTML = `<h2 style="color:var(--primary); font-family:Montserrat,sans-serif; margin-bottom:8px;">${cat}</h2>${desc}`;
+        const catEsc = escapeHTML(cat);
+        const desc = categoryDescriptions[cat] ? `<p style="color:var(--text-light); margin-bottom:20px;">${escapeHTML(categoryDescriptions[cat])}</p>` : '';
+        section.innerHTML = `<h2 style="color:var(--primary); font-family:Montserrat,sans-serif; margin-bottom:8px;">${catEsc}</h2>${desc}`;
         const grid = document.createElement('div');
         grid.className = 'aircraft-card-grid';
         byCategory[cat].forEach(item => {
@@ -1395,17 +1409,22 @@ function renderAircraftPublic(container, items) {
             if (item.highlight) card.style.cssText = 'border: 2px solid var(--accent); transform: scale(1.02); position:relative;';
 
             const specsLines = (item.specs || '').split('\n').filter(l => l.trim());
-            const specsList = specsLines.map(l => `<li>${l.trim()}</li>`).join('');
+            const specsList = specsLines.map(l => `<li>${escapeHTML(l.trim())}</li>`).join('');
+            const imgSrc = escapeHTML(safeImageUrl(item.imageUrl));
+            const nameEsc = escapeHTML(item.name || '—');
+            const altEsc = escapeHTML(item.name || '');
+            const regEsc = escapeHTML(item.registration || '');
+            const typeEsc = escapeHTML(item.type || '');
 
             card.innerHTML = `
                 ${item.highlight ? '<div class="badge-highlight">★ Highlight</div>' : ''}
                 <div class="card-img-top">
-                    <img src="${item.imageUrl || 'images/hero.jpg'}" alt="${item.name || ''}" loading="lazy" class="zoomable" onerror="this.src='images/hero.jpg'">
+                    <img src="${imgSrc}" alt="${altEsc}" loading="lazy" class="zoomable" onerror="this.src='images/hero.jpg'">
                 </div>
                 <div class="card-body">
-                    <h3 class="card-title"${item.highlight ? ' style="color:var(--accent);"' : ''}>${item.name || '—'}</h3>
-                    ${item.registration ? `<p style="font-size:0.9rem; color:#888; margin-top:-8px; margin-bottom:8px;">${item.registration}</p>` : ''}
-                    ${item.type ? `<p style="font-size:0.9rem; margin-bottom:10px; font-weight:600;">${item.type}</p>` : ''}
+                    <h3 class="card-title"${item.highlight ? ' style="color:var(--accent);"' : ''}>${nameEsc}</h3>
+                    ${regEsc ? `<p style="font-size:0.9rem; color:#888; margin-top:-8px; margin-bottom:8px;">${regEsc}</p>` : ''}
+                    ${typeEsc ? `<p style="font-size:0.9rem; margin-bottom:10px; font-weight:600;">${typeEsc}</p>` : ''}
                     ${specsList ? `<ul class="data-list" style="font-size:0.9rem; margin-top:10px;">${specsList}</ul>` : ''}
                 </div>
             `;
@@ -1670,24 +1689,26 @@ function renderOrderRow(order, isClosed) {
     row.onmouseenter = function() { row.style.background = hoverColor; };
     row.onmouseleave = function() { row.style.background = bgColor; };
 
-    var besteller = order.name || '\u2014';
-    var email = order.email || '';
-    var telefon = order.telefon || '';
-    var flugart = order.flugart || '';
-    var empfaenger = order.empfaenger || '';
-    var wert = order.wert || '';
-    var gruss = order.grusstext || '';
-    var zustellung = order.zustellung || '';
+    var besteller = escapeHTML(order.name || '\u2014');
+    var email = escapeHTML(order.email || '');
+    var telefon = escapeHTML(order.telefon || '');
+    var flugart = escapeHTML(order.flugart || '');
+    var empfaenger = escapeHTML(order.empfaenger || '');
+    var wert = escapeHTML(order.wert || '');
+    var gruss = escapeHTML(order.grusstext || '');
+    var zustellungRaw = order.zustellung || '';
+    var zustellung = escapeHTML(zustellungRaw);
 
     var paidBadge = isPaid
         ? '<span style="font-size:0.75rem; padding:3px 8px; border-radius:12px; font-weight:600; background:#e8f5e9; color:#2e7d32; margin-left:8px;">Bezahlt</span>'
         : '<span style="font-size:0.75rem; padding:3px 8px; border-radius:12px; font-weight:600; background:#fff3e0; color:#e65100; margin-left:8px;">Unbezahlt</span>';
 
-    var infoHtml = '<div style="flex:1; min-width:200px;' + (!isClosed && isPaid ? ' cursor:pointer;' : '') + '"' + (!isClosed && isPaid ? ' onclick="loadVoucherOrder(' + JSON.stringify(order).replace(/"/g, '&quot;') + ')"' : '') + '>'
+    var infoClickable = !isClosed && isPaid;
+    var infoHtml = '<div class="order-info" style="flex:1; min-width:200px;' + (infoClickable ? ' cursor:pointer;' : '') + '">'
         + '<strong style="font-size:1rem;">\u2709 ' + besteller + '</strong>' + paidBadge
         + '<div style="font-size:0.82rem; color:var(--text-light); margin-top:3px;">'
         + flugart + (wert ? ' &middot; ' + wert + ' \u20AC' : '') + ' &middot; F\u00FCr: ' + empfaenger
-        + (zustellung ? ' &middot; <span style="font-weight:600; color:' + (zustellung.indexOf('Abholung') !== -1 ? '#6a1b9a' : '#1565c0') + ';">' + (zustellung.indexOf('Abholung') !== -1 ? '\uD83D\uDCCD Abholung' : '\u2709 \u00DCberweisung') + '</span>' : '')
+        + (zustellungRaw ? ' &middot; <span style="font-weight:600; color:' + (zustellungRaw.indexOf('Abholung') !== -1 ? '#6a1b9a' : '#1565c0') + ';">' + (zustellungRaw.indexOf('Abholung') !== -1 ? '\uD83D\uDCCD Abholung' : '\u2709 \u00DCberweisung') + '</span>' : '')
         + '</div>'
         + '<div style="font-size:0.78rem; color:#888; margin-top:2px;">'
         + email + (telefon ? ' &middot; ' + telefon : '') + ' &middot; ' + orderDate
@@ -1698,23 +1719,42 @@ function renderOrderRow(order, isClosed) {
     var buttonsHtml = '<div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">';
 
     if (isClosed) {
-        buttonsHtml += '<button onclick="event.stopPropagation(); reopenVoucherOrder(\'' + order.id + '\')" class="btn btn-secondary" style="padding:6px 12px; font-size:0.78rem;">Wieder \u00F6ffnen</button>'
-            + '<button onclick="event.stopPropagation(); deleteVoucherOrder(\'' + order.id + '\')" class="btn btn-secondary" style="padding:6px 12px; font-size:0.78rem; background:#c0392b; color:#fff; border-color:#c0392b;">L\u00F6schen</button>';
+        buttonsHtml += '<button data-action="reopen" class="btn btn-secondary" style="padding:6px 12px; font-size:0.78rem;">Wieder \u00F6ffnen</button>'
+            + '<button data-action="delete" class="btn btn-secondary" style="padding:6px 12px; font-size:0.78rem; background:#c0392b; color:#fff; border-color:#c0392b;">L\u00F6schen</button>';
     } else {
         var paidBtnStyle = isPaid
             ? 'padding:6px 12px; font-size:0.78rem; background:#fff3e0; color:#e65100; border-color:#e65100;'
             : 'padding:6px 12px; font-size:0.78rem; background:#2e7d32; color:#fff; border-color:#2e7d32;';
         var paidBtnText = isPaid ? 'Unbezahlt' : 'Bezahlt';
 
-        buttonsHtml += '<button onclick="event.stopPropagation(); toggleOrderPaid(\'' + order.id + '\', ' + isPaid + ')" class="btn btn-secondary" style="' + paidBtnStyle + '">' + paidBtnText + '</button>'
-            + (isPaid ? '<button onclick="event.stopPropagation(); loadVoucherOrder(' + JSON.stringify(order).replace(/"/g, '&quot;') + ')" class="btn" style="padding:6px 14px; font-size:0.78rem;">\u00DCbernehmen</button>' : '')
-            + (!isPaid ? '<button onclick="event.stopPropagation(); sendPaymentReminder(' + JSON.stringify(order).replace(/"/g, '&quot;') + ')" class="btn btn-secondary" style="padding:6px 12px; font-size:0.78rem; background:#e65100; color:#fff; border-color:#e65100;">Reminder</button>' : '')
-            + (isPaid ? '<button onclick="event.stopPropagation(); completeVoucherOrder(\'' + order.id + '\')" class="btn btn-secondary" style="padding:6px 12px; font-size:0.78rem; background:#6a1b9a; color:#fff; border-color:#6a1b9a;">Abschlie\u00DFen</button>' : '')
-            + '<button onclick="event.stopPropagation(); deleteVoucherOrder(\'' + order.id + '\')" class="btn btn-secondary" style="padding:6px 12px; font-size:0.78rem; background:#c0392b; color:#fff; border-color:#c0392b;">L\u00F6schen</button>';
+        buttonsHtml += '<button data-action="togglePaid" class="btn btn-secondary" style="' + paidBtnStyle + '">' + paidBtnText + '</button>'
+            + (isPaid ? '<button data-action="load" class="btn" style="padding:6px 14px; font-size:0.78rem;">\u00DCbernehmen</button>' : '')
+            + (!isPaid ? '<button data-action="reminder" class="btn btn-secondary" style="padding:6px 12px; font-size:0.78rem; background:#e65100; color:#fff; border-color:#e65100;">Reminder</button>' : '')
+            + (isPaid ? '<button data-action="complete" class="btn btn-secondary" style="padding:6px 12px; font-size:0.78rem; background:#6a1b9a; color:#fff; border-color:#6a1b9a;">Abschlie\u00DFen</button>' : '')
+            + '<button data-action="delete" class="btn btn-secondary" style="padding:6px 12px; font-size:0.78rem; background:#c0392b; color:#fff; border-color:#c0392b;">L\u00F6schen</button>';
     }
     buttonsHtml += '</div>';
 
     row.innerHTML = infoHtml + buttonsHtml;
+
+    // Event-Listener via Closure (vermeidet HTML/Attribut-Injection durch User-Input)
+    var infoEl = row.querySelector('.order-info');
+    if (infoEl && infoClickable) {
+        infoEl.addEventListener('click', function() { window.loadVoucherOrder(order); });
+    }
+    row.querySelectorAll('button[data-action]').forEach(function(btn) {
+        btn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            var action = btn.getAttribute('data-action');
+            if (action === 'reopen') window.reopenVoucherOrder(order.id);
+            else if (action === 'delete') window.deleteVoucherOrder(order.id);
+            else if (action === 'togglePaid') window.toggleOrderPaid(order.id, isPaid);
+            else if (action === 'load') window.loadVoucherOrder(order);
+            else if (action === 'reminder') window.sendPaymentReminder(order);
+            else if (action === 'complete') window.completeVoucherOrder(order.id);
+        });
+    });
+
     return row;
 }
 

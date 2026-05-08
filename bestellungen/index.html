@@ -235,6 +235,16 @@
 
     // --- Rendering ---
 
+    function escapeHtml(str) {
+        if (str === null || str === undefined) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#x27;');
+    }
+
     function renderList() {
         var unpaid = orders.filter(function(o) { return !o.paid; });
         var paid = orders.filter(function(o) { return !!o.paid; });
@@ -261,7 +271,18 @@
             html = '<div class="empty">Keine offenen Bestellungen vorhanden</div>';
         }
 
-        document.getElementById('order-content').innerHTML = html;
+        var content = document.getElementById('order-content');
+        content.innerHTML = html;
+
+        // Buttons via Event-Delegation (vermeidet onclick-Attribut-Injection durch User-Input)
+        content.querySelectorAll('button[data-action]').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                var action = btn.getAttribute('data-action');
+                var id = decodeURIComponent(btn.getAttribute('data-id') || '');
+                if (action === 'paid') markAsPaid(id);
+                else if (action === 'reminder') sendReminder(id);
+            });
+        });
     }
 
     function renderRow(o) {
@@ -275,24 +296,34 @@
         var paidBadge = isPaid
             ? '<span class="badge badge-paid">Bezahlt</span>'
             : '<span class="badge badge-unpaid">Unbezahlt</span>';
-        var searchText = ((o.name || '') + ' ' + (o.flugart || '') + ' ' + (o.email || '') + ' ' + (o.empfaenger || '')).toLowerCase();
+        var searchText = escapeHtml(((o.name || '') + ' ' + (o.flugart || '') + ' ' + (o.email || '') + ' ' + (o.empfaenger || '')).toLowerCase());
+
+        var nameEsc = escapeHtml(o.name || '\u2014');
+        var flugartEsc = escapeHtml(o.flugart || '');
+        var wertEsc = escapeHtml(o.wert || '');
+        var empfaengerEsc = escapeHtml(o.empfaenger || '\u2014');
+        var emailEsc = escapeHtml(o.email || '');
+        var telefonEsc = escapeHtml(o.telefon || '');
+        var grussCut = (o.grusstext || '').substring(0, 80) + ((o.grusstext || '').length > 80 ? '...' : '');
+        var grussEsc = escapeHtml(grussCut);
+        var idEsc = encodeURIComponent(o.id || '');
 
         var buttons = '';
         if (!isPaid) {
-            buttons = '<button class="btn btn-paid" onclick="markAsPaid(\'' + o.id + '\')">Bezahlt</button> '
-                + '<button class="btn btn-reminder" onclick="sendReminder(\'' + o.id + '\')">Reminder</button>';
+            buttons = '<button class="btn btn-paid" data-action="paid" data-id="' + idEsc + '">Bezahlt</button> '
+                + '<button class="btn btn-reminder" data-action="reminder" data-id="' + idEsc + '">Reminder</button>';
         }
 
         return '<div class="' + rowClass + '" data-search="' + searchText + '">'
             + '<div class="order-info">'
-            + '<span class="order-name">\u2709 ' + (o.name || '\u2014') + '</span>' + paidBadge + zustellBadge
+            + '<span class="order-name">\u2709 ' + nameEsc + '</span>' + paidBadge + zustellBadge
             + '<div class="order-detail">'
-            + (o.flugart || '') + (o.wert ? ' &middot; <strong>' + o.wert + ' \u20AC</strong>' : '') + ' &middot; F\u00FCr: ' + (o.empfaenger || '\u2014')
+            + flugartEsc + (wertEsc ? ' &middot; <strong>' + wertEsc + ' \u20AC</strong>' : '') + ' &middot; F\u00FCr: ' + empfaengerEsc
             + '</div>'
             + '<div class="order-meta">'
-            + (o.email || '') + (o.telefon ? ' &middot; ' + o.telefon : '') + ' &middot; ' + orderDate
+            + emailEsc + (telefonEsc ? ' &middot; ' + telefonEsc : '') + ' &middot; ' + orderDate
             + '</div>'
-            + (o.grusstext ? '<div class="order-gruss">\u201E' + o.grusstext.substring(0, 80) + (o.grusstext.length > 80 ? '...' : '') + '\u201C</div>' : '')
+            + (o.grusstext ? '<div class="order-gruss">\u201E' + grussEsc + '\u201C</div>' : '')
             + '</div>'
             + '<div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">' + buttons + '</div>'
             + '</div>';

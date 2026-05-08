@@ -54,8 +54,46 @@ service cloud.firestore {
     }
 
     // Bestellungen — anonyme User dürfen erstellen, Admin + Bestellungs-User lesen/bearbeiten
+    // Schema- und Größenlimits beim Create verhindern DoS und Spam-Submissions
     match /voucherOrders/{doc} {
-      allow create: if request.auth != null;
+      allow create: if request.auth != null
+                    && request.resource.data.keys().hasOnly([
+                         'name', 'email', 'telefon', 'flugart', 'zusatzzeit',
+                         'wert', 'empfaenger', 'grusstext', 'zustellung',
+                         'wertAnzeigen', 'status', 'paid', 'timestamp',
+                         'flugdauer', 'anlass', 'schreibstil'
+                       ])
+                    && request.resource.data.name is string
+                    && request.resource.data.name.size() <= 200
+                    && request.resource.data.email is string
+                    && request.resource.data.email.size() <= 200
+                    && request.resource.data.telefon is string
+                    && request.resource.data.telefon.size() <= 50
+                    && request.resource.data.flugart is string
+                    && request.resource.data.flugart.size() <= 100
+                    && request.resource.data.empfaenger is string
+                    && request.resource.data.empfaenger.size() <= 200
+                    && (!('grusstext' in request.resource.data)
+                        || (request.resource.data.grusstext is string
+                            && request.resource.data.grusstext.size() <= 2000))
+                    && (!('zustellung' in request.resource.data)
+                        || (request.resource.data.zustellung is string
+                            && request.resource.data.zustellung.size() <= 200))
+                    && (!('wert' in request.resource.data)
+                        || (request.resource.data.wert is string
+                            && request.resource.data.wert.size() <= 20))
+                    && (!('zusatzzeit' in request.resource.data)
+                        || (request.resource.data.zusatzzeit is string
+                            && request.resource.data.zusatzzeit.size() <= 10))
+                    && (!('flugdauer' in request.resource.data)
+                        || (request.resource.data.flugdauer is string
+                            && request.resource.data.flugdauer.size() <= 200))
+                    && (!('anlass' in request.resource.data)
+                        || (request.resource.data.anlass is string
+                            && request.resource.data.anlass.size() <= 200))
+                    && (!('schreibstil' in request.resource.data)
+                        || (request.resource.data.schreibstil is string
+                            && request.resource.data.schreibstil.size() <= 200));
       allow read, update, delete: if isBestellungUser();
     }
   }

@@ -135,6 +135,16 @@ async function callCloudFunction(data) {
     return resp.json();
 }
 
+function escapeHtml(str) {
+    if (str === null || str === undefined) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#x27;');
+}
+
 function injectLayout() {
     const headerElement = document.getElementById('main-header');
     if (headerElement && !headerElement.innerHTML.trim()) {
@@ -269,14 +279,19 @@ function initReviews() {
         // Reviews rendern
         if (!listContainer || !data.reviews) return;
         listContainer.innerHTML = data.reviews.map(function(review) {
-            var initials = review.name.split(' ').map(function(n) { return n[0]; }).join('');
-            var starsHTML = '★'.repeat(review.rating) + '☆'.repeat(5 - review.rating);
-            var textEscaped = (review.text || '').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>');
+            var name = review.name || '';
+            var initials = escapeHtml(name.split(' ').map(function(n) { return n[0] || ''; }).join(''));
+            var nameEsc = escapeHtml(name);
+            var dateEsc = escapeHtml(review.date || '');
+            var rating = parseInt(review.rating, 10) || 0;
+            if (rating < 0) rating = 0; if (rating > 5) rating = 5;
+            var starsHTML = '★'.repeat(rating) + '☆'.repeat(5 - rating);
+            var textEscaped = escapeHtml(review.text || '').replace(/\n/g, '<br>');
             return '<div class="review-card">'
                 + '<div class="review-avatar" style="background-color: ' + getAvatarColor() + '">' + initials + '</div>'
                 + '<div class="review-content">'
-                + '<h4>' + review.name + '</h4>'
-                + '<span class="review-meta">' + (review.date || '') + '</span>'
+                + '<h4>' + nameEsc + '</h4>'
+                + '<span class="review-meta">' + dateEsc + '</span>'
                 + '<div style="color: #ffc107; font-size: 0.9rem;">' + starsHTML + '</div>'
                 + '<p>' + textEscaped + '</p>'
                 + '</div></div>';
