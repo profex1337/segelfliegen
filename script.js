@@ -412,8 +412,11 @@ function initCookieConsent() {
         <div class="cookie-content">
             <h3>Datenschutzeinstellungen</h3>
             <p>
-                Diese Website nutzt essenzielle Dienste (Firebase) für die Anzeige von Inhalten.
-                Zusätzlich können optionale Inhalte (Google Maps, YouTube) eingebettet werden, die erst nach deiner Zustimmung geladen werden.
+                Zur Bereitstellung der Inhalte nutzt diese Website technisch erforderliche Dienste:
+                <strong>Google Firebase</strong> (Datenbank &amp; Anmeldung),
+                <strong>GitHub</strong> (Hosting &amp; Bilder) und auf der Startseite die
+                <strong>Open-Meteo Wetter-API</strong>. Dabei wird Ihre IP-Adresse an die jeweiligen Server übertragen.
+                Optionale Inhalte (<strong>Google Maps</strong>, <strong>YouTube</strong>) werden erst nach Ihrer ausdrücklichen Zustimmung geladen.
                 <a href="datenschutz.html" style="text-decoration: underline;">Mehr erfahren</a>.
             </p>
             <div class="cookie-buttons">
