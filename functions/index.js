@@ -804,6 +804,7 @@ exports.generateGreetingText = onCall(
         "Beginne mit einer persönlichen Anrede (z.B. \"Lieber Hans,\"). " +
         (besteller ? "Ende mit einer persönlichen Grußformel vom Schenkenden (z.B. \"Dein " + besteller + "\"). " : "") +
         "Schreibe NUR den Grußtext — keine Überschrift. " +
+        "Verwende KEINE Emojis und keine Sonderzeichen außerhalb üblicher Satzzeichen. " +
         "WICHTIG: Der Text darf MAXIMAL 600 Zeichen und MAXIMAL 8 Zeilen haben. Halte dich strikt an dieses Limit! Verwende Zeilenumbrüche sparsam. Sprache: Deutsch.";
 
       try {
