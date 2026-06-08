@@ -2,4 +2,7 @@ User-agent: *
 Allow: /
 Disallow: /gutschein/
 Disallow: /bestellungen/
+Disallow: /test-emails.html
+Disallow: /vorlagen/
+Disallow: /Anleitung%20Flugleiter/
 Sitemap: https://www.segelfliegenaltdorf.de/sitemap.xml

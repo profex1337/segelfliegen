@@ -549,7 +549,7 @@ async function startNewsLogic() {
                                     allImages.forEach(function(url, idx) {
                                         const wrapper = document.createElement('span');
                                         wrapper.style.cssText = 'position:relative; display:inline-block; margin:4px;';
-                                        wrapper.innerHTML = '<img src="' + url + '" alt="Bild ' + (idx+1) + '" style="width:80px; height:60px; object-fit:cover; border-radius:4px; border:1px solid #ddd;">'
+                                        wrapper.innerHTML = '<img src="' + escapeHTML(url) + '" alt="Bild ' + (idx+1) + '" style="width:80px; height:60px; object-fit:cover; border-radius:4px; border:1px solid #ddd;">'
                                             + '<button type="button" data-idx="' + idx + '" style="position:absolute; top:-6px; right:-6px; background:#e94560; color:#fff; border:none; border-radius:50%; width:20px; height:20px; font-size:12px; cursor:pointer; line-height:1;">&times;</button>';
                                         wrapper.querySelector('button').addEventListener('click', function() {
                                             allImages.splice(idx, 1);
@@ -761,6 +761,9 @@ async function startPricesLogic() {
             if (pricesContainer) renderPublicPrices(pricesContainer, items);
             if (pricesAdminList) renderAdminPrices(pricesAdminList, items, isAdmin);
             updateGutscheinDropdown(items);
+        }, (error) => {
+            console.error('Preise konnten nicht geladen werden:', error);
+            if (pricesContainer) pricesContainer.innerHTML = '<li style="color: var(--text-light);">Preise konnten zurzeit nicht geladen werden – bitte lade die Seite später neu.</li>';
         });
     });
 
@@ -1110,6 +1113,9 @@ async function startAircraftLogic() {
 
             if (publicList) renderAircraftPublic(publicList, items);
             if (adminList) renderAircraftAdmin(adminList, items, isAdmin);
+        }, (error) => {
+            console.error('Flugzeugpark konnte nicht geladen werden:', error);
+            if (publicList) publicList.innerHTML = '<p style="text-align:center; color: var(--text-light);">Der Flugzeugpark konnte zurzeit nicht geladen werden – bitte lade die Seite später neu.</p>';
         });
     });
 
@@ -1290,7 +1296,7 @@ async function startAircraftLogic() {
 
                 const info = document.createElement('div');
                 info.style.cssText = 'flex:1;';
-                info.innerHTML = `<strong>${item.name || '—'}</strong>${item.registration ? ` <span style="color:#888; font-size:0.85rem;">(${item.registration})</span>` : ''}${item.type ? `<br><span style="color:#666; font-size:0.82rem;">${item.type}</span>` : ''}${item.highlight ? ' <span style="color:var(--accent); font-size:0.8rem;">★ Highlight</span>' : ''}`;
+                info.innerHTML = `<strong>${escapeHTML(item.name || '—')}</strong>${item.registration ? ` <span style="color:#888; font-size:0.85rem;">(${escapeHTML(item.registration)})</span>` : ''}${item.type ? `<br><span style="color:#666; font-size:0.82rem;">${escapeHTML(item.type)}</span>` : ''}${item.highlight ? ' <span style="color:var(--accent); font-size:0.8rem;">★ Highlight</span>' : ''}`;
 
                 const btns = document.createElement('div');
                 btns.style.cssText = 'display:flex; gap:8px; flex-shrink:0;';
@@ -1460,6 +1466,8 @@ async function startVoucherLogic() {
             snapshot.forEach(d => cachedVouchers.push({ id: d.id, ...d.data() }));
             cachedVouchers.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
             renderAll();
+        }, (error) => {
+            console.error('Gutscheine konnten nicht geladen werden:', error);
         });
 
         onSnapshot(orderRef, (snapshot) => {
@@ -1467,6 +1475,8 @@ async function startVoucherLogic() {
             snapshot.forEach(d => cachedOrders.push({ id: d.id, ...d.data() }));
             cachedOrders.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
             renderAll();
+        }, (error) => {
+            console.error('Bestellungen konnten nicht geladen werden:', error);
         });
     });
 
@@ -1954,6 +1964,8 @@ async function startEventsLogic() {
 
             if (publicList) renderEventsPublic(publicList, items);
             if (adminList) renderEventsAdmin(adminList, items, isAdmin);
+        }, (error) => {
+            console.error('Termine konnten nicht geladen werden:', error);
         });
     });
 

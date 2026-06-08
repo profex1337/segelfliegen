@@ -203,6 +203,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initLightbox();
     initBackToTop();
     initSlideshows();
+    initHeroVideos();
     initWeather();
     initStickyNav();
     initFaqAnimation();
@@ -700,6 +701,44 @@ function initLightbox() {
         lightbox.querySelector('.lightbox-close').onclick = close;
         lightbox.onclick = (e) => { if(e.target === lightbox) close(); };
         document.addEventListener('keydown', (e) => { if(e.key === "Escape") close(); });
+    }
+}
+
+// === Hero-Videos: erst laden/abspielen, wenn sie in den Viewport kommen ===
+// Die <video>-Elemente tragen preload="none" und ihre Quelle als data-src,
+// damit das schwere Video nicht eager mit dem kritischen Rendering konkurriert.
+// Das poster-Bild (WebP) überbrückt visuell; ohne JS bleibt einfach das Poster stehen.
+function initHeroVideos() {
+    const videos = document.querySelectorAll('video.hero-video, video.page-hero-video');
+    if (!videos.length) return;
+
+    const loadVideo = (video) => {
+        if (video.dataset.heroLoaded) return;
+        video.dataset.heroLoaded = '1';
+        let changed = false;
+        video.querySelectorAll('source[data-src]').forEach((source) => {
+            source.src = source.dataset.src;
+            changed = true;
+        });
+        if (changed) video.load();
+        const playPromise = video.play();
+        if (playPromise && typeof playPromise.catch === 'function') {
+            playPromise.catch(() => {}); // Autoplay-Policy: stilles Scheitern ist ok
+        }
+    };
+
+    if ('IntersectionObserver' in window) {
+        const observer = new IntersectionObserver((entries, obs) => {
+            entries.forEach((entry) => {
+                if (entry.isIntersecting) {
+                    loadVideo(entry.target);
+                    obs.unobserve(entry.target);
+                }
+            });
+        }, { rootMargin: '200px' });
+        videos.forEach((v) => observer.observe(v));
+    } else {
+        videos.forEach(loadVideo);
     }
 }
 

@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin>
     <meta name="theme-color" content="#0f3460">
 
     <title>Segelflugplatz Altdorf-Hagenhausen | Fliegen bei Nürnberg</title>
@@ -17,6 +19,9 @@
     <meta property="og:title" content="Segelflugplatz Altdorf-Hagenhausen | Faszination Fliegen bei Nürnberg">
     <meta property="og:description" content="Erlebe Segelfliegen und Motorflug im Großraum Nürnberg. Ausbildung, Gastflüge, Gutscheine und Events am Flugplatz Altdorf-Hagenhausen.">
     <meta property="og:image" content="https://www.segelfliegenaltdorf.de/images/hero.jpg">
+    <meta property="og:site_name" content="Segelflieger im Post-SV Nürnberg e.V.">
+    <meta property="og:locale" content="de_DE">
+    <meta name="twitter:card" content="summary_large_image">
     
     <meta name="geo.region" content="DE-BY">
     <meta name="geo.placename" content="Berg bei Neumarkt in der Oberpfalz">
@@ -101,8 +106,8 @@
 
     <main id="main-content">
     <section class="hero">
-        <video class="hero-video" autoplay muted loop playsinline poster="images/hero_poster.webp">
-            <source src="videos/hero.mp4" type="video/mp4">
+        <video class="hero-video" autoplay muted loop playsinline preload="none" poster="images/hero_poster.webp">
+            <source data-src="videos/hero.mp4" type="video/mp4">
         </video>
         <div class="hero-overlay"></div>
 
