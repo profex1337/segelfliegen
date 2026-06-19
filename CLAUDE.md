@@ -29,6 +29,7 @@ segelfliegen/
 ├── kontakt.html          # Contact page (map, contact form)
 ├── impressum.html        # Legal notice (Impressum — German legal requirement)
 ├── datenschutz.html      # Privacy policy & cookie consent
+├── widerruf.html         # Withdrawal button + Widerrufsbelehrung + Muster-Widerrufsformular (§ 356a BGB)
 ├── intern.html           # Members-only admin panel (3 tabs: News, Gastfluggebühren, Flugzeugpark)
 │
 ├── gutschein/            # Standalone voucher status page (open/redeemed)
@@ -100,6 +101,7 @@ aircraft/       — top-level, sorted ascending by order field (public read, adm
 events/         — top-level, sorted ascending by order field (public read, admin write)
 vouchers/       — top-level, sorted descending by timestamp (admin + gutschein@ user)
 voucherOrders/  — top-level, sorted descending by timestamp (create: any auth, read/update: admin + bestellung@ user)
+widerrufe/      — top-level, withdrawal log (§ 356a BGB); written server-side by Cloud Function (Admin-SDK), admin read
 ```
 
 **Firestore security rules** are defined in `firestore-rules.txt` (must be manually pasted into Firebase Console → Firestore → Rules → Publish). Rules use helper functions `isAdmin()`, `isGutscheinUser()`, `isBestellungUser()` based on `request.auth.token.email`.
@@ -351,6 +353,7 @@ There is no test suite and no linter/formatter configuration. Validate changes b
 |---|---|---|
 | **Firebase** | `news-db.js` lines 5–13, `functions/index.js` | Project ID: `segelfliegen`. SDK version: `11.6.1`. Cloud Functions (europe-west1): `sendPublicEmail` (onRequest, public forms), `sendAdminEmail` (onCall, admin), `sendVoucherEmail` (onCall, PDF), `uploadImage` (onCall, GitHub upload), `deleteImage` (onCall, GitHub delete). Secrets: `SMTP_USER`, `SMTP_PASS`, `GH_PAT`. |
 | **GitHub API** | `functions/index.js` `uploadImage()` / `deleteImage()` | Used for news & aircraft image storage. PAT stored as Firebase Secret `GH_PAT` — no client-side token needed. Client calls Cloud Functions via `httpsCallable()`. |
+| **Widerruf (§ 356a BGB)** | `widerruf.html`, `functions/index.js` (`formType: "widerruf"`), `functions/widerruf-mail.js` | Two-stage withdrawal button → customer Eingangsbestätigung (durable medium, server-side Europe/Berlin timestamp, no acknowledgement) + club notification (info@ + CC dan@ + Kassier) + Firestore log `widerrufe`. Widerrufsbelehrung also appended to gutschein confirmation mail (§ 312f BGB). Highlighted footer link `.footer-widerruf` on every page. |
 | **Cloud Functions** | `functions/index.js`, `script.js`, `news-db.js`, `bestellungen/index.html` | `sendPublicEmail` (onRequest, public forms via `fetch()`), `sendAdminEmail` (onCall, admin actions via `httpsCallable()`), `sendVoucherEmail` (onCall, PDF email), `uploadImage` (onCall, image upload to GitHub), `deleteImage` (onCall, image delete from GitHub). SMTP functions use Strato-SMTP via Nodemailer; image functions use GitHub Contents API. All customer emails use "Du" form. **CC-Logik**: dan@ always; kassier@ on gutschein; joergsperber@ only on Abholung orders; Jeremy on Ausbildung. |
 | **Google Maps** | Embed `<iframe>` in `kontakt.html` | Uses consent overlay pattern; iframe only loads after cookie accept. |
 | **Flatpickr** | Self-hosted in `lib/flatpickr/` | Loaded locally in `mitfliegen.html` and `kontakt.html`. No CDN requests. |

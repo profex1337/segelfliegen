@@ -1350,6 +1350,26 @@ footer {
     z-index: 5;
 }
 
+/* Widerrufsbutton im Footer — gesetzlich gefordert: hervorgehoben und
+   deutlich abgegrenzt von Impressum/Datenschutz (§ 356a BGB). */
+.footer-widerruf {
+    display: inline-block;
+    background: var(--accent);
+    color: var(--white) !important;
+    font-weight: 700;
+    text-decoration: none;
+    padding: 9px 22px;
+    border-radius: 999px;
+    font-size: 0.9rem;
+    letter-spacing: 0.3px;
+    box-shadow: 0 4px 12px rgba(233, 69, 96, 0.35);
+    transition: background 0.2s ease, transform 0.2s ease;
+}
+.footer-widerruf:hover {
+    background: var(--accent-hover);
+    transform: translateY(-2px);
+}
+
 .footer-socials {
     display: flex;
     justify-content: center;

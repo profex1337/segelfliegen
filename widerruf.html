@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0f3460">
+    <title>Vertrag widerrufen | Segelflugplatz Altdorf</title>
+    <meta name="description" content="Widerruf eines online geschlossenen Vertrags (z. B. Gutschein-Bestellung) beim Segelflieger im Post-SV Nürnberg e.V. — Widerrufsfunktion, Widerrufsbelehrung und Muster-Widerrufsformular.">
+    <meta name="robots" content="index, follow">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.segelfliegenaltdorf.de/widerruf.html">
+    <meta property="og:title" content="Vertrag widerrufen | Segelflugplatz Altdorf">
+    <meta property="og:description" content="Widerrufsfunktion, Widerrufsbelehrung und Muster-Widerrufsformular des Segelflieger im Post-SV Nürnberg e.V.">
+    <meta property="og:image" content="https://www.segelfliegenaltdorf.de/images/logo.png">
+    <meta property="og:site_name" content="Segelflieger im Post-SV Nürnberg e.V.">
+    <meta property="og:locale" content="de_DE">
+    <meta name="twitter:card" content="summary">
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <link rel="canonical" href="https://www.segelfliegenaltdorf.de/widerruf.html">
+    <link rel="preload" href="fonts/montserrat-latin.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .content-block a { color: var(--accent); font-weight: 600; text-decoration: underline; }
+        .content-block h3 { margin-top: 30px; margin-bottom: 10px; font-size: 1.2rem; color: var(--primary); }
+        .content-block h4 { margin-top: 20px; font-size: 1.1rem; color: var(--primary); }
+        .content-block p { line-height: 1.7; }
+        .widerruf-intro-box { background: #fff8e1; border-left: 5px solid #ffc107; padding: 18px 20px; border-radius: 4px; margin: 20px 0; }
+        .muster-box { background: var(--bg-light); border: 1px dashed #c5cdd6; border-radius: var(--radius); padding: 20px; line-height: 1.9; }
+    </style>
+</head>
+<body>
+    <a href="#main-content" class="skip-link">Zum Hauptinhalt springen</a>
+    <header id="main-header"></header>
+
+    <div class="page-header">
+        <div class="container page-hero-content">
+            <h1>Vertrag widerrufen</h1>
+            <p>Online geschlossene Verträge einfach widerrufen</p>
+        </div>
+    </div>
+
+    <main id="main-content" class="container section">
+
+        <!-- ===== Widerrufsfunktion (hervorgehoben, zweistufig nach § 356a BGB) ===== -->
+        <div class="content-block" id="widerrufsfunktion" style="border-top: 5px solid var(--accent);">
+            <h2>Online-Widerruf</h2>
+            <p>Haben Sie über diese Website einen Vertrag geschlossen (z.&nbsp;B. eine Gutschein-Bestellung)? Hier können Sie ihn elektronisch widerrufen. Nach Absenden erhalten Sie unverzüglich eine Eingangsbestätigung per E-Mail. Bitte beachten Sie auch die <a href="#widerrufsbelehrung">Widerrufsbelehrung</a> weiter unten.</p>
+
+            <!-- Stufe 1: löst den Widerruf NICHT aus, blendet das Formular ein -->
+            <button type="button" id="widerruf-start" class="btn" style="min-width: 250px; margin-top: 10px;">Vertrag widerrufen</button>
+
+            <!-- Stufe 2: Formular + Bestätigungsschaltfläche -->
+            <form data-emailjs="widerruf" id="widerruf-form" style="display: none; max-width: 700px; margin-top: 25px;">
+                <input type="text" name="website_url" style="display:none !important;" tabindex="-1" autocomplete="off" aria-hidden="true">
+
+                <p style="color: var(--text-light); font-size: 0.95rem;">Bitte füllen Sie die folgenden Felder aus. Es werden nur die für die Bearbeitung nötigen Angaben erhoben.</p>
+
+                <div class="form-group">
+                    <label for="widerruf-name">Ihr Name *</label>
+                    <input type="text" id="widerruf-name" name="name" required placeholder="Vor- und Nachname">
+                </div>
+                <div class="form-group" style="margin-top: 18px;">
+                    <label for="widerruf-email">Ihre E-Mail-Adresse * <span style="font-weight: normal; color: var(--text-light);">(für die Eingangsbestätigung)</span></label>
+                    <input type="email" id="widerruf-email" name="email" required placeholder="ihre@email.de">
+                </div>
+                <div class="form-group" style="margin-top: 18px;">
+                    <label for="widerruf-bestelldetails">Angaben zur Identifizierung Ihrer Bestellung *</label>
+                    <textarea id="widerruf-bestelldetails" name="bestelldetails" rows="4" required placeholder="z. B. Bestelldatum, Flugart, Name des Beschenkten, Betrag"></textarea>
+                </div>
+                <div class="form-group" style="margin-top: 18px;">
+                    <label for="widerruf-grund">Grund <span style="font-weight: normal; color: var(--text-light);">(freiwillig)</span></label>
+                    <textarea id="widerruf-grund" name="grund" rows="3" placeholder="Eine Angabe des Grundes ist nicht erforderlich."></textarea>
+                </div>
+
+                <div style="margin-top: 25px;">
+                    <button type="submit" class="btn" style="min-width: 250px;">Widerruf bestätigen</button>
+                </div>
+                <p style="color: var(--text-light); font-size: 0.85rem; margin-top: 12px;">Mit Klick auf „Widerruf bestätigen" geben Sie die Widerrufserklärung ab.</p>
+            </form>
+        </div>
+
+        <!-- ===== Widerrufsbelehrung (amtliches Muster) ===== -->
+        <div class="content-block" id="widerrufsbelehrung">
+            <h2>Widerrufsbelehrung</h2>
+
+            <h3>Widerrufsrecht</h3>
+            <p>Sie haben das Recht, binnen vierzehn Tagen ohne Angabe von Gründen diesen Vertrag zu widerrufen. Die Widerrufsfrist beträgt vierzehn Tage ab dem Tag des Vertragsabschlusses.</p>
+            <p>Um Ihr Widerrufsrecht auszuüben, müssen Sie uns</p>
+            <p style="margin-left: 15px;">
+                <strong>Segelflieger im Post-SV Nürnberg e.V.</strong><br>
+                Kastanienweg 6<br>
+                92348 Berg / Stöckelsberg<br>
+                Telefon: 09189 310<br>
+                E-Mail: <a href="mailto:info@segelfliegen-altdorf.de">info@segelfliegen-altdorf.de</a>
+            </p>
+            <p>mittels einer eindeutigen Erklärung (z.&nbsp;B. ein mit der Post versandter Brief oder eine E-Mail) über Ihren Entschluss, diesen Vertrag zu widerrufen, informieren. Sie können dafür das unten stehende Muster-Widerrufsformular verwenden, das jedoch nicht vorgeschrieben ist. Sie können den Widerruf auch elektronisch über die <a href="#widerrufsfunktion">Widerrufsfunktion auf dieser Seite</a> (Schaltfläche „Vertrag widerrufen") erklären; in diesem Fall übermitteln wir Ihnen unverzüglich eine Bestätigung über den Eingang eines solchen Widerrufs auf einem dauerhaften Datenträger (z.&nbsp;B. per E-Mail).</p>
+            <p>Zur Wahrung der Widerrufsfrist reicht es aus, dass Sie die Mitteilung über die Ausübung des Widerrufsrechts vor Ablauf der Widerrufsfrist absenden.</p>
+
+            <h3>Folgen des Widerrufs</h3>
+            <p>Wenn Sie diesen Vertrag widerrufen, haben wir Ihnen alle Zahlungen, die wir von Ihnen erhalten haben, unverzüglich und spätestens binnen vierzehn Tagen ab dem Tag zurückzuzahlen, an dem die Mitteilung über Ihren Widerruf dieses Vertrags bei uns eingegangen ist. Für diese Rückzahlung verwenden wir dasselbe Zahlungsmittel, das Sie bei der ursprünglichen Transaktion eingesetzt haben, es sei denn, mit Ihnen wurde ausdrücklich etwas anderes vereinbart; in keinem Fall werden Ihnen wegen dieser Rückzahlung Entgelte berechnet.</p>
+            <p>Haben Sie verlangt, dass die Dienstleistung während der Widerrufsfrist beginnen soll, so haben Sie uns einen angemessenen Betrag zu zahlen, der dem Anteil der bis zu dem Zeitpunkt, zu dem Sie uns von der Ausübung des Widerrufsrechts hinsichtlich dieses Vertrags unterrichten, bereits erbrachten Leistungen im Vergleich zum Gesamtumfang der im Vertrag vorgesehenen Leistungen entspricht.</p>
+        </div>
+
+        <!-- ===== Muster-Widerrufsformular (amtliches Muster) ===== -->
+        <div class="content-block" id="muster-widerrufsformular">
+            <h2>Muster-Widerrufsformular</h2>
+            <p>(Wenn Sie den Vertrag widerrufen wollen, dann füllen Sie bitte dieses Formular aus und senden Sie es zurück.)</p>
+            <div class="muster-box">
+                An: Segelflieger im Post-SV Nürnberg e.V., Kastanienweg 6, 92348 Berg / Stöckelsberg, E-Mail: info@segelfliegen-altdorf.de<br><br>
+                Hiermit widerrufe(n) ich/wir (*) den von mir/uns (*) abgeschlossenen Vertrag über den Kauf des folgenden Gutscheins / die Erbringung der folgenden Dienstleistung (*):<br>
+                _______________________________________________<br>
+                Bestellt am (*) / erhalten am (*): __________________<br>
+                Name des/der Verbraucher(s): _____________________<br>
+                Anschrift des/der Verbraucher(s): _________________<br>
+                Unterschrift des/der Verbraucher(s) (nur bei Mitteilung auf Papier): __________<br>
+                Datum: __________<br><br>
+                (*) Unzutreffendes streichen.
+            </div>
+        </div>
+    </main>
+
+    <footer id="main-footer"></footer>
+    <button id="btn-back-to-top" title="Nach oben" aria-label="Zurück nach oben">↑</button>
+    <script src="script.js"></script>
+    <script>
+        // Stufe 1 → Stufe 2: Formular einblenden (löst den Widerruf nicht aus)
+        (function () {
+            var startBtn = document.getElementById('widerruf-start');
+            var form = document.getElementById('widerruf-form');
+            if (startBtn && form) {
+                startBtn.addEventListener('click', function () {
+                    form.style.display = 'block';
+                    startBtn.style.display = 'none';
+                    var firstField = document.getElementById('widerruf-name');
+                    if (firstField) firstField.focus();
+                    form.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                });
+            }
+        })();
+    </script>
+</body>
+</html>

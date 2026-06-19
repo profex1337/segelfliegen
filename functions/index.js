@@ -1,6 +1,7 @@
 const {onCall, onRequest, HttpsError} = require("firebase-functions/v2/https");
 const {setGlobalOptions} = require("firebase-functions/v2");
 const nodemailer = require("nodemailer");
+const widerrufMail = require("./widerruf-mail");
 
 setGlobalOptions({maxInstances: 5, region: "europe-west1"});
 
@@ -130,7 +131,7 @@ function buildNotificationHtml(subject, name, email, telefon, message, detailsHt
 }
 
 // Kunden-E-Mail (Auto-Reply / Reminder) (ersetzt EmailJS Template 2)
-function buildCustomerReplyHtml(title, subtitle, intro, flugart, empfaenger, wert, flugdauer, zustellung, paymentInfoHtml) {
+function buildCustomerReplyHtml(title, subtitle, intro, flugart, empfaenger, wert, flugdauer, zustellung, paymentInfoHtml, extraHtml) {
   let detailRows = "";
   if (flugart) {
     detailRows += '<tr><td style="padding:8px 12px; color:#666; width:130px;">Flugart:</td><td style="padding:8px 12px; font-weight:bold;">' + escapeHtml(flugart) + "</td></tr>";
@@ -158,6 +159,7 @@ function buildCustomerReplyHtml(title, subtitle, intro, flugart, empfaenger, wer
       + '<div style="font-size:15px; line-height:1.7; margin-bottom:20px;">' + intro + "</div>"
       + (detailRows ? '<div style="background:#f4f6f8; border-radius:8px; padding:16px; margin-bottom:20px;"><div style="font-weight:bold; color:#0f3460; font-size:14px; margin-bottom:10px;">Deine Bestellung</div><table role="presentation" style="width:100%; border-collapse:collapse;">' + detailRows + "</table></div>" : "")
       + (paymentInfoHtml || "")
+      + (extraHtml || "")
       + '<hr style="border:none; border-top:1px solid #eee; margin:20px 0;">'
       + '<div style="font-size:13px; color:#888; line-height:1.6;">'
       + "Viele Grüße<br><br>"
@@ -256,6 +258,54 @@ exports.sendPublicEmail = onRequest(
         return;
       }
 
+      // ===== Widerruf (§ 356a BGB) — eigener Ablauf, eigene Empfänger =====
+      if (formType === "widerruf") {
+        const bestelldetails = limitLength(sanitizeHeader(data.bestelldetails), 1000);
+        const grund = limitLength(sanitizeHeader(data.grund), 2000);
+        if (!bestelldetails) {
+          res.status(400).json({error: "Bitte geben Sie Angaben zur Identifizierung Ihrer Bestellung an."});
+          return;
+        }
+        const now = new Date();
+        const eingangLabel = widerrufMail.formatBerlinTimestamp(now);
+        const wTransporter = createTransporter();
+        const wFrom = `"Segelflugplatz Altdorf" <${process.env.SMTP_USER}>`;
+        const payload = {name, email, bestelldetails, grund, eingangLabel};
+        try {
+          // 1) Eingangsbestätigung an den Kunden (dauerhafter Datenträger)
+          await wTransporter.sendMail({
+            from: wFrom,
+            to: email,
+            subject: "Eingangsbestätigung Ihres Widerrufs — Segelflugplatz Altdorf",
+            html: widerrufMail.buildWiderrufCustomerHtml(payload),
+          });
+          // 2) Meldung an den Verein (CC: Vorstand + Kassier wegen Rückzahlung)
+          await wTransporter.sendMail({
+            from: wFrom,
+            to: VEREINS_EMAIL,
+            cc: "dan@segelfliegen-altdorf.de,r.dachauer-kassier@web.de",
+            replyTo: email,
+            subject: "Widerruf eingegangen: " + name,
+            html: widerrufMail.buildWiderrufVereinsHtml(payload),
+          });
+          // 3) Protokoll in Firestore (Nachweis) — Fehler nicht blockierend
+          try {
+            await getFirestore().collection("widerrufe").add({
+              name, email, bestelldetails, grund,
+              receivedAt: now.getTime(),
+              receivedAtLabel: eingangLabel,
+            });
+          } catch (logErr) {
+            console.error("Widerruf-Protokoll Fehler:", logErr);
+          }
+          res.status(200).json({success: true});
+        } catch (error) {
+          console.error("Widerruf-Mail Fehler:", error);
+          res.status(500).json({error: "Mail konnte nicht gesendet werden."});
+        }
+        return;
+      }
+
       const transporter = createTransporter();
       const from = `"Segelflugplatz Altdorf" <${process.env.SMTP_USER}>`;
       let subject = "";
@@ -317,6 +367,7 @@ exports.sendPublicEmail = onRequest(
               "Deine Gutschein-Bestellung ist bei uns eingegangen",
               "Hallo <strong>" + escapeHtml(name) + "</strong>,<br><br>vielen Dank für deine Bestellung eines Flug-Gutscheins beim Segelflugplatz Altdorf-Hagenhausen!",
               data.flugart, data.empfaenger, data.wert, flugdauer, data.zustellung, paymentHtml,
+              widerrufMail.buildWiderrufsbelehrungHtml(),
           );
 
           await transporter.sendMail({

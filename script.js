@@ -73,6 +73,8 @@ const footerHTML = `
     </div>
 
     <div class="footer-bottom">
+        <a href="widerruf.html" class="footer-widerruf">Vertrag widerrufen</a>
+        <br><br>
         <a href="impressum.html" style="margin:0 10px; color: #b0b0b0;">Impressum</a> |
         <a href="datenschutz.html" style="margin:0 10px; color: #b0b0b0;">Datenschutz</a> |
         <a href="#" id="cookie-settings-link" style="margin:0 10px; color: #b0b0b0; cursor:pointer; white-space:nowrap;">Cookies verwalten</a> |
@@ -559,6 +561,9 @@ function initForms() {
                 cfData.flugdauer = zusatz > 0 ? desc + ' + ' + zusatz + ' Min. zusätzlich' : desc;
             } else if (formType === 'gastflug') {
                 cfData.interest = fd.get('interest') || '';
+            } else if (formType === 'widerruf') {
+                cfData.bestelldetails = fd.get('bestelldetails') || '';
+                cfData.grund = fd.get('grund') || '';
             }
 
             try {
@@ -634,6 +639,12 @@ function initForms() {
                             + '</div>';
                         form.scrollIntoView({ behavior: 'smooth', block: 'center' });
                     }
+                } else if (formType === 'widerruf') {
+                    form.innerHTML = '<div style="text-align:center; padding: 40px 20px;">'
+                        + '<div style="font-size: 3rem; margin-bottom: 15px;">✅</div>'
+                        + '<h3 style="color: var(--primary);">Widerruf eingegangen</h3>'
+                        + '<p style="color: var(--text-light);">Vielen Dank. Wir haben den Eingang Ihrer Widerrufserklärung registriert. Sie erhalten in Kürze eine Eingangsbestätigung per E-Mail. Die Prüfung der Wirksamkeit erfolgt separat — wir melden uns bei Ihnen.</p>'
+                        + '</div>';
                 } else {
                     form.innerHTML = '<div style="text-align:center; padding: 40px 20px;">'
                         + '<div style="font-size: 3rem; margin-bottom: 15px;">✅</div>'

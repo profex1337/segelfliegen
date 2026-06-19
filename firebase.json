@@ -9,7 +9,9 @@
         ".git",
         "firebase-debug.log",
         "firebase-debug.*.log",
-        "*.local"
+        "*.local",
+        "test-widerruf-send.js",
+        "_widerruf_preview"
       ],
       "predeploy": [
         "npm --prefix \"$RESOURCE_DIR\" run lint"

@@ -17,7 +17,7 @@
 </url>
 <url>
   <loc>https://www.segelfliegenaltdorf.de/mitfliegen.html</loc>
-  <lastmod>2026-06-08T12:00:00+00:00</lastmod>
+  <lastmod>2026-06-19T12:00:00+00:00</lastmod>
   <priority>0.80</priority>
 </url>
 <url>
@@ -48,6 +48,11 @@
 <url>
   <loc>https://www.segelfliegenaltdorf.de/datenschutz.html</loc>
   <lastmod>2026-06-08T12:00:00+00:00</lastmod>
+  <priority>0.50</priority>
+</url>
+<url>
+  <loc>https://www.segelfliegenaltdorf.de/widerruf.html</loc>
+  <lastmod>2026-06-19T12:00:00+00:00</lastmod>
   <priority>0.50</priority>
 </url>
 
