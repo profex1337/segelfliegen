@@ -1350,24 +1350,26 @@ footer {
     z-index: 5;
 }
 
-/* Widerrufsbutton im Footer — gesetzlich gefordert: hervorgehoben und
-   deutlich abgegrenzt von Impressum/Datenschutz (§ 356a BGB). */
+/* Widerrufsbutton im Footer — gesetzlich gefordert (§ 356a BGB): muss
+   "hervorgehoben platziert" und von jeder Seite erreichbar sein. Dezente
+   Outline-Variante: durch Akzentfarbe + Rahmen klar von den grauen
+   Legal-Links abgesetzt, aber ruhiger als ein gefüllter Button. */
 .footer-widerruf {
     display: inline-block;
-    background: var(--accent);
-    color: var(--white) !important;
-    font-weight: 700;
+    background: transparent;
+    color: var(--accent) !important;
+    font-weight: 600;
     text-decoration: none;
-    padding: 9px 22px;
+    padding: 7px 18px;
+    border: 1.5px solid var(--accent);
     border-radius: 999px;
-    font-size: 0.9rem;
-    letter-spacing: 0.3px;
-    box-shadow: 0 4px 12px rgba(233, 69, 96, 0.35);
-    transition: background 0.2s ease, transform 0.2s ease;
+    font-size: 0.85rem;
+    letter-spacing: 0.2px;
+    transition: background 0.2s ease, color 0.2s ease;
 }
 .footer-widerruf:hover {
-    background: var(--accent-hover);
-    transform: translateY(-2px);
+    background: var(--accent);
+    color: var(--white) !important;
 }
 
 .footer-socials {
