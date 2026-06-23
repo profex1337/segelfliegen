@@ -1768,6 +1768,48 @@ function renderOrderRow(order, isClosed) {
     return row;
 }
 
+// Liefert das Jahr eines Unix-ms-Timestamps (oder null)
+function yearOf(ts) {
+    return ts ? new Date(ts).getFullYear() : null;
+}
+
+// Hängt (bereits sortierte) Einträge nach Jahr gruppiert als aufklappbare Unterabschnitte an.
+// Aktuelles Jahr offen, ältere zu. Bei nur einem Jahr ohne zusätzliche Verschachtelung flach.
+function appendGroupedByYear(parent, items, getYear, renderRow) {
+    var currentYear = new Date().getFullYear();
+    var order = [];
+    var groups = {};
+    items.forEach(function(it) {
+        var y = getYear(it);
+        var key = y ? String(y) : 'Ohne Datum';
+        if (!groups[key]) { groups[key] = []; order.push(key); }
+        groups[key].push(it);
+    });
+    if (order.length <= 1) {
+        items.forEach(function(it) { parent.appendChild(renderRow(it)); });
+        return;
+    }
+    order.sort(function(a, b) {
+        if (a === 'Ohne Datum') return 1;
+        if (b === 'Ohne Datum') return -1;
+        return parseInt(b, 10) - parseInt(a, 10);
+    });
+    order.forEach(function(key) {
+        var det = document.createElement('details');
+        det.style.cssText = 'margin:6px 0 6px 4px; border-left:2px solid #eee; padding-left:10px;';
+        if (key === String(currentYear)) det.open = true;
+        var sum = document.createElement('summary');
+        sum.style.cssText = 'cursor:pointer; font-weight:600; color:var(--text-light); font-size:0.85rem; padding:4px 0;';
+        sum.textContent = key + ' (' + groups[key].length + ')';
+        det.appendChild(sum);
+        var body = document.createElement('div');
+        body.style.cssText = 'margin-top:6px;';
+        groups[key].forEach(function(it) { body.appendChild(renderRow(it)); });
+        det.appendChild(body);
+        parent.appendChild(det);
+    });
+}
+
 function renderVoucherList(container, items, orders) {
     orders = orders || [];
     const openCount = items.filter(v => !v.redeemed).length;
@@ -1835,20 +1877,20 @@ function renderVoucherList(container, items, orders) {
         });
     }
 
-    // Abgeschlossene Bestellungen rendern
+    // Abgeschlossene Bestellungen rendern (nach Jahr gruppiert)
     if (closedOrders.length > 0) {
         var closedContainer = container.querySelector('#voucher-orders-closed');
-        closedOrders.forEach(function(order) {
-            closedContainer.appendChild(renderOrderRow(order, true));
-        });
+        appendGroupedByYear(closedContainer, closedOrders,
+            function(order) { return yearOf(order.completedAt || order.timestamp); },
+            function(order) { return renderOrderRow(order, true); });
     }
 
-    // Eingelöste Gutscheine rendern
+    // Eingelöste Gutscheine rendern (nach Jahr gruppiert)
     if (redeemedVouchers.length > 0) {
         var redeemedContainer = container.querySelector('#voucher-items-redeemed');
-        redeemedVouchers.forEach(function(item) {
-            redeemedContainer.appendChild(renderVoucherRow(item));
-        });
+        appendGroupedByYear(redeemedContainer, redeemedVouchers,
+            function(item) { return yearOf(item.timestamp); },
+            renderVoucherRow);
     }
 
     // Offene Gutscheine rendern

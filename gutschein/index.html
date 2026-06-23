@@ -51,6 +51,8 @@
         .btn-logout:hover { background: #ddd; }
         .empty { text-align: center; color: #999; padding: 30px; font-size: 0.9rem; }
         details summary { cursor: pointer; }
+        .year-group { margin: 6px 0 6px 4px; border-left: 2px solid #eee; padding-left: 10px; }
+        .year-summary { font-weight: 600; color: #777; font-size: 0.82rem; padding: 4px 0; }
     </style>
 </head>
 <body>
@@ -170,13 +172,41 @@
         if (redeemed.length > 0) {
             html += '<details style="margin-top:12px;"' + (redeemed.length <= 5 ? ' open' : '') + '>';
             html += '<summary class="section-title" style="cursor:pointer;">Eingelöste Gutscheine (' + redeemed.length + ')</summary>';
-            redeemed.forEach(function(v) { html += renderRow(v); });
+            html += groupByYearHtml(redeemed, function(v) { return v.timestamp ? new Date(v.timestamp).getFullYear() : null; });
             html += '</details>';
         }
         if (vouchers.length === 0) {
             html = '<div class="empty">Keine Gutscheine vorhanden</div>';
         }
         document.getElementById('voucher-content').innerHTML = html;
+    }
+
+    // Gruppiert (bereits sortierte) Gutscheine nach Jahr in aufklappbare Unterabschnitte.
+    // Aktuelles Jahr offen, ältere zu. Bei nur einem Jahr ohne Verschachtelung flach.
+    function groupByYearHtml(items, getYear) {
+        var currentYear = new Date().getFullYear();
+        var order = [], groups = {};
+        items.forEach(function(it) {
+            var y = getYear(it);
+            var key = y ? String(y) : 'Ohne Datum';
+            if (!groups[key]) { groups[key] = []; order.push(key); }
+            groups[key].push(it);
+        });
+        if (order.length <= 1) {
+            return items.map(renderRow).join('');
+        }
+        order.sort(function(a, b) {
+            if (a === 'Ohne Datum') return 1;
+            if (b === 'Ohne Datum') return -1;
+            return parseInt(b, 10) - parseInt(a, 10);
+        });
+        return order.map(function(key) {
+            var op = (key === String(currentYear)) ? ' open' : '';
+            return '<details class="year-group"' + op + '>'
+                + '<summary class="year-summary">' + key + ' (' + groups[key].length + ')</summary>'
+                + groups[key].map(renderRow).join('')
+                + '</details>';
+        }).join('');
     }
 
     function renderRow(v) {
@@ -205,9 +235,13 @@
 
     document.getElementById('search').addEventListener('input', function() {
         var q = this.value.toLowerCase().trim();
+        // Leeres Suchfeld -> Standardzustand (Jahres-Aufklapper zurücksetzen) wiederherstellen
+        if (!q) { renderList(); return; }
+        // Bei aktiver Suche alle Aufklapper öffnen, damit Treffer (auch in älteren Jahren) sichtbar sind
+        document.querySelectorAll('#voucher-content details').forEach(function(d) { d.open = true; });
         document.querySelectorAll('.voucher-row').forEach(function(row) {
             var text = row.getAttribute('data-search') || '';
-            row.style.display = (!q || text.indexOf(q) !== -1) ? '' : 'none';
+            row.style.display = text.indexOf(q) !== -1 ? '' : 'none';
         });
     });
 </script>
