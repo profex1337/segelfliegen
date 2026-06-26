@@ -215,13 +215,12 @@ document.addEventListener('DOMContentLoaded', () => {
     initSwipeNavigation();
     initTransparentHeader();
 
-    // Einzelner Consent-Button (pro Einbettung)
+    // Einzelner Consent-Button (pro Einbettung) — lädt NUR den geklickten Inhalt
+    // und setzt KEINE globale Einwilligung (granulare Einwilligung je Einbettung).
     document.addEventListener('click', (e) => {
         if (e.target.classList.contains('consent-accept-btn')) {
-            localStorage.setItem('dsgvo-consent', 'accepted');
-            const banner = document.getElementById('cookie-banner');
-            if (banner) banner.style.display = 'none';
-            embedConsentContent();
+            const overlay = e.target.closest('.consent-overlay');
+            if (overlay) embedConsentContent(overlay);
         }
     });
 
@@ -301,16 +300,20 @@ function initReviews() {
         }).join('');
     }
 
-    // Sofort Fallback anzeigen
+    // Sofort Fallback anzeigen (keine externe Verbindung)
     renderReviews(fallbackReviews);
 
-    // Live-Daten von Cloud Function laden
-    fetch('https://europe-west1-segelfliegen.cloudfunctions.net/getGoogleReviews')
-        .then(function(r) { return r.json(); })
-        .then(function(data) {
-            if (data && data.reviews && data.reviews.length > 0) renderReviews(data);
-        })
-        .catch(function() { /* Fallback bleibt stehen */ });
+    // Live-Daten von der Cloud Function (Google-Infrastruktur, EU-Region) — erst nach
+    // Einwilligung laden, da dabei die IP an den Google-betriebenen Endpunkt übermittelt wird.
+    window.loadLiveReviews = function() {
+        fetch('https://europe-west1-segelfliegen.cloudfunctions.net/getGoogleReviews')
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (data && data.reviews && data.reviews.length > 0) renderReviews(data);
+            })
+            .catch(function() { /* Fallback bleibt stehen */ });
+    };
+    if (localStorage.getItem('dsgvo-consent') === 'accepted') window.loadLiveReviews();
 
     var openSidebar = function() {
         sidebar.classList.add('active');
@@ -396,8 +399,9 @@ function getAvatarColor() {
 }
 
 
-function embedConsentContent() {
-    document.querySelectorAll('.consent-overlay').forEach(overlay => {
+function embedConsentContent(singleOverlay) {
+    const overlays = singleOverlay ? [singleOverlay] : document.querySelectorAll('.consent-overlay');
+    overlays.forEach(overlay => {
         const src = overlay.getAttribute('data-src');
         if (!src) return;
         const title = overlay.getAttribute('data-title') || '';
@@ -432,8 +436,8 @@ function initCookieConsent() {
                 <a href="datenschutz.html" style="text-decoration: underline;">Mehr erfahren</a>.
             </p>
             <div class="cookie-buttons">
-                <button id="cookie-accept" class="btn" style="padding: 8px 15px; font-size: 0.9rem;">Alle akzeptieren</button>
-                <button id="cookie-decline" class="btn btn-secondary" style="padding: 8px 15px; font-size: 0.9rem;">Nur Essenzielle</button>
+                <button id="cookie-accept" class="btn" style="padding: 8px 15px; font-size: 0.9rem; box-shadow: none;">Alle akzeptieren</button>
+                <button id="cookie-decline" class="btn" style="padding: 8px 15px; font-size: 0.9rem; background: var(--primary); box-shadow: none;">Nur Essenzielle</button>
             </div>
         </div>
     </div>`;
@@ -447,6 +451,7 @@ function initCookieConsent() {
         banner.style.display = 'none';
         embedConsentContent();
         if (typeof loadWeatherData === 'function') loadWeatherData();
+        if (typeof window.loadLiveReviews === 'function') window.loadLiveReviews();
     };
 
     document.getElementById('cookie-decline').onclick = () => {
