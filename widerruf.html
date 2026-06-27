@@ -25,7 +25,8 @@
         .content-block h3 { margin-top: 30px; margin-bottom: 10px; font-size: 1.2rem; color: var(--primary); }
         .content-block h4 { margin-top: 20px; font-size: 1.1rem; color: var(--primary); }
         .content-block p { line-height: 1.7; }
-        .widerruf-intro-box { background: #fff8e1; border-left: 5px solid #ffc107; padding: 18px 20px; border-radius: 4px; margin: 20px 0; }
+        .widerruf-intro-box { background: #fff8ec; border: 1px solid #f3e2b3; padding: 18px 20px; border-radius: 8px; margin: 20px 0; }
+        .widerruf-intro-box::before { content: ""; display: block; width: 70px; height: 3px; border-radius: 2px; margin-bottom: 14px; background: linear-gradient(90deg, #e0a500, transparent); }
         .muster-box { background: var(--bg-light); border: 1px dashed #c5cdd6; border-radius: var(--radius); padding: 20px; line-height: 1.9; }
     </style>
 </head>
@@ -43,8 +44,8 @@
     <main id="main-content" class="container section">
 
         <!-- ===== Widerrufsfunktion (hervorgehoben, zweistufig nach § 356a BGB) ===== -->
-        <div class="content-block" id="widerrufsfunktion" style="border-top: 5px solid var(--accent);">
-            <h2>Online-Widerruf</h2>
+        <div class="content-block" id="widerrufsfunktion">
+            <h2 class="accent-kicker">Online-Widerruf</h2>
             <p>Haben Sie über diese Website einen Vertrag geschlossen (z.&nbsp;B. eine Gutschein-Bestellung)? Hier können Sie ihn elektronisch widerrufen. Nach Absenden erhalten Sie unverzüglich eine Eingangsbestätigung per E-Mail. Bitte beachten Sie auch die <a href="#widerrufsbelehrung">Widerrufsbelehrung</a> weiter unten.</p>
 
             <!-- Stufe 1: löst den Widerruf NICHT aus, blendet das Formular ein -->

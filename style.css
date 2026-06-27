@@ -635,6 +635,22 @@ header {
     overflow-wrap: anywhere;
 }
 
+/* === Akzent-Kicker === */
+/* Kurzer, auslaufender Akzent-Strich unter einer Überschrift — ersetzt die
+   früheren farbigen Balken links an Boxen. Farbe über --ak-color (Default: Sky). */
+.accent-kicker::after {
+    content: "";
+    display: block;
+    width: 70px;
+    height: 3px;
+    border-radius: 2px;
+    margin: 12px 0 2px;
+    background: linear-gradient(90deg, var(--ak-color, var(--accent)), transparent);
+}
+.accent-kicker.ak-navy { --ak-color: var(--primary); }
+.accent-kicker.ak-warn { --ak-color: #e0a500; }
+.accent-kicker.ak-center::after { margin-left: auto; margin-right: auto; }
+
 .btn {
     display: inline-block;
     background-color: var(--accent);
@@ -1451,7 +1467,6 @@ footer {
     padding: 40px;
     border-radius: var(--radius);
     box-shadow: var(--shadow);
-    border-top: 5px solid var(--accent);
 }
 @media (min-width: 768px) {
     .quote-wrapper { grid-template-columns: 2fr 1fr; }
@@ -1600,7 +1615,8 @@ footer {
 .data-list { list-style: none; padding: 0; }
 .data-list li { margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 15px; }
 .data-list strong { color: var(--primary); display: block; }
-.highlight-box { background-color: #fff3cd; border-left: 5px solid #ffc107; padding: 15px; margin-top: 20px; border-radius: 5px; }
+.highlight-box { background-color: #fff8ec; border: 1px solid #f3e2b3; padding: 18px 20px; margin-top: 20px; border-radius: 8px; }
+.highlight-box::before { content: ""; display: block; width: 70px; height: 3px; border-radius: 2px; margin-bottom: 14px; background: linear-gradient(90deg, #e0a500, transparent); }
 
 .slideshow-container {
     max-width: 100%;
@@ -1677,7 +1693,7 @@ footer {
 
 .admin-login-link { font-size: 0.8rem; color: #e0e0e0; cursor: pointer; margin-left: 10px; text-decoration: none; transition: color 0.3s; }
 .admin-login-link:hover { color: var(--accent); }
-.admin-panel { display: none; background: var(--white); padding: 25px; margin-bottom: 30px; border-radius: var(--radius); box-shadow: var(--shadow); border-left: 5px solid var(--accent); animation: fadeIn 0.5s; }
+.admin-panel { display: none; background: var(--white); padding: 25px; margin-bottom: 30px; border-radius: var(--radius); box-shadow: var(--shadow); animation: fadeIn 0.5s; }
 .admin-panel.active { display: block; }
 .admin-panel h3 { margin-top: 0; font-size: 1.2rem; }
 .news-form input, .news-form textarea { width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 6px; font-family: inherit; }
@@ -1977,7 +1993,6 @@ body.admin-mode .delete-btn { display: inline-block; }
     border-radius: var(--radius);
     box-shadow: 0 10px 40px rgba(0,0,0,0.2);
     z-index: 9999;
-    border-left: 5px solid var(--accent);
     animation: slideUp 0.5s ease-out;
 }
 

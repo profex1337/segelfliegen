@@ -1695,7 +1695,7 @@ function renderOrderRow(order, isClosed) {
     var borderColor = isClosed ? '#bbb' : (isPaid ? '#2e7d32' : '#1565c0');
     var hoverColor = isClosed ? '#eee' : (isPaid ? '#c8e6c9' : '#bbdefb');
 
-    row.style.cssText = 'display:flex; align-items:center; gap:16px; padding:14px 18px; margin-bottom:8px; border-radius:8px; flex-wrap:wrap; background:' + bgColor + '; border-left:4px solid ' + borderColor + '; cursor:pointer; transition:background 0.2s;' + (isClosed ? ' opacity:0.7;' : '');
+    row.style.cssText = 'display:flex; align-items:center; gap:16px; padding:14px 18px; margin-bottom:8px; border-radius:8px; flex-wrap:wrap; background:' + bgColor + '; cursor:pointer; transition:background 0.2s;' + (isClosed ? ' opacity:0.7;' : '');
     row.onmouseenter = function() { row.style.background = hoverColor; };
     row.onmouseleave = function() { row.style.background = bgColor; };
 
@@ -1745,7 +1745,7 @@ function renderOrderRow(order, isClosed) {
     }
     buttonsHtml += '</div>';
 
-    row.innerHTML = infoHtml + buttonsHtml;
+    row.innerHTML = '<span style="flex:0 0 auto; width:10px; height:10px; border-radius:50%; background:' + borderColor + ';"></span>' + infoHtml + buttonsHtml;
 
     // Event-Listener via Closure (vermeidet HTML/Attribut-Injection durch User-Input)
     var infoEl = row.querySelector('.order-info');
@@ -1944,7 +1944,7 @@ function renderVoucherRow(item) {
     var bgColor = item.redeemed ? '#fff8e1' : (expired ? '#fff5f5' : '#f9f9f9');
     var borderColor = item.redeemed ? '#ffa000' : (expired ? '#c62828' : '#2e7d32');
     var opacityVal = item.redeemed ? '0.75' : '1';
-    row.style.cssText = 'display:flex; align-items:center; gap:16px; padding:14px 18px; margin-bottom:8px; border-radius:8px; flex-wrap:wrap; background:' + bgColor + '; border-left:4px solid ' + borderColor + '; opacity:' + opacityVal + ';';
+    row.style.cssText = 'display:flex; align-items:center; gap:16px; padding:14px 18px; margin-bottom:8px; border-radius:8px; flex-wrap:wrap; background:' + bgColor + '; opacity:' + opacityVal + ';';
 
     var createdDate = item.timestamp ? new Date(item.timestamp).toLocaleDateString('de-DE') : '\u2014';
     var nameStyle = item.redeemed ? ' text-decoration:line-through; color:#999;' : '';
@@ -1955,7 +1955,8 @@ function renderVoucherRow(item) {
     var expiredLabel = expired ? '<span style="color:#c62828; font-weight:700; margin-left:6px;">abgelaufen</span>' : '';
     var validLine = item.validUntil ? '<div style="font-size:0.78rem; color:#888;">Gültig bis: ' + item.validUntil + expiredLabel + '</div>' : '';
 
-    row.innerHTML = '<div style="flex:1; min-width:200px;">'
+    row.innerHTML = '<span style="flex:0 0 auto; width:10px; height:10px; border-radius:50%; background:' + borderColor + ';"></span>'
+        + '<div style="flex:1; min-width:200px;">'
         + '<strong style="font-size:1rem;' + nameStyle + '">' + (item.recipient || '\u2014') + '</strong>'
         + '<div style="font-size:0.82rem; color:var(--text-light); margin-top:3px;">'
         + (item.flightType || '') + (item.value ? ' &middot; ' + item.value + ' \u20AC' : '') + ' &middot; ' + (item.number || '') + ' &middot; Erstellt: ' + createdDate

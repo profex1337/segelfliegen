@@ -33,8 +33,10 @@
 
         .section-title { font-size: 0.9rem; font-weight: 700; color: #0f3460; margin: 18px 0 8px; padding-bottom: 4px; border-bottom: 2px solid #e0e0e0; }
 
-        .order-row { display: flex; align-items: center; gap: 12px; padding: 12px 14px; margin-bottom: 6px; border-radius: 8px; flex-wrap: wrap; background: #fff; border-left: 3px solid #1565c0; }
-        .order-row.paid { border-left-color: #2e7d32; background: #f1f8e9; }
+        .order-row { display: flex; align-items: center; gap: 12px; padding: 12px 14px; margin-bottom: 6px; border-radius: 8px; flex-wrap: wrap; background: #fff; border: 1px solid rgba(15,52,96,.07); }
+        .order-row::before { content: ""; flex: 0 0 auto; width: 10px; height: 10px; border-radius: 50%; background: #1565c0; }
+        .order-row.paid { background: #f1f8e9; }
+        .order-row.paid::before { background: #2e7d32; }
         .order-info { flex: 1; min-width: 200px; }
         .order-name { font-weight: 600; font-size: 0.95rem; }
         .order-meta { font-size: 0.78rem; color: #888; margin-top: 2px; }
