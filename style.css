@@ -644,21 +644,25 @@ header {
     width: fit-content;
     max-width: 100%;
     padding-bottom: 8px;
+    --ulw: min(100%, 300px); /* Unterstrich-Länge: Textbreite, aber gedeckelt (mehrzeilige Titel); mobil enger (siehe Media-Query) */
 }
 .accent-kicker.ak-center { margin-left: auto; margin-right: auto; }
+/* Zentrierte Titel: Unterstrich + Segler unter der Box-Mitte (statt linksbündig) */
+.accent-kicker.ak-center::before { left: calc(50% - var(--ulw) / 2); }
+.accent-kicker.ak-center::after  { left: calc(50% + var(--ulw) / 2 - 36px); }
 .accent-kicker::before {
     content: "";
     position: absolute;
     left: 0;
     bottom: 2px;
-    width: calc(100% - 18px);
+    width: var(--ulw);
     height: 2px;
     background: linear-gradient(to right, transparent 0%, var(--ak-color, var(--accent)) 45%, var(--ak-color, var(--accent)) 100%);
 }
 .accent-kicker::after {
     content: "";
     position: absolute;
-    left: calc(100% - 34px);
+    left: calc(var(--ulw) - 36px);
     bottom: -6px;
     width: 70px;
     height: 34px;
@@ -669,6 +673,9 @@ header {
 }
 .accent-kicker.ak-navy { --ak-color: var(--primary); }
 .accent-kicker.ak-warn { --ak-color: #e0a500; }
+@media (max-width: 600px) {
+    .accent-kicker { --ulw: min(100%, 190px); } /* mehrzeilige Titel mobil: Strich enger */
+}
 
 .btn {
     display: inline-block;
