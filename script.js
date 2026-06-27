@@ -214,6 +214,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initForms();
     initSwipeNavigation();
     initTransparentHeader();
+    initGliderUnderline();
 
     // Einzelner Consent-Button (pro Einbettung) — lädt NUR den geklickten Inhalt
     // und setzt KEINE globale Einwilligung (granulare Einwilligung je Einbettung).
@@ -1001,6 +1002,27 @@ function initSwipeNavigation() {
 }
 
 // FAQ: Sanfte Öffnen/Schließen-Animation für <details>
+// Setzt die Unterstrich-Länge (--ulw) exakt auf die Breite der LETZTEN Titel-Zeile,
+// damit Strich + Segler bei ein- und mehrzeiligen Titeln in jeder Auflösung passgenau sind.
+function initGliderUnderline() {
+    const heads = document.querySelectorAll('.accent-kicker');
+    if (!heads.length || typeof document.createRange !== 'function') return;
+    const measure = () => {
+        heads.forEach(h => {
+            const range = document.createRange();
+            range.selectNodeContents(h);
+            const rects = range.getClientRects();
+            if (!rects.length) return;
+            const last = rects[rects.length - 1];
+            if (last.width) h.style.setProperty('--ulw', Math.round(last.width) + 'px');
+        });
+    };
+    measure();
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(measure);
+    let t;
+    window.addEventListener('resize', () => { clearTimeout(t); t = setTimeout(measure, 150); });
+}
+
 function initFaqAnimation() {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
