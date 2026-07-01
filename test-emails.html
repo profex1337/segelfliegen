@@ -140,6 +140,22 @@
             </div>
         </div>
 
+        <!-- 4b. Gutschein Auto-Reply (Abholung am Flugplatz) — NEU -->
+        <div class="card">
+            <div class="card-header">
+                <h3>Gutschein — Kunden-Mail (Flugplatz) NEU</h3>
+                <span class="badge">sendPublicEmail</span>
+            </div>
+            <div class="card-body">
+                <p>NEU: Kunden-Bestätigung bei Abholung am Flugplatz (92348 Stöckelsberg, Wochenende, Barzahlung, vorher melden). Motorsegler.</p>
+                <div class="card-actions">
+                    <button class="btn btn-preview" onclick="preview('gutschein-reply-flugplatz')">Vorschau</button>
+                    <button class="btn btn-send" onclick="sendTest('gutschein-reply-flugplatz')">Senden</button>
+                </div>
+                <div class="status" id="status-gutschein-reply-flugplatz"></div>
+            </div>
+        </div>
+
         <!-- 5. Gutschein Auto-Reply (Kunstflug) -->
         <div class="card">
             <div class="card-header">
@@ -285,7 +301,20 @@ function buildEpcQrUrl(name, wert) {
 }
 
 function buildPaymentInfoHtml(name, wert, zustellung, qrUrl) {
-    const istAbholung = (zustellung || "").indexOf("Abholung") !== -1;
+    const z = zustellung || "";
+    const istFlugplatz = z.indexOf("Flugplatz") !== -1;
+    const istAbholung = z.indexOf("Abholung") !== -1;
+    if (istFlugplatz) {
+        return '<div style="background: #f3e5f5; border: 1px solid #ce93d8; border-radius: 8px; padding: 20px; margin-bottom: 25px;">'
+            + '<div style="font-weight: bold; color: #6a1b9a; font-size: 15px; margin-bottom: 10px;">Abholung am Flugplatz &amp; Barzahlung</div>'
+            + '<div style="font-size: 14px; line-height: 1.6; color: #555;">'
+            + 'Hole deinen Gutschein am Segelflugplatz Altdorf-Hagenhausen ab:<br>'
+            + '<strong>92348 Stöckelsberg</strong> (bitte der Beschilderung folgen)<br>'
+            + '<strong>Nur am Wochenende oder an Feiertagen.</strong><br><br>'
+            + 'Bitte melde dich vorher unter <a href="tel:+499189310" style="color: #6a1b9a; font-weight: bold;">09189 310</a>, damit wir deinen Gutschein ausdrucken und für dich bereitlegen.'
+            + (wert ? '<br><br><strong>Betrag:</strong> ' + wert + ' € (Barzahlung vor Ort)' : '')
+            + '</div></div>';
+    }
     if (istAbholung) {
         return '<div style="background: #f3e5f5; border: 1px solid #ce93d8; border-radius: 8px; padding: 20px; margin-bottom: 25px;">'
             + '<div style="font-weight: bold; color: #6a1b9a; font-size: 15px; margin-bottom: 10px;">Abholung &amp; Barzahlung</div>'
@@ -426,6 +455,14 @@ function generateEmail(type) {
         html = buildCustomerReplyHtml("Vielen Dank!", "Deine Gutschein-Bestellung ist bei uns eingegangen",
             'Hallo <strong>' + escapeHtml(TEST.name) + '</strong>,<br><br>vielen Dank für deine Bestellung eines Flug-Gutscheins beim Segelflugplatz Altdorf-Hagenhausen!',
             "Motorsegler", "Peter Geschenk", "85,00", flugdauer, "Abholung (Barzahlung vor Ort)", paymentHtml);
+    }
+    else if (type === "gutschein-reply-flugplatz") {
+        subject = "Deine Gutschein-Bestellung beim Segelflugplatz Altdorf";
+        const flugdauer = getFlugdauer("Motorsegler", 0);
+        const paymentHtml = buildPaymentInfoHtml(TEST.name, "85,00", "Abholung am Flugplatz (Wochenende/Feiertag, Barzahlung)", "");
+        html = buildCustomerReplyHtml("Vielen Dank!", "Deine Gutschein-Bestellung ist bei uns eingegangen",
+            'Hallo <strong>' + escapeHtml(TEST.name) + '</strong>,<br><br>vielen Dank für deine Bestellung eines Flug-Gutscheins beim Segelflugplatz Altdorf-Hagenhausen!',
+            "Motorsegler", "Peter Geschenk", "85,00", flugdauer, "Abholung am Flugplatz (Wochenende/Feiertag, Barzahlung)", paymentHtml);
     }
     else if (type === "gutschein-reply-kunstflug") {
         subject = "Deine Gutschein-Bestellung beim Segelflugplatz Altdorf";

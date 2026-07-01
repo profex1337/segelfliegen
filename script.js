@@ -463,7 +463,20 @@ function initCookieConsent() {
 
 // Zahlungsinfo-HTML für Auto-Reply/Reminder E-Mail (Überweisung oder Abholung)
 function buildPaymentInfoHtml(name, wert, zustellung, qrUrl) {
-    var istAbholung = (zustellung || '').indexOf('Abholung') !== -1;
+    var z = zustellung || '';
+    var istFlugplatz = z.indexOf('Flugplatz') !== -1;
+    var istAbholung = z.indexOf('Abholung') !== -1;
+    if (istFlugplatz) {
+        return '<div style="background: #f3e5f5; border: 1px solid #ce93d8; border-radius: 8px; padding: 20px; margin-bottom: 25px;">'
+            + '<div style="font-weight: bold; color: #6a1b9a; font-size: 15px; margin-bottom: 10px;">Abholung am Flugplatz &amp; Barzahlung</div>'
+            + '<div style="font-size: 14px; line-height: 1.6; color: #555;">'
+            + 'Hole deinen Gutschein am Segelflugplatz Altdorf-Hagenhausen ab:<br>'
+            + '<strong>92348 Stöckelsberg</strong> (bitte der Beschilderung folgen)<br>'
+            + '<strong>Nur am Wochenende oder an Feiertagen.</strong><br><br>'
+            + 'Bitte melde dich vorher unter <a href="tel:+499189310" style="color: #6a1b9a; font-weight: bold;">09189 310</a>, damit wir deinen Gutschein ausdrucken und für dich bereitlegen.'
+            + (wert ? '<br><br><strong>Betrag:</strong> ' + wert + ' € (Barzahlung vor Ort)' : '')
+            + '</div></div>';
+    }
     if (istAbholung) {
         return '<div style="background: #f3e5f5; border: 1px solid #ce93d8; border-radius: 8px; padding: 20px; margin-bottom: 25px;">'
             + '<div style="font-weight: bold; color: #6a1b9a; font-size: 15px; margin-bottom: 10px;">Abholung &amp; Barzahlung</div>'
