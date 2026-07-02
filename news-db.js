@@ -35,6 +35,12 @@ function safeImageUrl(url) {
     return 'images/hero.jpg';
 }
 
+// Login-Modal: Fokus-Rückgabe-Ziel + Flag für den Escape-Listener. Auf Modulebene, weil der
+// Admin-Setup-Block bei jeder onAuthStateChanged-Änderung neu läuft — der Listener darf aber
+// nur EINMAL an document gebunden werden (sonst Listener-Leak).
+let loginModalLastFocus = null;
+let loginEscHandlerBound = false;
+
 // === Bild-Upload: Komprimierung & GitHub ===
 
 async function compressImage(file, maxWidth = 1200, quality = 0.80) {
@@ -604,7 +610,6 @@ async function startNewsLogic() {
                             if(logoutBtn) logoutBtn.style.display = "inline-block"; 
                         }
 
-                        let loginModalLastFocus = null;
                         function closeLoginModal() {
                             const modal = document.getElementById('login-modal');
                             const lError = document.getElementById('login-error');
@@ -673,10 +678,13 @@ async function startNewsLogic() {
                             lClose.onclick = closeLoginModal;
                         }
 
-                        document.addEventListener('keydown', (e) => {
-                            const modal = document.getElementById('login-modal');
-                            if (e.key === 'Escape' && modal && modal.style.display === 'flex') closeLoginModal();
-                        });
+                        if (!loginEscHandlerBound) {
+                            loginEscHandlerBound = true;
+                            document.addEventListener('keydown', (e) => {
+                                const modal = document.getElementById('login-modal');
+                                if (e.key === 'Escape' && modal && modal.style.display === 'flex') closeLoginModal();
+                            });
+                        }
                     
                         const handleLogin = async () => {
                             const pInput = document.getElementById('admin-password-input');
