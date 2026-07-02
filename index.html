@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
     <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin>
+    <link rel="preconnect" href="https://raw.githubusercontent.com" crossorigin>
+    <link rel="preload" href="images/hero_poster.webp" as="image" fetchpriority="high">
     <meta name="theme-color" content="#0f3460">
 
     <title>Segelflugplatz Altdorf-Hagenhausen | Fliegen bei Nürnberg</title>
@@ -52,52 +54,25 @@
         "https://www.facebook.com/Segelflieger.PostSV",
         "https://www.instagram.com/segelflieger.psv",
         "https://www.youtube.com/channel/UCPiG85TTftKcU4jr4Vjuhvg"
-      ]
+      ],
+      "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": "4.9",
+        "reviewCount": "51",
+        "bestRating": "5"
+      }
     }
     </script>
+    <!-- aggregateRating manuell aus Google-Bewertungen übernommen (Stand 2026-07-02, via getGoogleReviews Cloud Function) —
+         Googlebot bekommt keinen DSGVO-Cookie-Consent und lädt die Live-Zahl daher nicht; bei spürbarer Abweichung
+         zur echten Google-Bewertung aktualisieren. -->
+
     
     <link rel="icon" href="favicon.ico" type="image/x-icon">
     <link rel="apple-touch-icon" href="apple-touch-icon.png">
     <link rel="canonical" href="https://www.segelfliegenaltdorf.de/">
     <link rel="preload" href="fonts/montserrat-latin.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="stylesheet" href="style.css">
-
-    <style>
-        .hero {
-            position: relative;
-            overflow: hidden;
-            background-color: var(--bg-light);
-        }
-        .hero-video {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            object-fit: cover; z-index: 0;
-        }
-        .hero-overlay {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(15, 52, 96, 0.5); z-index: 1;
-        }
-        /* Weicher Auslauf in den Seitenhintergrund (analog Unterseiten) */
-        .hero::after {
-            content: '';
-            position: absolute;
-            left: 0; right: 0; bottom: 0;
-            height: 45%;
-            background: linear-gradient(to bottom,
-                rgba(244, 246, 248, 0) 0%,
-                rgba(244, 246, 248, 0.05) 30%,
-                rgba(244, 246, 248, 0.25) 55%,
-                rgba(244, 246, 248, 0.6) 75%,
-                rgba(244, 246, 248, 0.9) 90%,
-                var(--bg-light) 100%);
-            z-index: 2;
-            pointer-events: none;
-        }
-        .hero-content {
-            position: relative; z-index: 3;
-        }
-    </style>
 </head>
 <body>
 

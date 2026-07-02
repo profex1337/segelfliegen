@@ -34,6 +34,7 @@
     --accent: #0ea5e9;
     --accent-hover: #0284c7;
     --accent-rgb: 14, 165, 233;
+    --warn-red: #d1344f;
     --text-main: #333333;
     --text-light: #666666;
     --bg-light: #f4f6f8;
@@ -268,31 +269,35 @@ header {
 
 
 .hamburger {
+    /* 44x44 Touch-Ziel (WCAG); enthält das 30x20 Icon zentriert per padding-unabhängigem Offset s.u. */
     display: none;
     cursor: pointer;
-    width: 30px;
-    height: 20px;
+    width: 44px;
+    height: 44px;
     position: relative;
     z-index: 1002;
-    margin-right: 10px;
+    margin-right: 0;
+    background: none;
+    border: none;
+    padding: 0;
 }
 
 .hamburger span {
     display: block;
     position: absolute;
     height: 3px;
-    width: 100%;
+    width: 30px;
+    left: 7px;
     background: var(--primary);
     border-radius: 3px;
     opacity: 1;
-    left: 0;
     transform: rotate(0deg);
     transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out, top 0.3s ease-in-out;
 }
 
-.hamburger span:nth-child(1) { top: 0px; }
-.hamburger span:nth-child(2) { top: 9px; } 
-.hamburger span:nth-child(3) { top: 18px; }
+.hamburger span:nth-child(1) { top: 12px; }
+.hamburger span:nth-child(2) { top: 21px; }
+.hamburger span:nth-child(3) { top: 30px; }
 
 .hamburger span:nth-child(2)::after {
     content: '';
@@ -322,10 +327,10 @@ header {
 
 
 
-.hamburger.open span:nth-child(1) { 
-    top: 9px; 
-    transform: rotate(135deg); 
-    background: var(--accent); 
+.hamburger.open span:nth-child(1) {
+    top: 21px;
+    transform: rotate(135deg);
+    background: var(--accent);
 }
 
 
@@ -346,30 +351,46 @@ header {
 }
 
 
-.hamburger.open span:nth-child(3) { 
-    top: 9px; 
-    transform: rotate(-135deg); 
-    background: var(--accent); 
+.hamburger.open span:nth-child(3) {
+    top: 21px;
+    transform: rotate(-135deg);
+    background: var(--accent);
 }
 
 
 .hero {
     position: relative;
-    
-    min-height: 80vh; 
-    background-color: var(--primary); 
+
+    min-height: 80vh;
+    background-color: var(--bg-light);
     display: flex;
     align-items: center;
     justify-content: center;
     text-align: center;
     color: var(--white);
     overflow: hidden;
-    
+
     padding-top: 60px;
     padding-bottom: 60px;
     height: auto;
 }
 
+/* Weicher Auslauf in den Seitenhintergrund (analog Unterseiten) */
+.hero::after {
+    content: '';
+    position: absolute;
+    left: 0; right: 0; bottom: 0;
+    height: 45%;
+    background: linear-gradient(to bottom,
+        rgba(244, 246, 248, 0) 0%,
+        rgba(244, 246, 248, 0.05) 30%,
+        rgba(244, 246, 248, 0.25) 55%,
+        rgba(244, 246, 248, 0.6) 75%,
+        rgba(244, 246, 248, 0.9) 90%,
+        var(--bg-light) 100%);
+    z-index: 2;
+    pointer-events: none;
+}
 
 .hero-video {
     position: absolute;
@@ -379,13 +400,13 @@ header {
 .hero-overlay {
     position: absolute;
     top: 0; left: 0; width: 100%; height: 100%;
-    background: linear-gradient(to top, rgba(15, 52, 96, 0.85) 0%, rgba(15, 52, 96, 0.4) 50%, rgba(15, 52, 96, 0.2) 100%);
+    background: rgba(15, 52, 96, 0.5);
     z-index: 1;
 }
 
 .hero-content {
     position: relative;
-    z-index: 2;
+    z-index: 3;
     max-width: 800px;
     padding: 20px;
 }
@@ -512,6 +533,10 @@ header {
     font-size: 30px;
     cursor: pointer;
     line-height: 1;
+    background: none;
+    border: none;
+    color: inherit;
+    padding: 8px;
 }
 
 .reviews-summary {
@@ -624,7 +649,6 @@ header {
 
 .section { padding: 60px 0; }
 .section-title { text-align: center; margin-bottom: 60px; }
-.bg-grey { background-color: #eef2f5; }
 
 .content-block {
     background: var(--white);
@@ -1423,7 +1447,8 @@ footer {
 .footer-socials a {
     color: #b0b0b0;
     transition: color 0.3s, transform 0.3s;
-    padding: 5px;
+    padding: 10px;
+    display: inline-flex;
 }
 .footer-socials a:hover {
     color: var(--accent);
@@ -1716,8 +1741,6 @@ footer {
 @keyframes fade { from {opacity: .4} to {opacity: 1} }
 @media (max-width: 600px) { .mySlides { height: 280px; } }
 
-.admin-login-link { font-size: 0.8rem; color: #e0e0e0; cursor: pointer; margin-left: 10px; text-decoration: none; transition: color 0.3s; }
-.admin-login-link:hover { color: var(--accent); }
 .admin-panel { display: none; background: var(--white); padding: 25px; margin-bottom: 30px; border-radius: var(--radius); box-shadow: var(--shadow); animation: fadeIn 0.5s; }
 .admin-panel.active { display: block; }
 .admin-panel h3 { margin-top: 0; font-size: 1.2rem; }
@@ -1866,10 +1889,6 @@ body.admin-mode .delete-btn { display: inline-block; }
     }
     
     
-    .footer-spn-logo {
-        display: none;
-    }
-    
     .footer-bg-flieger {
         height: 60vh;
         opacity: 0.6;
@@ -1978,6 +1997,10 @@ body.admin-mode .delete-btn { display: inline-block; }
     font-weight: bold;
     color: var(--text-light);
     cursor: pointer;
+    background: none;
+    border: none;
+    padding: 10px;
+    line-height: 1;
 }
 .modal-close:hover { color: var(--accent); }
 

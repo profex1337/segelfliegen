@@ -4,8 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gutschein-Bestellungen</title>
+    <meta name="robots" content="noindex, nofollow">
     <meta name="theme-color" content="#0f3460">
     <link rel="icon" href="../favicon.ico" type="image/x-icon">
+    <link rel="apple-touch-icon" href="../apple-touch-icon.png">
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: system-ui, -apple-system, sans-serif; background: #f4f6f8; color: #333; padding: 16px; font-size: 14px; }
@@ -291,10 +293,13 @@
         var isPaid = !!o.paid;
         var rowClass = isPaid ? 'order-row paid' : 'order-row';
         var orderDate = o.timestamp ? new Date(o.timestamp).toLocaleDateString('de-DE') : '\u2014';
+        var istFlugplatzAbholung = (o.zustellung || '').indexOf('Flugplatz') !== -1;
         var istAbholung = (o.zustellung || '').indexOf('Abholung') !== -1;
-        var zustellBadge = istAbholung
-            ? '<span class="badge badge-pickup">\uD83D\uDCCD Abholung</span>'
-            : '<span class="badge badge-transfer">\u2709 \u00DCberweisung</span>';
+        var zustellBadge = istFlugplatzAbholung
+            ? '<span class="badge badge-pickup">\uD83D\uDCCD Abholung (Flugplatz)</span>'
+            : (istAbholung
+                ? '<span class="badge badge-pickup">\uD83D\uDCCD Abholung (Altdorf)</span>'
+                : '<span class="badge badge-transfer">\u2709 \u00DCberweisung</span>');
         var paidBadge = isPaid
             ? '<span class="badge badge-paid">Bezahlt</span>'
             : '<span class="badge badge-unpaid">Unbezahlt</span>';

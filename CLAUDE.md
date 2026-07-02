@@ -11,7 +11,7 @@ A static website for **Segelflugplatz Altdorf-Hagenhausen / Post-SV Nürnberg e.
 - **Live URL**: https://www.segelfliegenaltdorf.de
 - **Hosting**: GitHub Pages (configured via `CNAME`)
 - **Language**: German (all user-facing content is in German)
-- **Address form**: Informal "Du" on all public pages. Exception: `datenschutz.html` and `impressum.html` use formal "Sie" (legal requirement).
+- **Address form**: Informal "Du" on all public pages. Exception: `datenschutz.html`, `impressum.html`, and `widerruf.html` use formal "Sie" (legal requirement — these pages consist largely of statutory text).
 - **Stack**: Vanilla HTML5 / CSS3 / ES6+ JavaScript — no build step, no package manager
 
 ---
@@ -44,8 +44,7 @@ segelfliegen/
 │                         #   prices, and aircraft fleet; GitHub API image uploads
 ├── style.css             # All styling (CSS variables, responsive)
 │
-├── fonts/                # Self-hosted web fonts (WOFF2): Montserrat, Open Sans, Tangerine
-├── lib/flatpickr/        # Self-hosted Flatpickr date picker (CSS, JS, German locale)
+├── fonts/                # Self-hosted web fonts (WOFF2): Montserrat, Tangerine
 ├── images/               # Static image assets (logos, aircraft, team photos, news images)
 ├── videos/               # Hero section .mp4 videos
 │
@@ -69,7 +68,6 @@ There is **no server-side runtime** and **no build pipeline**. Every file is ser
 | Form submissions | Firebase Cloud Functions (`sendPublicEmail` via `fetch()`, `sendAdminEmail` via `httpsCallable()`) + Strato-SMTP |
 | Authentication (role-based) | Firebase Authentication (email/password) — 3 accounts with different Firestore access |
 | News image hosting | GitHub repository (`images/` folder) via GitHub Contents API |
-| Date picker | Flatpickr self-hosted in `lib/flatpickr/` (DSGVO-compliant, no CDN) |
 | Fonts | Self-hosted in `fonts/` (WOFF2, DSGVO-compliant, no Google server contact) |
 | Maps | Google Maps Embed API |
 
@@ -259,8 +257,9 @@ There is no test suite and no linter/formatter configuration. Validate changes b
 - **CSS custom properties** are declared in `:root` — use these variables rather than hardcoded values:
   ```css
   --primary:      #0f3460      /* Dark blue — brand primary */
-  --accent:       #e94560      /* Red/pink — CTAs, highlights */
-  --accent-hover: #d1344f      /* Darker accent for hover states */
+  --accent:       #0ea5e9      /* Sky blue — CTAs, highlights */
+  --accent-hover: #0284c7      /* Darker accent for hover states */
+  --warn-red:     #d1344f      /* Warning/highlight red, independent of brand accent */
   --text-main:    #333333
   --text-light:   #666666
   --bg-light:     #f4f6f8
@@ -302,13 +301,15 @@ There is no test suite and no linter/formatter configuration. Validate changes b
 | `initSlideshows()` | Auto-plays `.slideshow-container` elements every 4 seconds; prev/next buttons reset the timer |
 | `initCookieConsent()` | Shows DSGVO cookie banner; on accept, calls `embedConsentContent()` |
 | `embedConsentContent()` | Replaces `.consent-overlay` divs with real `<iframe>` elements |
-| `initReviews()` | Renders a static snapshot of Google reviews in the sidebar; opened via `#review-trigger-btn` |
-| `initDatepickers()` | Applies Flatpickr to `#wunschtermin` input (weekends only, German locale) |
-| `buildPaymentInfoHtml()` | Builds payment/pickup HTML block for customer emails (bank details + QR or pickup address) |
+| `initReviews()` | Renders a static snapshot of Google reviews in the sidebar; opened via `#review-trigger-btn` (add this trigger markup on any page that should offer it — see `ausbildung.html`) |
+| `showFormError(form, message)` | Renders a styled inline error message inside a form (replaces blocking `alert()` popups) |
 | `getFlugdauer()` | Calculates flight duration string from flight type + extra time (e.g., "bis zu 20 Min. + 10 Min. zusätzlich") |
 | `initForms()` | Intercepts all `form[data-emailjs]` submit events and sends via Cloud Function (`sendPublicEmail`) |
 | `initSwipeNavigation()` | Mobile-only horizontal swipe between the 7 main pages (index/uber-uns/mitfliegen/flugzeugpark/ausbildung/veranstaltungen/kontakt). Prefetches neighbours via `<link rel="prefetch">`, fades `#main-content` on transition, respects `prefers-reduced-motion`, and ignores swipes inside slideshows, news-carousels, the lightbox, the reviews sidebar, form inputs, and when the mobile menu is open. |
 | `getAvatarColor()` | Returns a random brand colour for review avatar backgrounds |
+| `measureGliderUnderlines()` / `window.remeasureGliderUnderlines` | Measures the last line of every `.accent-kicker` heading and sets `--ulw` so the glider-underline width is exact; the `window`-exposed variant lets dynamically-rendered headings (e.g. Flugzeugpark categories) re-measure after render |
+| `initSkipLink()` | Makes `#main-content` programmatically focusable (`tabindex="-1"`) and moves keyboard focus there when the skip-link is used |
+| `initSecurityMeta()` | Injects a Content-Security-Policy and Referrer-Policy `<meta>` tag as early as possible (no server-header option on GitHub Pages) |
 
 ### `news-db.js` Function & Constant Inventory
 
@@ -356,8 +357,7 @@ There is no test suite and no linter/formatter configuration. Validate changes b
 | **Widerruf (§ 356a BGB)** | `widerruf.html`, `functions/index.js` (`formType: "widerruf"`), `functions/widerruf-mail.js` | Two-stage withdrawal button → customer Eingangsbestätigung (durable medium, server-side Europe/Berlin timestamp, no acknowledgement) + club notification (info@ + CC dan@ + Kassier) + Firestore log `widerrufe`. Widerrufsbelehrung also appended to gutschein confirmation mail (§ 312f BGB). Highlighted footer link `.footer-widerruf` on every page. |
 | **Cloud Functions** | `functions/index.js`, `script.js`, `news-db.js`, `bestellungen/index.html` | `sendPublicEmail` (onRequest, public forms via `fetch()`), `sendAdminEmail` (onCall, admin actions via `httpsCallable()`), `sendVoucherEmail` (onCall, PDF email), `uploadImage` (onCall, image upload to GitHub), `deleteImage` (onCall, image delete from GitHub). SMTP functions use Strato-SMTP via Nodemailer; image functions use GitHub Contents API. All customer emails use "Du" form. **CC-Logik**: dan@ always; kassier@ on gutschein; joergsperber@ only on Abholung orders; Jeremy on Ausbildung. |
 | **Google Maps** | Embed `<iframe>` in `kontakt.html` | Uses consent overlay pattern; iframe only loads after cookie accept. |
-| **Flatpickr** | Self-hosted in `lib/flatpickr/` | Loaded locally in `mitfliegen.html` and `kontakt.html`. No CDN requests. |
-| **Fonts** | Self-hosted in `fonts/` | Montserrat, Open Sans, Tangerine as WOFF2. `@font-face` in `style.css`. No Google server contact. |
+| **Fonts** | Self-hosted in `fonts/` | Montserrat, Tangerine as WOFF2. `@font-face` in `style.css`. No Google server contact. |
 | **GitHub Pages** | `CNAME` file | Do not delete or rename this file — it maps the domain. |
 
 ---
@@ -501,8 +501,7 @@ Edit the `headerHTML` template literal in `script.js`. The change applies to all
 
 1. Add `data-emailjs="formtype"` to the `<form>` element (e.g., `data-emailjs="kontakt"`, `data-emailjs="gutschein"`, `data-emailjs="gastflug"`).
 2. Add the form type handling in `initForms()` in `script.js` to map form fields to Cloud Function parameters, and add the corresponding formType handler in `sendPublicEmail` in `functions/index.js`.
-3. Add Flatpickr to date inputs if needed (see `mitfliegen.html` for the pattern).
-4. Form submission is handled automatically via AJAX by `initForms()` in `script.js` — no extra JS needed.
+3. Form submission is handled automatically via AJAX by `initForms()` in `script.js` — no extra JS needed.
 
 ### Embed Google Maps or YouTube
 

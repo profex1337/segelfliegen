@@ -27,6 +27,14 @@ function escapeHTML(str) {
         .replace(/'/g, '&#x27;');
 }
 
+// Bild-URLs (News & Aircraft) müssen aus dem GitHub-Repo kommen (verhindert javascript:/data: URLs etc.)
+function safeImageUrl(url) {
+    if (!url) return 'images/hero.jpg';
+    var s = String(url);
+    if (s.indexOf('https://raw.githubusercontent.com/profex1337/segelfliegen/') === 0) return s;
+    return 'images/hero.jpg';
+}
+
 // === Bild-Upload: Komprimierung & GitHub ===
 
 async function compressImage(file, maxWidth = 1200, quality = 0.80) {
@@ -240,13 +248,13 @@ async function startNewsLogic() {
                 if (images.length === 0) return '';
                 if (images.length === 1) {
                     return '<div class="news-card-img">'
-                        + '<img src="' + images[0] + '" alt="' + (alt || '') + '" class="zoomable" onerror="this.closest(\'.news-card-img\').remove()">'
+                        + '<img src="' + escapeHTML(safeImageUrl(images[0])) + '" alt="' + (alt || '') + '" class="zoomable" onerror="this.closest(\'.news-card-img\').remove()">'
                         + '</div>';
                 }
                 let slides = '';
                 let dots = '';
                 for (let i = 0; i < images.length; i++) {
-                    slides += '<div class="news-carousel-slide"><img src="' + images[i] + '" alt="' + (alt || '') + '" class="zoomable"></div>';
+                    slides += '<div class="news-carousel-slide"><img src="' + escapeHTML(safeImageUrl(images[i])) + '" alt="' + (alt || '') + '" class="zoomable"></div>';
                     dots += '<button class="news-carousel-dot' + (i === 0 ? ' active' : '') + '" data-index="' + i + '"></button>';
                 }
                 return '<div class="news-card-img">'
@@ -320,7 +328,7 @@ async function startNewsLogic() {
                             (isFeatured
                                 ? '<div class="news-card-body">'
                                     + '<div class="admin-controls" style="float:right; display:' + adminDisplay + '; gap: 5px; align-items: center; margin-bottom: 8px;">'
-                                        + '<button class="edit-btn" style="background:#e94560; color:white; border:none; padding:5px 10px; cursor:pointer; border-radius:4px; height: 30px;">Ändern</button>'
+                                        + '<button class="edit-btn" style="background:var(--accent); color:white; border:none; padding:5px 10px; cursor:pointer; border-radius:4px; height: 30px;">Ändern</button>'
                                         + '<button class="delete-btn" style="background:red; color:white; border:none; padding:5px 10px; cursor:pointer; border-radius:4px; height: 30px;">Löschen</button>'
                                     + '</div>'
                                     + '<span class="news-date">' + escapeHTML(item.date) + '</span>'
@@ -331,7 +339,7 @@ async function startNewsLogic() {
                                 : buildCarouselHTML(images, escapeHTML(item.title))
                                     + '<div class="news-card-body">'
                                         + '<div class="admin-controls" style="float:right; display:' + adminDisplay + '; gap: 5px; align-items: center; margin-bottom: 8px;">'
-                                            + '<button class="edit-btn" style="background:#e94560; color:white; border:none; padding:5px 10px; cursor:pointer; border-radius:4px; height: 30px;">Ändern</button>'
+                                            + '<button class="edit-btn" style="background:var(--accent); color:white; border:none; padding:5px 10px; cursor:pointer; border-radius:4px; height: 30px;">Ändern</button>'
                                             + '<button class="delete-btn" style="background:red; color:white; border:none; padding:5px 10px; cursor:pointer; border-radius:4px; height: 30px;">Löschen</button>'
                                         + '</div>'
                                         + '<span class="news-date">' + escapeHTML(item.date) + '</span>'
@@ -348,7 +356,7 @@ async function startNewsLogic() {
                         div.innerHTML = `
                             <!-- Buttons Container -->
                             <div class="admin-controls" style="float:right; display:${adminDisplay}; gap: 5px; align-items: center;">
-                                <button class="edit-btn" style="background:#e94560; color:white; border:none; padding:5px 10px; cursor:pointer; border-radius:4px; height: 30px;">Ändern</button>
+                                <button class="edit-btn" style="background:var(--accent); color:white; border:none; padding:5px 10px; cursor:pointer; border-radius:4px; height: 30px;">Ändern</button>
                                 <button class="delete-btn" style="background:red; color:white; border:none; padding:5px 10px; cursor:pointer; border-radius:4px; height: 30px;">Löschen</button>
                             </div>
                             <span class="news-date">${escapeHTML(item.date) || ''}</span>
@@ -420,6 +428,9 @@ async function startNewsLogic() {
                 // Karussell-Interaktivität initialisieren
                 initCarousels(newsContainer);
             }
+        }, (error) => {
+            console.error('Neuigkeiten konnten nicht geladen werden:', error);
+            if (newsContainer) newsContainer.innerHTML = '<p style="color: var(--text-light); text-align: center;">Neuigkeiten konnten zurzeit nicht geladen werden – bitte lade die Seite später neu.</p>';
         });
 
         
@@ -550,7 +561,7 @@ async function startNewsLogic() {
                                         const wrapper = document.createElement('span');
                                         wrapper.style.cssText = 'position:relative; display:inline-block; margin:4px;';
                                         wrapper.innerHTML = '<img src="' + escapeHTML(url) + '" alt="Bild ' + (idx+1) + '" style="width:80px; height:60px; object-fit:cover; border-radius:4px; border:1px solid #ddd;">'
-                                            + '<button type="button" data-idx="' + idx + '" style="position:absolute; top:-6px; right:-6px; background:#e94560; color:#fff; border:none; border-radius:50%; width:20px; height:20px; font-size:12px; cursor:pointer; line-height:1;">&times;</button>';
+                                            + '<button type="button" data-idx="' + idx + '" style="position:absolute; top:-6px; right:-6px; background:var(--accent); color:#fff; border:none; border-radius:50%; width:20px; height:20px; font-size:12px; cursor:pointer; line-height:1;">&times;</button>';
                                         wrapper.querySelector('button').addEventListener('click', function() {
                                             allImages.splice(idx, 1);
                                             document.getElementById('news-image-url').value = JSON.stringify(allImages);
@@ -593,6 +604,17 @@ async function startNewsLogic() {
                             if(logoutBtn) logoutBtn.style.display = "inline-block"; 
                         }
 
+                        let loginModalLastFocus = null;
+                        function closeLoginModal() {
+                            const modal = document.getElementById('login-modal');
+                            const lError = document.getElementById('login-error');
+                            const pInput = document.getElementById('admin-password-input');
+                            if (modal) modal.style.display = 'none';
+                            if (lError) lError.style.display = 'none';
+                            if (pInput) pInput.value = '';
+                            if (loginModalLastFocus) { loginModalLastFocus.focus(); loginModalLastFocus = null; }
+                        }
+
                         function handleInternPageVisibility(isAdmin) {
                             const internContent = document.getElementById('intern-content');
                             const loginRequired = document.getElementById('login-required');
@@ -612,6 +634,7 @@ async function startNewsLogic() {
                                 loginTrigger.onclick = () => {
                                     const modal = document.getElementById('login-modal');
                                     const pInput = document.getElementById('admin-password-input');
+                                    loginModalLastFocus = loginTrigger;
                                     if (modal) {
                                         modal.style.display = 'flex';
                                         if (pInput) pInput.focus();
@@ -637,24 +660,23 @@ async function startNewsLogic() {
                             adminToggle.addEventListener('click', () => {
                                 const modal = document.getElementById('login-modal');
                                 const passInput = document.getElementById('admin-password-input');
+                                loginModalLastFocus = adminToggle;
                                 if (modal) {
                                     modal.style.display = 'flex';
                                     if (passInput) passInput.focus();
                                 }
                             });
                         }
-                    
+
                         const lClose = document.getElementById('login-close');
                         if (lClose) {
-                            lClose.onclick = () => {
-                                const modal = document.getElementById('login-modal');
-                                const lError = document.getElementById('login-error');
-                                const pInput = document.getElementById('admin-password-input');
-                                if(modal) modal.style.display = 'none';
-                                if(lError) lError.style.display = 'none';
-                                if(pInput) pInput.value = '';
-                            };
+                            lClose.onclick = closeLoginModal;
                         }
+
+                        document.addEventListener('keydown', (e) => {
+                            const modal = document.getElementById('login-modal');
+                            if (e.key === 'Escape' && modal && modal.style.display === 'flex') closeLoginModal();
+                        });
                     
                         const handleLogin = async () => {
                             const pInput = document.getElementById('admin-password-input');
@@ -691,13 +713,7 @@ async function startNewsLogic() {
                     
                         window.onclick = (event) => {
                             const modal = document.getElementById('login-modal');
-                            const lError = document.getElementById('login-error');
-                            const pInput = document.getElementById('admin-password-input');
-                            if (event.target == modal) {
-                                if(modal) modal.style.display = "none";
-                                if(lError) lError.style.display = 'none';
-                                if(pInput) pInput.value = '';
-                            }
+                            if (event.target == modal) closeLoginModal();
                         };
                     }
                     
@@ -941,7 +957,7 @@ function renderAdminPrices(container, items, isAdmin) {
             btn.style.borderColor = active ? color : '#ccc';
         }
         styleToggle(gutscheinBtn, !!item.gutschein, '#0f3460');
-        styleToggle(perMinBtn, !!item.perMinute, '#e94560');
+        styleToggle(perMinBtn, !!item.perMinute, '#0ea5e9');
 
         gutscheinBtn.onclick = async () => {
             const newVal = !item.gutschein;
@@ -1113,6 +1129,7 @@ async function startAircraftLogic() {
 
             if (publicList) renderAircraftPublic(publicList, items);
             if (adminList) renderAircraftAdmin(adminList, items, isAdmin);
+            if (typeof window.remeasureGliderUnderlines === 'function') window.remeasureGliderUnderlines();
         }, (error) => {
             console.error('Flugzeugpark konnte nicht geladen werden:', error);
             if (publicList) publicList.innerHTML = '<p style="text-align:center; color: var(--text-light);">Der Flugzeugpark konnte zurzeit nicht geladen werden – bitte lade die Seite später neu.</p>';
@@ -1392,21 +1409,13 @@ function renderAircraftPublic(container, items) {
         'Winde':          'Unser Kraftpaket am Boden.',
     };
 
-    // Aircraft-Bilder müssen aus dem GitHub-Repo kommen (verhindert javascript:/data: URLs etc.)
-    function safeImageUrl(url) {
-        if (!url) return 'images/hero.jpg';
-        var s = String(url);
-        if (s.indexOf('https://raw.githubusercontent.com/profex1337/segelfliegen/') === 0) return s;
-        return 'images/hero.jpg';
-    }
-
     cats.forEach(cat => {
         const section = document.createElement('div');
         section.id = cat;
         section.style.cssText = 'margin-bottom: 60px;';
         const catEsc = escapeHTML(cat);
         const desc = categoryDescriptions[cat] ? `<p style="color:var(--text-light); margin-bottom:20px;">${escapeHTML(categoryDescriptions[cat])}</p>` : '';
-        section.innerHTML = `<h2 style="color:var(--primary); font-family:Montserrat,sans-serif; margin-bottom:8px;">${catEsc}</h2>${desc}`;
+        section.innerHTML = `<h2 class="accent-kicker" style="color:var(--primary); font-family:Montserrat,sans-serif; margin-bottom:8px;">${catEsc}</h2>${desc}`;
         const grid = document.createElement('div');
         grid.className = 'aircraft-card-grid';
         byCategory[cat].forEach(item => {
@@ -1708,6 +1717,9 @@ function renderOrderRow(order, isClosed) {
     var gruss = escapeHTML(order.grusstext || '');
     var zustellungRaw = order.zustellung || '';
     var zustellung = escapeHTML(zustellungRaw);
+    var istFlugplatzAbholung = zustellungRaw.indexOf('Flugplatz') !== -1;
+    var istAbholung = zustellungRaw.indexOf('Abholung') !== -1;
+    var zustellungBadgeLabel = istFlugplatzAbholung ? '📍 Abholung (Flugplatz)' : (istAbholung ? '📍 Abholung (Altdorf)' : '✉ Überweisung');
 
     var paidBadge = isPaid
         ? '<span style="font-size:0.75rem; padding:3px 8px; border-radius:12px; font-weight:600; background:#e8f5e9; color:#2e7d32; margin-left:8px;">Bezahlt</span>'
@@ -1718,7 +1730,7 @@ function renderOrderRow(order, isClosed) {
         + '<strong style="font-size:1rem;">\u2709 ' + besteller + '</strong>' + paidBadge
         + '<div style="font-size:0.82rem; color:var(--text-light); margin-top:3px;">'
         + flugart + (wert ? ' &middot; ' + wert + ' \u20AC' : '') + ' &middot; F\u00FCr: ' + empfaenger
-        + (zustellungRaw ? ' &middot; <span style="font-weight:600; color:' + (zustellungRaw.indexOf('Abholung') !== -1 ? '#6a1b9a' : '#1565c0') + ';">' + (zustellungRaw.indexOf('Abholung') !== -1 ? '\uD83D\uDCCD Abholung' : '\u2709 \u00DCberweisung') + '</span>' : '')
+        + (zustellungRaw ? ' &middot; <span style="font-weight:600; color:' + (istAbholung ? '#6a1b9a' : '#1565c0') + ';">' + zustellungBadgeLabel + '</span>' : '')
         + '</div>'
         + '<div style="font-size:0.78rem; color:#888; margin-top:2px;">'
         + email + (telefon ? ' &middot; ' + telefon : '') + ' &middot; ' + orderDate
@@ -2041,7 +2053,7 @@ async function startEventsLogic() {
             const card = document.createElement('div');
             card.style.cssText = 'background: var(--white); border-radius: var(--radius); padding: 24px; box-shadow: var(--shadow);';
             card.innerHTML =
-                '<span style="background-color: var(--accent); color: white; padding: 5px 15px; border-radius: 50px; font-weight: bold; font-size: 0.9rem; display: inline-block; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(233, 69, 96, 0.3);">'
+                '<span style="background-color: var(--accent); color: white; padding: 5px 15px; border-radius: 50px; font-weight: bold; font-size: 0.9rem; display: inline-block; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(14, 165, 233, 0.3);">'
                     + escapeHTML(item.dateLabel || '') + '</span>'
                 + '<h3 style="margin-top: 10px;">' + escapeHTML(item.title || '') + '</h3>'
                 + '<p>' + escapeHTML(item.description || '') + '</p>';

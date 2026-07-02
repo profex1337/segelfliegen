@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
     <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin>
+    <link rel="preconnect" href="https://raw.githubusercontent.com" crossorigin>
     <meta name="theme-color" content="#0f3460">
 
 
@@ -309,18 +310,17 @@
 
             <div style="display: flex; flex-wrap: wrap; gap: 30px; align-items: center; margin-bottom: 40px;">
                 <div style="flex: 1 1 300px;">
-                    <img src="images/Gutschein.jpg" alt="Flug-Gutschein Segelflugplatz Altdorf" loading="lazy" class="zoomable" style="width: 100%; height: 400px; object-fit: cover; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); display: block;">
+                    <img src="images/Gutschein.webp" alt="Flug-Gutschein Segelflugplatz Altdorf" loading="lazy" class="zoomable" style="width: 100%; height: 400px; object-fit: cover; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); display: block;">
                 </div>
                 <div style="flex: 1 1 350px;">
                     <h3 style="margin-top: 0;">In wenigen Schritten zum perfekten Geschenk</h3>
                     <ol style="line-height: 1.8; padding-left: 20px;">
                         <li><strong>Bestellung aufgeben:</strong><br>Fülle das untenstehende Formular aus — schnell und unkompliziert.</li>
                         <li><strong>Bequem bezahlen:</strong><br>Per Überweisung auf unser Vereinskonto oder Barzahlung bei Abholung — du wählst im Formular, was dir lieber ist.</li>
-                        <li><strong>Freude verschenken:</strong><br>Deinen personalisierten Gutschein erhältst du als PDF per E-Mail (meist innerhalb von 24 Stunden) oder direkt bei Abholung in 90518 Altdorf.</li>
+                        <li><strong>Freude verschenken:</strong><br>Deinen personalisierten Gutschein erhältst du als PDF per E-Mail (meist innerhalb von 24 Stunden) oder direkt bei Abholung — bei Jörg Sperber in Altdorf oder am Flugplatz.</li>
                         <li><strong>Abheben:</strong><br>Die beschenkte Person ruft uns einfach an und vereinbart ihren persönlichen Wunschtermin für den Flug.</li>
                     </ol>
-                    <img src="images/Gutscheinbeispiel.jpg" alt="Beispiel-Gutschein Rundflug" loading="lazy" class="zoomable" style="display: none;">
-                    <button type="button" class="btn" style="display: inline-block; margin-top: 20px; font-size: 0.9rem; cursor: pointer;" onclick="document.querySelector('img[alt=&quot;Beispiel-Gutschein Rundflug&quot;]').click();">Beispielgutschein</button>
+                    <button type="button" class="btn" id="beispielgutschein-btn" style="display: inline-block; margin-top: 20px; font-size: 0.9rem; cursor: pointer;">Beispielgutschein</button>
                 </div>
             </div>
 
@@ -367,23 +367,23 @@
                     </div>
                 </div>
 
-                <div class="form-group" style="margin-top: 20px;">
-                    <label>Zustellung *</label>
-                    <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 8px;">
+                <fieldset class="form-group" style="margin-top: 20px; border: none; padding: 0;">
+                    <legend style="font-weight: 600; padding: 0; margin-bottom: 8px; font-size: inherit;">Zustellung *</legend>
+                    <div style="display: flex; flex-direction: column; gap: 10px;">
                         <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: normal;">
                             <input type="radio" name="zustellung" value="E-Mail (Zahlung per Überweisung)" required style="width: auto; margin: 0;">
                             Per E-Mail (Zahlung per Überweisung)
                         </label>
                         <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: normal;">
-                            <input type="radio" name="zustellung" value="Abholung in 90518 Altdorf (Barzahlung vor Ort)" style="width: auto; margin: 0;">
-                            Abholung in 90518 Altdorf (Barzahlung vor Ort)
+                            <input type="radio" name="zustellung" value="Abholung bei Jörg Sperber in 90518 Altdorf (Barzahlung vor Ort)" style="width: auto; margin: 0;">
+                            Abholung bei Jörg Sperber in 90518 Altdorf (Barzahlung vor Ort)
                         </label>
                         <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: normal;">
-                            <input type="radio" name="zustellung" value="Abholung am Flugplatz (Wochenende/Feiertag, Barzahlung)" style="width: auto; margin: 0;">
-                            Abholung am Flugplatz (nur Wochenende/Feiertag, Barzahlung)
+                            <input type="radio" name="zustellung" value="Abholung direkt am Flugplatz, 92348 Stöckelsberg (nur Wochenende/Feiertag, Barzahlung)" style="width: auto; margin: 0;">
+                            Abholung direkt am Flugplatz, 92348 Stöckelsberg (nur Wochenende/Feiertag, Barzahlung)
                         </label>
                     </div>
-                </div>
+                </fieldset>
 
                 <h3 style="margin-top: 30px; margin-bottom: 20px; font-size: 1.1rem; color: var(--primary);">Gutschein-Details</h3>
                 <div class="form-group">
@@ -441,7 +441,7 @@
             <h2 class="accent-kicker ak-center" style="text-align: center; margin-bottom: 10px;">Fragen zum Gastflug?</h2>
             <p style="text-align: center; margin-bottom: 30px; color: var(--text-light);">Du hast Fragen zu einem Gastflug, möchtest einen Wunschtermin vereinbaren oder hast besondere Wünsche? Schreib uns einfach — wir melden uns schnellstmöglich bei dir.</p>
             <div style="text-align: center;">
-                <a href="kontakt.html?betreff=Gastflug" class="btn" style="min-width: 250px;">Kontakt aufnehmen</a>
+                <a href="kontakt.html?betreff=Gastflug#kontakt-formular" class="btn" style="min-width: 250px;">Kontakt aufnehmen</a>
             </div>
         </div>
 
@@ -528,13 +528,14 @@
         }
 
         async function generateGreeting() {
+            var form = document.getElementById('gutschein-name').closest('form');
             var nameVal = document.getElementById('gutschein-name').value.trim();
             var emailVal = document.getElementById('gutschein-email').value.trim();
             var flugartVal = document.getElementById('gutschein-flugart').value;
             var empfaengerVal = document.getElementById('gutschein-empfaenger').value.trim();
 
             if (!nameVal || !emailVal || !flugartVal || !empfaengerVal) {
-                alert('Bitte fülle zuerst alle Pflichtfelder aus (Name, E-Mail, Flugart, Name des Beschenkten).');
+                showFormError(form, 'Bitte fülle zuerst alle Pflichtfelder aus (Name, E-Mail, Flugart, Name des Beschenkten).');
                 return;
             }
 
@@ -545,7 +546,7 @@
 
             try {
                 if (typeof window.callGenerateGreeting !== 'function') {
-                    alert('Funktion noch nicht verfügbar. Bitte Seite neu laden.');
+                    showFormError(form, 'Funktion noch nicht verfügbar. Bitte Seite neu laden.');
                     btn.textContent = originalText;
                     btn.disabled = false;
                     return;
@@ -562,21 +563,27 @@
                     document.getElementById('gutschein-grusstext').value = text;
                     document.getElementById('gruss-counter').textContent = text.length + ' / 800';
                 } else {
-                    alert('Kein Text generiert. Bitte erneut versuchen.');
+                    showFormError(form, 'Kein Text generiert. Bitte erneut versuchen.');
                 }
             } catch (e) {
                 if (e && e.code === 'functions/resource-exhausted') {
-                    alert('Zu viele Anfragen. Bitte warte einen Moment und versuche es erneut.');
+                    showFormError(form, 'Zu viele Anfragen. Bitte warte einen Moment und versuche es erneut.');
                 } else if (e && e.code === 'functions/unauthenticated') {
-                    alert('Sitzung abgelaufen. Bitte Seite neu laden.');
+                    showFormError(form, 'Sitzung abgelaufen. Bitte Seite neu laden.');
                 } else {
-                    alert('Fehler bei der Textgenerierung. Bitte versuche es später erneut.');
+                    showFormError(form, 'Fehler bei der Textgenerierung. Bitte versuche es später erneut.');
                 }
             }
 
             btn.textContent = originalText;
             btn.disabled = false;
         }
+
+        document.getElementById('beispielgutschein-btn').addEventListener('click', function () {
+            if (typeof window.openLightbox === 'function') {
+                window.openLightbox('images/Gutscheinbeispiel.webp', 'Beispiel-Gutschein Rundflug');
+            }
+        });
     </script>
 </body>
 </html>

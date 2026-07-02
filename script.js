@@ -7,11 +7,11 @@ const headerHTML = `
         </a>
     </div>
 
-    <div class="hamburger" id="hamburger-btn" aria-label="Menü öffnen" aria-expanded="false" role="button">
+    <button type="button" class="hamburger" id="hamburger-btn" aria-label="Menü öffnen" aria-expanded="false">
         <span></span>
         <span></span>
         <span></span>
-    </div>
+    </button>
 
     <nav class="nav-menu" id="nav-menu">
         <a href="index.html">Start</a>
@@ -93,7 +93,7 @@ const footerHTML = `
 const loginModalHTML = `
 <div id="login-modal" class="modal" style="display: none;">
     <div class="modal-content admin-login-card">
-        <span class="modal-close" id="login-close">&times;</span>
+        <button type="button" class="modal-close" id="login-close" aria-label="Login schließen">&times;</button>
         <h3>Mitarbeiter & Mitglieder Login</h3>
         <p>Bitte gib dein Passwort ein:</p>
         <form id="admin-login-form">
@@ -109,7 +109,7 @@ const GOOGLE_MAPS_REVIEW_URL = 'https://www.google.de/maps/place/Segelflugplatz+
 const reviewsHTML = `<aside id="reviews-sidebar" class="reviews-sidebar">
     <div class="reviews-header">
         <h3>Google Rezensionen</h3>
-        <span id="close-reviews" class="close-reviews">&times;</span>
+        <button type="button" id="close-reviews" class="close-reviews" aria-label="Bewertungen schließen">&times;</button>
     </div>
     <div class="reviews-summary">
         <div class="big-rating" id="reviews-avg-rating">4.9</div>
@@ -146,6 +146,40 @@ function escapeHtml(str) {
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#x27;');
 }
+
+// Defense-in-Depth: CSP + Referrer-Policy so früh wie möglich setzen (kein Server-Header
+// auf GitHub Pages verfügbar). Erlaubt: Firebase SDK/Firestore/Auth, Cloud Functions,
+// GitHub-Raw-Bilder, Google Maps/YouTube-Embeds (Consent-Overlay), QR-Code- und Wetter-API.
+// 'unsafe-inline' ist wegen der vielen inline style="..."/onclick="..."-Attribute
+// (kein Build-Schritt, kein Nonce möglich) nötig — schützt primär vor dem Nachladen
+// fremder <script>/<object>/<frame>-Quellen, nicht vor Inline-Injection.
+function initSecurityMeta() {
+    if (!document.querySelector('meta[http-equiv="Content-Security-Policy"]')) {
+        const csp = document.createElement('meta');
+        csp.setAttribute('http-equiv', 'Content-Security-Policy');
+        csp.setAttribute('content', [
+            "default-src 'self'",
+            "script-src 'self' 'unsafe-inline' https://www.gstatic.com",
+            "style-src 'self' 'unsafe-inline'",
+            "img-src 'self' data: https:",
+            "font-src 'self' data:",
+            "connect-src 'self' https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com https://*.cloudfunctions.net https://*.run.app https://api.qrserver.com https://api.open-meteo.com",
+            "frame-src https://www.google.com https://www.youtube-nocookie.com https://www.youtube.com",
+            "media-src 'self'",
+            "object-src 'none'",
+            "base-uri 'self'",
+            "form-action 'self'"
+        ].join('; '));
+        document.head.insertBefore(csp, document.head.firstChild);
+    }
+    if (!document.querySelector('meta[name="referrer"]')) {
+        const ref = document.createElement('meta');
+        ref.setAttribute('name', 'referrer');
+        ref.setAttribute('content', 'strict-origin-when-cross-origin');
+        document.head.insertBefore(ref, document.head.firstChild);
+    }
+}
+initSecurityMeta();
 
 function injectLayout() {
     const headerElement = document.getElementById('main-header');
@@ -215,6 +249,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initSwipeNavigation();
     initTransparentHeader();
     initGliderUnderline();
+    initSkipLink();
 
     // Einzelner Consent-Button (pro Einbettung) — lädt NUR den geklickten Inhalt
     // und setzt KEINE globale Einwilligung (granulare Einwilligung je Einbettung).
@@ -320,17 +355,22 @@ function initReviews() {
         sidebar.classList.add('active');
         overlay.classList.add('active');
         document.body.style.overflow = 'hidden';
+        if (closeBtn) closeBtn.focus();
     };
 
     var closeSidebar = function() {
         sidebar.classList.remove('active');
         overlay.classList.remove('active');
         document.body.style.overflow = '';
+        trigger.focus();
     };
 
     trigger.addEventListener('click', openSidebar);
     if(closeBtn) closeBtn.addEventListener('click', closeSidebar);
     if(overlay) overlay.addEventListener('click', closeSidebar);
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && sidebar.classList.contains('active')) closeSidebar();
+    });
 }
 
 // Wetter-Widget (Open-Meteo API, Flugplatz Altdorf-Hagenhausen)
@@ -461,52 +501,6 @@ function initCookieConsent() {
     };
 }
 
-// Zahlungsinfo-HTML für Auto-Reply/Reminder E-Mail (Überweisung oder Abholung)
-function buildPaymentInfoHtml(name, wert, zustellung, qrUrl) {
-    var z = zustellung || '';
-    var istFlugplatz = z.indexOf('Flugplatz') !== -1;
-    var istAbholung = z.indexOf('Abholung') !== -1;
-    if (istFlugplatz) {
-        return '<div style="background: #f3e5f5; border: 1px solid #ce93d8; border-radius: 8px; padding: 20px; margin-bottom: 25px;">'
-            + '<div style="font-weight: bold; color: #6a1b9a; font-size: 15px; margin-bottom: 10px;">Abholung am Flugplatz &amp; Barzahlung</div>'
-            + '<div style="font-size: 14px; line-height: 1.6; color: #555;">'
-            + 'Hole deinen Gutschein am Segelflugplatz Altdorf-Hagenhausen ab:<br>'
-            + '<strong>92348 Stöckelsberg</strong> (bitte der Beschilderung folgen)<br>'
-            + '<strong>Nur am Wochenende oder an Feiertagen.</strong><br><br>'
-            + 'Bitte melde dich vorher unter <a href="tel:+499189310" style="color: #6a1b9a; font-weight: bold;">09189 310</a>, damit wir deinen Gutschein ausdrucken und für dich bereitlegen.'
-            + (wert ? '<br><br><strong>Betrag:</strong> ' + wert + ' € (Barzahlung vor Ort)' : '')
-            + '</div></div>';
-    }
-    if (istAbholung) {
-        return '<div style="background: #f3e5f5; border: 1px solid #ce93d8; border-radius: 8px; padding: 20px; margin-bottom: 25px;">'
-            + '<div style="font-weight: bold; color: #6a1b9a; font-size: 15px; margin-bottom: 10px;">Abholung &amp; Barzahlung</div>'
-            + '<div style="font-size: 14px; line-height: 1.6; color: #555;">'
-            + 'Bitte hole deinen Gutschein ab bei:<br>'
-            + '<strong>J\u00F6rg Sperber, Schulstra\u00DFe 18, 90518 Altdorf</strong><br>'
-            + '<a href="https://maps.app.goo.gl/p4YEwmERAwFkmy479" style="color: #6a1b9a;">In Google Maps \u00F6ffnen</a><br>'
-            + 'Bitte vorher anrufen:<br><a href="tel:+4915117250329" style="color: #6a1b9a; font-weight: bold;">+49 1511 7250329</a>'
-            + (wert ? '<br><br><strong>Betrag:</strong> ' + wert + ' \u20AC (Barzahlung vor Ort)' : '')
-            + '</div></div>';
-    }
-    // Überweisung
-    return '<div style="background: #fff8e1; border: 1px solid #ffd54f; border-radius: 8px; padding: 20px; margin-bottom: 25px;">'
-        + '<div style="font-weight: bold; color: #f57f17; font-size: 15px; margin-bottom: 15px;">Bitte \u00FCberweise den Betrag auf folgendes Konto:</div>'
-        + '<div style="margin-bottom: 10px;"><div style="font-size: 12px; color: #666; text-transform: uppercase; letter-spacing: 0.5px;">Kontoinhaber</div>'
-        + '<div style="font-weight: bold; font-size: 15px; margin-top: 2px;">Segelflieger im Post SV N\u00FCrnberg</div></div>'
-        + '<div style="margin-bottom: 10px;"><div style="font-size: 12px; color: #666; text-transform: uppercase; letter-spacing: 0.5px;">IBAN</div>'
-        + '<div style="font-weight: bold; font-family: monospace; font-size: 16px; margin-top: 2px;">DE20 7606 1482 0004 5555 54</div></div>'
-        + '<div style="margin-bottom: 10px;"><div style="font-size: 12px; color: #666; text-transform: uppercase; letter-spacing: 0.5px;">BIC</div>'
-        + '<div style="font-weight: bold; font-size: 15px; margin-top: 2px;">GENODEF1HSB</div></div>'
-        + '<div style="margin-bottom: 10px;"><div style="font-size: 12px; color: #666; text-transform: uppercase; letter-spacing: 0.5px;">Bank</div>'
-        + '<div style="font-size: 15px; margin-top: 2px;">Raiffeisenbank im N\u00FCrnberger Land</div></div>'
-        + '<div><div style="font-size: 12px; color: #666; text-transform: uppercase; letter-spacing: 0.5px;">Verwendungszweck</div>'
-        + '<div style="font-weight: bold; color: #e94560; font-size: 15px; margin-top: 2px;">Gutschein ' + (name || '') + '</div></div></div>'
-        + '<div style="text-align: center; margin-bottom: 25px;">'
-        + '<img src="' + (qrUrl || '') + '" alt="QR-Code f\u00FCr \u00DCberweisung" width="200" height="200" style="border-radius: 8px;">'
-        + '<div style="font-size: 12px; color: #888; margin-top: 8px;">QR-Code f\u00FCr deine Banking-App scannen</div></div>'
-        + '<div style="font-size: 14px; line-height: 1.7; color: #555; margin-bottom: 25px;">Nach Zahlungseingang erstellen wir deinen personalisierten Gutschein und senden ihn dir per E-Mail zu.</div>';
-}
-
 // Flugdauer berechnen: Basisdauer je Flugart + Zusatzzeit
 function getFlugdauer(flugart, zusatzMin) {
     var basis = { 'Segelflug (Windenstart)': 20, 'Segelflug (F-Schlepp)': 20, 'Motorsegler': 15 };
@@ -521,6 +515,18 @@ function getFlugdauer(flugart, zusatzMin) {
     var text = 'bis zu ' + base + ' Min.';
     if (zusatzMin > 0) text += ' + ' + zusatzMin + ' Min. zus\u00E4tzlich';
     return text;
+}
+
+// Zeigt eine gestaltete Inline-Fehlermeldung im Formular statt eines blockierenden alert()
+function showFormError(form, message) {
+    const existing = form.querySelector('.form-error');
+    if (existing) existing.remove();
+    const errorDiv = document.createElement('div');
+    errorDiv.className = 'form-error';
+    errorDiv.setAttribute('role', 'alert');
+    errorDiv.style.cssText = 'color:#d63030; background:#fff5f5; border:1px solid #fed7d7; padding:12px 15px; border-radius:8px; margin-top:15px; text-align:center; font-size:0.9rem;';
+    errorDiv.textContent = message;
+    form.appendChild(errorDiv);
 }
 
 function initForms() {
@@ -564,7 +570,7 @@ function initForms() {
                 if (!selectedOpt || !selectedOpt.value || !selectedOpt.getAttribute('data-base')) {
                     btn.textContent = originalText;
                     btn.disabled = false;
-                    alert('Bitte warte kurz, die Preise werden noch geladen.');
+                    showFormError(form, 'Bitte warte kurz, die Preise werden noch geladen.');
                     return;
                 }
                 var zusatz = parseInt(fd.get('zusatzzeit') || '0', 10);
@@ -612,6 +618,8 @@ function initForms() {
                 if (formType === 'gutschein') {
                     var gWert = fd.get('wert') || '';
                     var gName = fd.get('name') || '';
+                    var gWertEsc = escapeHtml(gWert);
+                    var gNameEsc = escapeHtml(gName);
                     var gZustellung = fd.get('zustellung') || '';
                     var istFlugplatz = gZustellung.indexOf('Flugplatz') !== -1;
                     var istAbholung = gZustellung.indexOf('Abholung') !== -1;
@@ -626,7 +634,7 @@ function initForms() {
                             + '<p style="margin: 12px 0 0; font-size: 0.95rem;"><strong>Adresse:</strong> 92348 Stöckelsberg (bitte der Beschilderung folgen)</p>'
                             + '<p style="margin: 6px 0 0; font-size: 0.95rem;"><strong>Nur am Wochenende oder an Feiertagen.</strong></p>'
                             + '<p style="margin: 6px 0 0; font-size: 0.95rem;"><strong>Telefon:</strong> <a href="tel:+499189310" style="color: var(--primary);">09189 310</a></p>'
-                            + (gWert ? '<p style="margin: 12px 0 0; font-size: 0.95rem;"><strong>Betrag:</strong> ' + gWert + ' € (Barzahlung vor Ort)</p>' : '')
+                            + (gWert ? '<p style="margin: 12px 0 0; font-size: 0.95rem;"><strong>Betrag:</strong> ' + gWertEsc + ' € (Barzahlung vor Ort)</p>' : '')
                             + '</div>'
                             + '<p style="color: var(--text-light); margin-top: 25px; font-size: 0.9rem;">Bitte melde dich vorher an, damit wir deinen Gutschein ausdrucken und für dich bereitlegen.</p>'
                             + '<p style="color: var(--text-light); font-size: 0.85rem; font-style: italic;">Du erhältst eine Bestätigung per E-Mail.</p>'
@@ -642,7 +650,7 @@ function initForms() {
                             + '<p style="margin: 12px 0 0; font-size: 0.95rem;"><strong>Adresse:</strong> Jörg Sperber, Schulstraße 18, 90518 Altdorf</p>'
                             + '<p style="margin: 6px 0 0; font-size: 0.95rem;"><strong>Standort:</strong> <a href="https://maps.app.goo.gl/p4YEwmERAwFkmy479" target="_blank" rel="noopener noreferrer" style="color: var(--primary);">In Google Maps öffnen</a></p>'
                             + '<p style="margin: 6px 0 0; font-size: 0.95rem;"><strong>Telefon:</strong> <a href="tel:+4915117250329" style="color: var(--primary);">+49 1511 7250329</a></p>'
-                            + (gWert ? '<p style="margin: 12px 0 0; font-size: 0.95rem;"><strong>Betrag:</strong> ' + gWert + ' € (Barzahlung vor Ort)</p>' : '')
+                            + (gWert ? '<p style="margin: 12px 0 0; font-size: 0.95rem;"><strong>Betrag:</strong> ' + gWertEsc + ' € (Barzahlung vor Ort)</p>' : '')
                             + '</div>'
                             + '<p style="color: var(--text-light); margin-top: 25px; font-size: 0.9rem;">Bitte ruf vorher an, um einen Abholtermin zu vereinbaren.</p>'
                             + '<p style="color: var(--text-light); font-size: 0.85rem; font-style: italic;">Du erhältst eine Bestätigung per E-Mail.</p>'
@@ -663,8 +671,8 @@ function initForms() {
                             + '<p style="margin: 6px 0 0; font-size: 0.95rem;"><strong>IBAN:</strong> DE20 7606 1482 0004 5555 54</p>'
                             + '<p style="margin: 6px 0 0; font-size: 0.95rem;"><strong>BIC:</strong> GENODEF1HSB</p>'
                             + '<p style="margin: 6px 0 0; font-size: 0.85rem; color: var(--text-light);">Raiffeisenbank im Nürnberger Land</p>'
-                            + (gWert ? '<p style="margin: 12px 0 0; font-size: 0.95rem;"><strong>Betrag:</strong> ' + gWert + ' €</p>' : '')
-                            + '<p style="margin: 6px 0 0; font-size: 0.95rem;"><strong>Verwendungszweck:</strong> Gutschein ' + gName + '</p>'
+                            + (gWert ? '<p style="margin: 12px 0 0; font-size: 0.95rem;"><strong>Betrag:</strong> ' + gWertEsc + ' €</p>' : '')
+                            + '<p style="margin: 6px 0 0; font-size: 0.95rem;"><strong>Verwendungszweck:</strong> Gutschein ' + gNameEsc + '</p>'
                             + '</div>'
                             + '<div style="margin-top: 20px;">'
                             + '<img src="' + qrUrl + '" alt="QR-Code für Überweisung" width="120" height="120" style="width: 120px; height: 120px; max-width: 120px; border-radius: 6px; display: inline-block;">'
@@ -691,11 +699,7 @@ function initForms() {
             } catch (err) {
                 btn.textContent = originalText;
                 btn.disabled = false;
-                const errorDiv = document.createElement('div');
-                errorDiv.className = 'form-error';
-                errorDiv.style.cssText = 'color:#d63030; background:#fff5f5; border:1px solid #fed7d7; padding:12px 15px; border-radius:8px; margin-top:15px; text-align:center; font-size:0.9rem;';
-                errorDiv.textContent = 'Es gab einen Fehler beim Senden. Bitte versuche es später erneut oder schreib uns per E-Mail.';
-                form.appendChild(errorDiv);
+                showFormError(form, 'Es gab einen Fehler beim Senden. Bitte versuche es später erneut oder schreib uns per E-Mail.');
             }
         });
     });
@@ -733,7 +737,7 @@ function initLightbox() {
         window.openLightbox = (src, alt) => {
             lightbox.style.display = "block";
             lightboxImg.src = src;
-            caption.innerHTML = alt || '';
+            caption.textContent = alt || '';
             document.body.style.overflow = 'hidden';
         };
         
@@ -1034,23 +1038,41 @@ function initSwipeNavigation() {
 // FAQ: Sanfte Öffnen/Schließen-Animation für <details>
 // Setzt die Unterstrich-Länge (--ulw) exakt auf die Breite der LETZTEN Titel-Zeile,
 // damit Strich + Segler bei ein- und mehrzeiligen Titeln in jeder Auflösung passgenau sind.
+function measureGliderUnderlines() {
+    if (typeof document.createRange !== 'function') return;
+    document.querySelectorAll('.accent-kicker').forEach(h => {
+        const range = document.createRange();
+        range.selectNodeContents(h);
+        const rects = range.getClientRects();
+        if (!rects.length) return;
+        const last = rects[rects.length - 1];
+        if (last.width) h.style.setProperty('--ulw', Math.round(last.width) + 'px');
+    });
+}
+// Global aufrufbar, damit dynamisch nachgeladene Titel (z. B. Flugzeugpark-Kategorien
+// nach dem Firestore-onSnapshot) ebenfalls vermessen werden.
+window.remeasureGliderUnderlines = measureGliderUnderlines;
+
 function initGliderUnderline() {
-    const heads = document.querySelectorAll('.accent-kicker');
-    if (!heads.length || typeof document.createRange !== 'function') return;
-    const measure = () => {
-        heads.forEach(h => {
-            const range = document.createRange();
-            range.selectNodeContents(h);
-            const rects = range.getClientRects();
-            if (!rects.length) return;
-            const last = rects[rects.length - 1];
-            if (last.width) h.style.setProperty('--ulw', Math.round(last.width) + 'px');
-        });
-    };
-    measure();
-    if (document.fonts && document.fonts.ready) document.fonts.ready.then(measure);
+    // Kein früher Ausstieg, wenn noch keine .accent-kicker im DOM sind: auf Seiten wie
+    // flugzeugpark.html werden die Section-Titel erst asynchron per Firestore nachgeladen
+    // (siehe window.remeasureGliderUnderlines) — der Resize-Listener muss trotzdem aktiv sein.
+    if (typeof document.createRange !== 'function') return;
+    measureGliderUnderlines();
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(measureGliderUnderlines);
     let t;
-    window.addEventListener('resize', () => { clearTimeout(t); t = setTimeout(measure, 150); });
+    window.addEventListener('resize', () => { clearTimeout(t); t = setTimeout(measureGliderUnderlines, 150); });
+}
+
+// Skip-Link muss den Tastaturfokus tatsächlich ins Hauptelement verschieben (WCAG 2.4.1)
+function initSkipLink() {
+    const main = document.getElementById('main-content');
+    const skipLink = document.querySelector('.skip-link');
+    if (!main || !skipLink) return;
+    if (!main.hasAttribute('tabindex')) main.setAttribute('tabindex', '-1');
+    skipLink.addEventListener('click', () => {
+        setTimeout(() => main.focus(), 0);
+    });
 }
 
 function initFaqAnimation() {
