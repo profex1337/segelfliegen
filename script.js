@@ -613,9 +613,26 @@ function initForms() {
                     var gWert = fd.get('wert') || '';
                     var gName = fd.get('name') || '';
                     var gZustellung = fd.get('zustellung') || '';
+                    var istFlugplatz = gZustellung.indexOf('Flugplatz') !== -1;
                     var istAbholung = gZustellung.indexOf('Abholung') !== -1;
 
-                    if (istAbholung) {
+                    if (istFlugplatz) {
+                        form.innerHTML = '<div style="text-align:center; padding: 40px 20px;">'
+                            + '<div style="font-size: 3rem; margin-bottom: 15px;">🎁</div>'
+                            + '<h3 style="color: var(--primary);">Gutschein-Bestellung eingegangen!</h3>'
+                            + '<p style="color: var(--text-light); margin-bottom: 25px;">Vielen Dank für deine Bestellung!</p>'
+                            + '<div style="background: var(--bg-light); border: 2px solid var(--primary); border-radius: var(--radius); padding: 25px; display: inline-block; text-align: left; max-width: 400px;">'
+                            + '<p style="margin: 0; font-weight: 600; text-align: center;">Abholung am Flugplatz</p>'
+                            + '<p style="margin: 12px 0 0; font-size: 0.95rem;"><strong>Adresse:</strong> 92348 Stöckelsberg (bitte der Beschilderung folgen)</p>'
+                            + '<p style="margin: 6px 0 0; font-size: 0.95rem;"><strong>Nur am Wochenende oder an Feiertagen.</strong></p>'
+                            + '<p style="margin: 6px 0 0; font-size: 0.95rem;"><strong>Telefon:</strong> <a href="tel:+499189310" style="color: var(--primary);">09189 310</a></p>'
+                            + (gWert ? '<p style="margin: 12px 0 0; font-size: 0.95rem;"><strong>Betrag:</strong> ' + gWert + ' € (Barzahlung vor Ort)</p>' : '')
+                            + '</div>'
+                            + '<p style="color: var(--text-light); margin-top: 25px; font-size: 0.9rem;">Bitte melde dich vorher an, damit wir deinen Gutschein ausdrucken und für dich bereitlegen.</p>'
+                            + '<p style="color: var(--text-light); font-size: 0.85rem; font-style: italic;">Du erhältst eine Bestätigung per E-Mail.</p>'
+                            + '</div>';
+                        form.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    } else if (istAbholung) {
                         form.innerHTML = '<div style="text-align:center; padding: 40px 20px;">'
                             + '<div style="font-size: 3rem; margin-bottom: 15px;">🎁</div>'
                             + '<h3 style="color: var(--primary);">Gutschein-Bestellung eingegangen!</h3>'
