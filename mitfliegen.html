@@ -413,6 +413,7 @@
                         </div>
                     </div>
                 </fieldset>
+                <div id="ki-error" role="alert" style="display:none; color:#d63030; background:#fff5f5; border:1px solid #fed7d7; padding:12px 15px; border-radius:8px; margin-top:15px; text-align:center; font-size:0.9rem;"></div>
                 <div class="form-group" style="margin-top: 20px;">
                     <label for="gutschein-grusstext">Persönlicher Grußtext (optional)</label>
                     <div style="position:relative;">
@@ -527,15 +528,24 @@
             hidden.value = total.toFixed(2).replace('.', ',');
         }
 
+        function setKiError(msg) {
+            var el = document.getElementById('ki-error');
+            if (!el) return;
+            el.textContent = msg || '';
+            el.style.display = msg ? 'block' : 'none';
+            if (msg) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
         async function generateGreeting() {
-            var form = document.getElementById('gutschein-name').closest('form');
-            var nameVal = document.getElementById('gutschein-name').value.trim();
-            var emailVal = document.getElementById('gutschein-email').value.trim();
             var flugartVal = document.getElementById('gutschein-flugart').value;
             var empfaengerVal = document.getElementById('gutschein-empfaenger').value.trim();
+            var nameVal = document.getElementById('gutschein-name').value.trim();
 
-            if (!nameVal || !emailVal || !flugartVal || !empfaengerVal) {
-                showFormError(form, 'Bitte fülle zuerst alle Pflichtfelder aus (Name, E-Mail, Flugart, Name des Beschenkten).');
+            setKiError('');
+
+            // Für die Generierung genügen Beschenkter + Flugart
+            if (!empfaengerVal || !flugartVal) {
+                setKiError('Bitte gib zuerst den Namen des Beschenkten und die Flugart an.');
                 return;
             }
 
@@ -546,7 +556,7 @@
 
             try {
                 if (typeof window.callGenerateGreeting !== 'function') {
-                    showFormError(form, 'Funktion noch nicht verfügbar. Bitte Seite neu laden.');
+                    setKiError('Funktion noch nicht verfügbar. Bitte Seite neu laden.');
                     btn.textContent = originalText;
                     btn.disabled = false;
                     return;
@@ -563,15 +573,15 @@
                     document.getElementById('gutschein-grusstext').value = text;
                     document.getElementById('gruss-counter').textContent = text.length + ' / 800';
                 } else {
-                    showFormError(form, 'Kein Text generiert. Bitte erneut versuchen.');
+                    setKiError('Kein Text generiert. Bitte erneut versuchen.');
                 }
             } catch (e) {
                 if (e && e.code === 'functions/resource-exhausted') {
-                    showFormError(form, 'Zu viele Anfragen. Bitte warte einen Moment und versuche es erneut.');
+                    setKiError('Zu viele Anfragen. Bitte warte einen Moment und versuche es erneut.');
                 } else if (e && e.code === 'functions/unauthenticated') {
-                    showFormError(form, 'Sitzung abgelaufen. Bitte Seite neu laden.');
+                    setKiError('Sitzung abgelaufen. Bitte Seite neu laden.');
                 } else {
-                    showFormError(form, 'Fehler bei der Textgenerierung. Bitte versuche es später erneut.');
+                    setKiError('Fehler bei der Textgenerierung. Bitte versuche es später erneut.');
                 }
             }
 
