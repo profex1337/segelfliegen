@@ -161,7 +161,7 @@ function initSecurityMeta() {
             "default-src 'self'",
             "script-src 'self' 'unsafe-inline' https://www.gstatic.com",
             "style-src 'self' 'unsafe-inline'",
-            "img-src 'self' data: https:",
+            "img-src 'self' data: https: blob:",
             "font-src 'self' data:",
             "connect-src 'self' https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com https://*.cloudfunctions.net https://*.run.app https://api.qrserver.com https://api.open-meteo.com",
             "frame-src https://www.google.com https://www.youtube-nocookie.com https://www.youtube.com",
