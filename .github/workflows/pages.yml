@@ -3,6 +3,13 @@ name: Deploy to GitHub Pages
 on:
   push:
     branches: [main]
+    # Automatisch hochgeladene News-/Flugzeugpark-Bilder (von der uploadImage/deleteImage
+    # Cloud Function ins Repo committet) brauchen KEINEN Pages-Deploy — sie werden direkt
+    # über raw.githubusercontent.com ausgeliefert. Sonst löst jeder Bild-Upload einen
+    # (heute oft fehlschlagenden) Deploy aus.
+    paths-ignore:
+      - 'images/news_*'
+      - 'images/aircraft_*'
   workflow_dispatch:
 
 permissions:
