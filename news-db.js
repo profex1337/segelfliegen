@@ -1731,10 +1731,10 @@ function renderOrderRow(order, isClosed) {
 
     var paidBadge = isPaid
         ? '<span style="font-size:0.75rem; padding:3px 8px; border-radius:12px; font-weight:600; background:#e8f5e9; color:#2e7d32; margin-left:8px;">Bezahlt</span>'
-        : '<span style="font-size:0.75rem; padding:3px 8px; border-radius:12px; font-weight:600; background:#fff3e0; color:#e65100; margin-left:8px;">Unbezahlt</span>';
+        : '<span style="font-size:0.75rem; padding:3px 8px; border-radius:12px; font-weight:700; background:var(--warn-red); color:#fff; margin-left:8px;">⚠ Unbezahlt</span>';
 
-    var infoClickable = !isClosed && isPaid;
-    var infoHtml = '<div class="order-info" style="flex:1; min-width:200px;' + (infoClickable ? ' cursor:pointer;' : '') + '">'
+    var canLoad = !isClosed && (isPaid || istAbholung);
+    var infoHtml = '<div class="order-info" style="flex:1; min-width:200px;' + (canLoad ? ' cursor:pointer;' : '') + '">'
         + '<strong style="font-size:1rem;">\u2709 ' + besteller + '</strong>' + paidBadge
         + '<div style="font-size:0.82rem; color:var(--text-light); margin-top:3px;">'
         + flugart + (wert ? ' &middot; ' + wert + ' \u20AC' : '') + ' &middot; F\u00FCr: ' + empfaenger
@@ -1757,8 +1757,11 @@ function renderOrderRow(order, isClosed) {
             : 'padding:6px 12px; font-size:0.78rem; background:#2e7d32; color:#fff; border-color:#2e7d32;';
         var paidBtnText = isPaid ? 'Unbezahlt' : 'Bezahlt';
 
+        var loadBtnStyle = 'padding:6px 14px; font-size:0.78rem;' + (!isPaid ? ' background:var(--warn-red); border-color:var(--warn-red); color:#fff;' : '');
+        var loadBtnTitle = !isPaid ? ' title="Achtung: Noch nicht bezahlt \u2013 Zahlung bei Abholung einsammeln!"' : '';
+
         buttonsHtml += '<button data-action="togglePaid" class="btn btn-secondary" style="' + paidBtnStyle + '">' + paidBtnText + '</button>'
-            + (isPaid ? '<button data-action="load" class="btn" style="padding:6px 14px; font-size:0.78rem;">\u00DCbernehmen</button>' : '')
+            + (canLoad ? '<button data-action="load" class="btn" style="' + loadBtnStyle + '"' + loadBtnTitle + '>\u00DCbernehmen</button>' : '')
             + (!isPaid ? '<button data-action="reminder" class="btn btn-secondary" style="padding:6px 12px; font-size:0.78rem; background:#e65100; color:#fff; border-color:#e65100;">Reminder</button>' : '')
             + (isPaid ? '<button data-action="complete" class="btn btn-secondary" style="padding:6px 12px; font-size:0.78rem; background:#6a1b9a; color:#fff; border-color:#6a1b9a;">Abschlie\u00DFen</button>' : '')
             + '<button data-action="delete" class="btn btn-secondary" style="padding:6px 12px; font-size:0.78rem; background:#c0392b; color:#fff; border-color:#c0392b;">L\u00F6schen</button>';
@@ -1769,7 +1772,7 @@ function renderOrderRow(order, isClosed) {
 
     // Event-Listener via Closure (vermeidet HTML/Attribut-Injection durch User-Input)
     var infoEl = row.querySelector('.order-info');
-    if (infoEl && infoClickable) {
+    if (infoEl && canLoad) {
         infoEl.addEventListener('click', function() { window.loadVoucherOrder(order); });
     }
     row.querySelectorAll('button[data-action]').forEach(function(btn) {
