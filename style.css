@@ -679,7 +679,7 @@ header {
     position: absolute;
     left: 0;
     bottom: 2px;
-    width: var(--ulw);
+    width: calc(var(--ulw) - 17px);
     height: 2px;
     background: linear-gradient(to right, transparent 0%, var(--ak-color, var(--accent)) 45%, var(--ak-color, var(--accent)) 100%);
 }
