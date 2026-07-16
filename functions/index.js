@@ -69,7 +69,9 @@ async function checkRateLimit(req) {
     const rawIp = fwd || req.ip || "unknown";
     const key = String(rawIp).replace(/[^a-zA-Z0-9_.:-]/g, "_").substring(0, 200) || "unknown";
     const WINDOW_MS = 10 * 60 * 1000; // 10 Minuten
-    const MAX = 10; // max. 10 Formular-Sendungen pro IP und Zeitfenster
+    // Großzügig gewählt: eine einzelne echte Bestellung ist 1 Anfrage; selbst mehrere
+    // Gutschein-Bestellungen aus einem Haushalt/IP bleiben weit darunter. Stoppt nur Massen-Missbrauch.
+    const MAX = 15; // max. 15 Formular-Sendungen pro IP und Zeitfenster
     const now = Date.now();
     const ref = getFirestore().collection("rateLimits").doc(key);
     return await getFirestore().runTransaction(async (tx) => {
