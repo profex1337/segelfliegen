@@ -30,7 +30,7 @@ segelfliegen/
 ├── impressum.html        # Legal notice (Impressum — German legal requirement)
 ├── datenschutz.html      # Privacy policy & cookie consent
 ├── widerruf.html         # Withdrawal button + Widerrufsbelehrung + Muster-Widerrufsformular (§ 356a BGB)
-├── intern.html           # Members-only admin panel (3 tabs: News, Gastfluggebühren, Flugzeugpark)
+├── intern.html           # Members-only admin panel (5 tabs: News, Termine, Gastfluggebühren, Flugzeugpark, Gutscheine)
 │
 ├── gutschein/            # Standalone voucher status page (open/redeemed)
 │   └── index.html        #   Firebase Compat-SDK, login: gutschein@segelfliegen-altdorf.de
@@ -100,6 +100,8 @@ events/         — top-level, sorted ascending by order field (public read, adm
 vouchers/       — top-level, sorted descending by timestamp (admin + gutschein@ user)
 voucherOrders/  — top-level, sorted descending by timestamp (create: any auth, read/update: admin + bestellung@ user)
 widerrufe/      — top-level, withdrawal log (§ 356a BGB); written server-side by Cloud Function (Admin-SDK), admin read
+reviewsCache/   — top-level, single doc `latest`; Google-Reviews cache written/read server-side by `getGoogleReviews` (Admin-SDK)
+rateLimits/     — top-level, one doc per IP; written server-side by `sendPublicEmail` rate limiter (Admin-SDK), never client-accessible
 ```
 
 **Firestore security rules** are defined in `firestore-rules.txt` (must be manually pasted into Firebase Console → Firestore → Rules → Publish). Rules use helper functions `isAdmin()`, `isGutscheinUser()`, `isBestellungUser()` based on `request.auth.token.email`.
@@ -283,7 +285,7 @@ There is no test suite and no linter/formatter configuration. Validate changes b
 - **ES6+ syntax** — arrow functions, `const`/`let`, template literals, destructuring.
 - **No framework** — vanilla DOM APIs only.
 - **camelCase** for variables and functions; **PascalCase** is not used for functions.
-- **Flight types** in forms and emails use: "Segelflug (Windenstart)", "Segelflug (F-Schlepp)", "Kunstflug", "Motorsegler" (NOT "Motorflug"). The voucher image file is still named `Gutschein_Motorflug.jpg`.
+- **Flight types** in forms and emails use: "Segelflug (Windenstart)", "Segelflug (F-Schlepp)", "Segelkunstflug", "Motorsegler" (NOT "Motorflug"). The voucher image file is still named `Gutschein_Motorflug.jpg`; the aerobatics voucher image is `Gutschein_Kunstflug.jpg` and `gutscheinImageMap` maps both "Kunstflug" and "Segelkunstflug" to it.
 - **Comments** in the source are written in German.
 - Firebase SDK (`v11.6.1`) is imported directly from the Google CDN (gstatic) using ES module URLs — do **not** switch to npm imports.
 - Never store sensitive logic client-side; secrets must remain in Firebase security rules or Cloud Function secrets.
@@ -301,7 +303,7 @@ There is no test suite and no linter/formatter configuration. Validate changes b
 | `initSlideshows()` | Auto-plays `.slideshow-container` elements every 4 seconds; prev/next buttons reset the timer |
 | `initCookieConsent()` | Shows DSGVO cookie banner; on accept, calls `embedConsentContent()` |
 | `embedConsentContent()` | Replaces `.consent-overlay` divs with real `<iframe>` elements |
-| `initReviews()` | Renders a static snapshot of Google reviews in the sidebar; opened via `#review-trigger-btn` (add this trigger markup on any page that should offer it — see `ausbildung.html`) |
+| `initReviews()` | Renders a static snapshot of Google reviews in the sidebar; opened via `#review-trigger-btn` (add this trigger markup on any page that should offer it — see `index.html`) |
 | `showFormError(form, message)` | Renders a styled inline error message inside a form (replaces blocking `alert()` popups) |
 | `getFlugdauer()` | Calculates flight duration string from flight type + extra time (e.g., "bis zu 20 Min. + 10 Min. zusätzlich") |
 | `initForms()` | Intercepts all `form[data-emailjs]` submit events and sends via Cloud Function (`sendPublicEmail`) |
@@ -352,7 +354,7 @@ There is no test suite and no linter/formatter configuration. Validate changes b
 
 | Service | Config location | Notes |
 |---|---|---|
-| **Firebase** | `news-db.js` lines 5–13, `functions/index.js` | Project ID: `segelfliegen`. SDK version: `11.6.1`. Cloud Functions (europe-west1): `sendPublicEmail` (onRequest, public forms), `sendAdminEmail` (onCall, admin), `sendVoucherEmail` (onCall, PDF), `uploadImage` (onCall, GitHub upload), `deleteImage` (onCall, GitHub delete). Secrets: `SMTP_USER`, `SMTP_PASS`, `GH_PAT`. |
+| **Firebase** | `news-db.js` lines 5–13, `functions/index.js` | Project ID: `segelfliegen`. SDK version: `11.6.1`. Cloud Functions (europe-west1): `sendPublicEmail` (onRequest, public forms; fail-open IP-Rate-Limit via `rateLimits` collection), `sendAdminEmail` (onCall, admin), `sendVoucherEmail` (onCall, PDF), `uploadImage` (onCall, GitHub upload), `deleteImage` (onCall, GitHub delete), `getGoogleReviews` (onRequest, public; Places-API-Cache in `reviewsCache/latest`), `generateGreetingText` (onCall, any authed user incl. anonymous; Gemini API). Secrets: `SMTP_USER`, `SMTP_PASS`, `GH_PAT`, `GOOGLE_PLACES_KEY`, `GEMINI_API_KEY`. |
 | **GitHub API** | `functions/index.js` `uploadImage()` / `deleteImage()` | Used for news & aircraft image storage. PAT stored as Firebase Secret `GH_PAT` — no client-side token needed. Client calls Cloud Functions via `httpsCallable()`. |
 | **Widerruf (§ 356a BGB)** | `widerruf.html`, `functions/index.js` (`formType: "widerruf"`), `functions/widerruf-mail.js` | Two-stage withdrawal button → customer Eingangsbestätigung (durable medium, server-side Europe/Berlin timestamp, no acknowledgement) + club notification (info@ + CC dan@ + Kassier) + Firestore log `widerrufe`. Widerrufsbelehrung also appended to gutschein confirmation mail (§ 312f BGB). Highlighted footer link `.footer-widerruf` on every page. |
 | **Cloud Functions** | `functions/index.js`, `script.js`, `news-db.js`, `bestellungen/index.html` | `sendPublicEmail` (onRequest, public forms via `fetch()`), `sendAdminEmail` (onCall, admin actions via `httpsCallable()`), `sendVoucherEmail` (onCall, PDF email), `uploadImage` (onCall, image upload to GitHub), `deleteImage` (onCall, image delete from GitHub). SMTP functions use Strato-SMTP via Nodemailer; image functions use GitHub Contents API. All customer emails use "Du" form. **CC-Logik**: dan@ always; kassier@ on gutschein; joergsperber@ only on Abholung orders; Jeremy on Ausbildung. |

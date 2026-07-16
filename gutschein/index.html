@@ -86,9 +86,9 @@
     <div id="voucher-content"></div>
 </div>
 
-<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore-compat.js"></script>
 <script>
     firebase.initializeApp({
         apiKey: "AIzaSyB1X5H3LOGKOSrq59_am4YnkISyOyEUAg4",
@@ -103,6 +103,17 @@
     var db = firebase.firestore();
     var vouchers = [];
     var unsubscribeFn = null;
+
+    // XSS-Schutz: HTML-Sonderzeichen escapen (Kundendaten wie recipient stammen aus Bestellungen)
+    function escapeHtml(str) {
+        if (str === null || str === undefined) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#x27;');
+    }
 
     function doLogin() {
         var pw = document.getElementById('login-pw').value.trim();
@@ -219,19 +230,19 @@
         var expired = !isR && isExpired(v.validUntil);
         var date = v.timestamp ? new Date(v.timestamp).toLocaleDateString('de-DE') : '\u2014';
         var expiredLabel = expired ? '<span class="expired-label">abgelaufen</span>' : '';
-        var valid = v.validUntil ? '<div class="voucher-valid">G\u00FCltig bis: ' + v.validUntil + expiredLabel + '</div>' : '';
+        var valid = v.validUntil ? '<div class="voucher-valid">G\u00FCltig bis: ' + escapeHtml(v.validUntil) + expiredLabel + '</div>' : '';
         var nameClass = isR ? 'voucher-name redeemed' : 'voucher-name';
         var rowClass = isR ? 'voucher-row redeemed' : 'voucher-row open' + (expired ? ' expired' : '');
         var badgeClass = isR ? 'badge badge-redeemed' : 'badge badge-open';
         var badgeText = isR ? 'Eingel\u00F6st' : 'Offen';
         var btnText = isR ? 'Wieder \u00F6ffnen' : 'Einl\u00F6sen';
-        var searchText = ((v.recipient || '') + ' ' + (v.number || '') + ' ' + (v.flightType || '') + ' ' + (v.ordererName || '')).toLowerCase();
+        var searchText = escapeHtml(((v.recipient || '') + ' ' + (v.number || '') + ' ' + (v.flightType || '') + ' ' + (v.ordererName || '')).toLowerCase());
 
         return '<div class="' + rowClass + '" data-search="' + searchText + '">'
             + '<div class="voucher-info">'
-            + '<span class="' + nameClass + '">' + (v.recipient || '\u2014') + '</span>'
+            + '<span class="' + nameClass + '">' + (escapeHtml(v.recipient) || '\u2014') + '</span>'
             + '<div class="voucher-meta">'
-            + (v.flightType || '') + (v.value ? ' &middot; ' + v.value + ' \u20AC' : '') + (v.number ? ' &middot; ' + v.number : '') + ' &middot; ' + date
+            + escapeHtml(v.flightType || '') + (v.value ? ' &middot; ' + escapeHtml(v.value) + ' \u20AC' : '') + (v.number ? ' &middot; ' + escapeHtml(v.number) : '') + ' &middot; ' + date
             + '</div>' + valid + '</div>'
             + '<span class="' + badgeClass + '">' + badgeText + '</span> '
             + '<button class="btn-toggle" onclick="toggleRedeemed(\'' + v.id + '\', ' + isR + ', ' + expired + ')">' + btnText + '</button>'

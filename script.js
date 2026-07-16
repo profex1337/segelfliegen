@@ -80,7 +80,7 @@ const footerHTML = `
         <a href="#" id="cookie-settings-link" style="margin:0 10px; color: #b0b0b0; cursor:pointer; white-space:nowrap;">Cookies verwalten</a> |
         <a href="intern.html" id="nav-intern" style="margin:0 10px; color: #b0b0b0;">Intern</a>
         <br><br>
-        &copy; 2026 Segelflugplatz Altdorf-Hagenhausen
+        &copy; 2026 Segelflieger im Post-SV Nürnberg e.V.
     </div>
 </div>
 
@@ -471,9 +471,9 @@ function initCookieConsent() {
             <p>
                 Zur Bereitstellung der Inhalte nutzt diese Website technisch erforderliche Dienste:
                 <strong>Google Firebase</strong> (Datenbank &amp; Anmeldung) und
-                <strong>GitHub</strong> (Hosting &amp; Bilder). Dabei wird Ihre IP-Adresse an die jeweiligen Server übertragen.
+                <strong>GitHub</strong> (Hosting &amp; Bilder). Dabei wird deine IP-Adresse an die jeweiligen Server übertragen.
                 Optionale Inhalte (<strong>Google Maps</strong>, <strong>YouTube</strong>, Wetter-Widget über <strong>Open-Meteo</strong>)
-                werden erst nach Ihrer ausdrücklichen Zustimmung geladen.
+                werden erst nach deiner ausdrücklichen Zustimmung geladen.
                 <a href="datenschutz.html" style="text-decoration: underline;">Mehr erfahren</a>.
             </p>
             <div class="cookie-buttons">
@@ -584,8 +584,6 @@ function initForms() {
                 cfData.zustellung = fd.get('zustellung') || '';
                 cfData.grusstext = fd.get('grusstext') || '';
                 cfData.flugdauer = zusatz > 0 ? desc + ' + ' + zusatz + ' Min. zusätzlich' : desc;
-            } else if (formType === 'gastflug') {
-                cfData.interest = fd.get('interest') || '';
             } else if (formType === 'widerruf') {
                 cfData.bestelldetails = fd.get('bestelldetails') || '';
                 cfData.grund = fd.get('grund') || '';
@@ -598,7 +596,7 @@ function initForms() {
                 // Bei Gutschein: Firestore-Speicherung
                 if (formType === 'gutschein') {
                     if (typeof window.saveVoucherOrder === 'function') {
-                        window.saveVoucherOrder({
+                        await window.saveVoucherOrder({
                             name: fd.get('name') || '',
                             email: fd.get('email') || '',
                             telefon: fd.get('telefon') || '',
@@ -901,7 +899,7 @@ function initStickyNav() {
     // Aktive Sektion per Intersection Observer
     const sections = [];
     buttons.forEach(btn => {
-        const href = btn.getAttribute('onclick') || '';
+        const href = btn.getAttribute('onclick') || btn.getAttribute('href') || '';
         // Buttons verwenden scrollToSection('id') oder href="#id"
         const match = href.match(/scrollToSection\(['"]([^'"]+)['"]\)/) || href.match(/#([^'"]+)/);
         if (match) {

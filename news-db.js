@@ -128,15 +128,23 @@ async function initFirebase() {
 
         // Globale Funktion zum Speichern von Gutschein-Bestellungen (auch für anonyme User)
         window.saveVoucherOrder = async (orderData) => {
+            const doSave = () => addDoc(collection(db, 'voucherOrders'), {
+                ...orderData,
+                status: 'neu',
+                timestamp: Date.now()
+            });
             try {
-                const orderRef = collection(db, 'voucherOrders');
-                await addDoc(orderRef, {
-                    ...orderData,
-                    status: 'neu',
-                    timestamp: Date.now()
-                });
+                await doSave();
             } catch (e) {
-                console.error('Gutschein-Bestellung speichern fehlgeschlagen:', e);
+                // Häufigste Ursache: anonyme Anmeldung noch nicht abgeschlossen → einmal erneut versuchen,
+                // damit keine Bestellung verloren geht
+                console.error('Gutschein-Bestellung speichern fehlgeschlagen, erneuter Versuch:', e);
+                try {
+                    await new Promise(r => setTimeout(r, 1200));
+                    await doSave();
+                } catch (e2) {
+                    console.error('Gutschein-Bestellung endgültig fehlgeschlagen:', e2);
+                }
             }
         };
 
@@ -218,10 +226,14 @@ async function startNewsLogic() {
     } catch (e) {
     }
 
+    let newsUnsub = null;
     onAuthStateChanged(auth, (user) => {
         const isAdmin = user && !user.isAnonymous;
         toggleAdminUI(isAdmin);
         handleInternPageVisibility(isAdmin);
+
+        // Alten Listener abmelden, bevor ein neuer registriert wird (verhindert Mehrfach-Listener)
+        if (newsUnsub) { newsUnsub(); newsUnsub = null; }
 
         if (!user) {
             signInAnonymously(auth).catch((err) => {
@@ -232,7 +244,7 @@ async function startNewsLogic() {
 
         const newsCollection = collectionPath(db);
 
-        onSnapshot(newsCollection, (snapshot) => {
+        newsUnsub = onSnapshot(newsCollection, (snapshot) => {
             let newsItems = [];
             snapshot.forEach((doc) => {
                 newsItems.push({ id: doc.id, ...doc.data() });
@@ -764,11 +776,15 @@ async function startPricesLogic() {
     const pricesAdminList = document.getElementById('prices-admin-list');
     const addPriceBtn = document.getElementById('add-price-btn');
 
+    let pricesUnsub = null;
     onAuthStateChanged(auth, (user) => {
+        if (pricesUnsub) { pricesUnsub(); pricesUnsub = null; }
         if (!user) {
             // Auf Seiten ohne News-Logik: Anonym einloggen
             if (!document.getElementById('dynamic-news-list')) {
-                signInAnonymously(auth).catch(() => {});
+                signInAnonymously(auth).catch((err) => {
+                    console.error('Anonyme Anmeldung (Preise) fehlgeschlagen:', err);
+                });
             }
             return;
         }
@@ -776,7 +792,7 @@ async function startPricesLogic() {
         const isAdmin = user && !user.isAnonymous;
         const pricesRef = collection(db, 'prices');
 
-        onSnapshot(pricesRef, (snapshot) => {
+        pricesUnsub = onSnapshot(pricesRef, (snapshot) => {
             const items = [];
             snapshot.forEach(d => items.push({ id: d.id, ...d.data() }));
             items.sort((a, b) => (a.order || 0) - (b.order || 0));
@@ -803,7 +819,9 @@ async function startPricesLogic() {
                     label: 'Neue Position',
                     description: 'Beschreibung eingeben',
                     price: '0,00 €',
-                    order: currentPriceItems.length
+                    // Date.now() statt Listenindex: konsistent mit der Drag&Drop-Sortierung
+                    // (base + i*100), damit die neue Position zuverlässig ans Ende kommt
+                    order: Date.now()
                 });
             } catch (e) {
                 alert('Fehler: ' + e.message);
@@ -989,8 +1007,9 @@ function renderAdminPrices(container, items, isAdmin) {
             const data = {
                 label: content.querySelector('[data-field="label"]').value,
                 description: content.querySelector('[data-field="description"]').value,
-                price: content.querySelector('[data-field="price"]').value,
-                order: idx
+                price: content.querySelector('[data-field="price"]').value
+                // order wird bewusst NICHT gesetzt: Bearbeiten soll die per Drag&Drop
+                // festgelegte Reihenfolge nicht verändern
             };
             try {
                 await updateDoc(doc(db, 'prices', item.id), data);
@@ -1126,11 +1145,22 @@ async function startAircraftLogic() {
         });
     }
 
+    let aircraftUnsub = null;
     onAuthStateChanged(auth, (user) => {
-        if (!user) return;
+        if (aircraftUnsub) { aircraftUnsub(); aircraftUnsub = null; }
+        if (!user) {
+            // Auf Seiten ohne News-Logik (z. B. flugzeugpark.html): anonym anmelden,
+            // damit der öffentliche onSnapshot-Listener Firestore lesen darf
+            if (!document.getElementById('dynamic-news-list')) {
+                signInAnonymously(auth).catch((err) => {
+                    console.error('Anonyme Anmeldung (Flugzeugpark) fehlgeschlagen:', err);
+                });
+            }
+            return;
+        }
         const isAdmin = !user.isAnonymous;
 
-        onSnapshot(aircraftRef, (snapshot) => {
+        aircraftUnsub = onSnapshot(aircraftRef, (snapshot) => {
             const items = [];
             snapshot.forEach(d => items.push({ id: d.id, ...d.data() }));
             items.sort((a, b) => (a.order || 0) - (b.order || 0));
@@ -1473,12 +1503,16 @@ async function startVoucherLogic() {
         renderVoucherList(listContainer, cachedVouchers, cachedOrders);
     }
 
+    let voucherUnsub = null, orderUnsub = null;
     onAuthStateChanged(auth, (user) => {
+        // Bei Logout/anonym: Admin-Listener abmelden (verhindert verwaiste permission-denied-Listener)
+        if (voucherUnsub) { voucherUnsub(); voucherUnsub = null; }
+        if (orderUnsub) { orderUnsub(); orderUnsub = null; }
         if (!user) return;
         const isAdmin = !user.isAnonymous;
         if (!isAdmin) return;
 
-        onSnapshot(voucherRef, (snapshot) => {
+        voucherUnsub = onSnapshot(voucherRef, (snapshot) => {
             cachedVouchers = [];
             snapshot.forEach(d => cachedVouchers.push({ id: d.id, ...d.data() }));
             cachedVouchers.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
@@ -1487,7 +1521,7 @@ async function startVoucherLogic() {
             console.error('Gutscheine konnten nicht geladen werden:', error);
         });
 
-        onSnapshot(orderRef, (snapshot) => {
+        orderUnsub = onSnapshot(orderRef, (snapshot) => {
             cachedOrders = [];
             snapshot.forEach(d => cachedOrders.push({ id: d.id, ...d.data() }));
             cachedOrders.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
@@ -1976,13 +2010,13 @@ function renderVoucherRow(item) {
     var statusText = item.redeemed ? 'Eingelöst' : 'Offen';
     var toggleText = item.redeemed ? 'Wieder \u00F6ffnen' : 'Einl\u00F6sen';
     var expiredLabel = expired ? '<span style="color:#c62828; font-weight:700; margin-left:6px;">abgelaufen</span>' : '';
-    var validLine = item.validUntil ? '<div style="font-size:0.78rem; color:#888;">Gültig bis: ' + item.validUntil + expiredLabel + '</div>' : '';
+    var validLine = item.validUntil ? '<div style="font-size:0.78rem; color:#888;">Gültig bis: ' + escapeHTML(item.validUntil) + expiredLabel + '</div>' : '';
 
     row.innerHTML = '<span style="flex:0 0 auto; width:10px; height:10px; border-radius:50%; background:' + borderColor + ';"></span>'
         + '<div style="flex:1; min-width:200px;">'
-        + '<strong style="font-size:1rem;' + nameStyle + '">' + (item.recipient || '\u2014') + '</strong>'
+        + '<strong style="font-size:1rem;' + nameStyle + '">' + (escapeHTML(item.recipient) || '\u2014') + '</strong>'
         + '<div style="font-size:0.82rem; color:var(--text-light); margin-top:3px;">'
-        + (item.flightType || '') + (item.value ? ' &middot; ' + item.value + ' \u20AC' : '') + ' &middot; ' + (item.number || '') + ' &middot; Erstellt: ' + createdDate
+        + escapeHTML(item.flightType || '') + (item.value ? ' &middot; ' + escapeHTML(item.value) + ' \u20AC' : '') + ' &middot; ' + escapeHTML(item.number || '') + ' &middot; Erstellt: ' + createdDate
         + '</div>' + validLine + '</div>'
         + '<div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">'
         + '<button class="btn btn-secondary voucher-reprint-btn" style="padding:6px 12px; font-size:0.78rem; background:var(--primary); color:#fff; border-color:var(--primary);">PDF</button>'
@@ -2013,17 +2047,21 @@ async function startEventsLogic() {
 
     let editingEventId = null;
 
+    let eventsUnsub = null;
     onAuthStateChanged(auth, (user) => {
+        if (eventsUnsub) { eventsUnsub(); eventsUnsub = null; }
         if (!user) {
             if (!document.getElementById('dynamic-news-list')) {
-                signInAnonymously(auth).catch(() => {});
+                signInAnonymously(auth).catch((err) => {
+                    console.error('Anonyme Anmeldung (Termine) fehlgeschlagen:', err);
+                });
             }
             return;
         }
         const isAdmin = user && !user.isAnonymous;
         const eventsRef = collection(db, 'events');
 
-        onSnapshot(eventsRef, (snapshot) => {
+        eventsUnsub = onSnapshot(eventsRef, (snapshot) => {
             const items = [];
             snapshot.forEach(d => items.push({ id: d.id, ...d.data() }));
             items.sort((a, b) => (a.order || 0) - (b.order || 0));

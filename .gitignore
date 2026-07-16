@@ -1,6 +1,10 @@
 # Interne Ordner (nicht veröffentlichen — Repo ist public!)
 .claude/
 .planning/
+.superpowers/
+Anleitung Flugleiter/
+Anleitung Admin/
+vorlagen/
 
 # Logs
 logs

@@ -93,8 +93,24 @@ service cloud.firestore {
                             && request.resource.data.anlass.size() <= 200))
                     && (!('schreibstil' in request.resource.data)
                         || (request.resource.data.schreibstil is string
-                            && request.resource.data.schreibstil.size() <= 200));
+                            && request.resource.data.schreibstil.size() <= 200))
+                    // Zahlungsstatus & Metadaten dürfen beim Anlegen nicht gefälscht werden
+                    // (verhindert, dass ein anonymer Nutzer paid:true / anderen Status setzt):
+                    && (!('paid' in request.resource.data)
+                        || request.resource.data.paid == false)
+                    && (!('status' in request.resource.data)
+                        || request.resource.data.status == 'neu')
+                    && (!('timestamp' in request.resource.data)
+                        || request.resource.data.timestamp is number)
+                    && (!('wertAnzeigen' in request.resource.data)
+                        || request.resource.data.wertAnzeigen is bool);
       allow read, update, delete: if isBestellungUser();
+    }
+
+    // Widerruf-Protokoll (§ 356a BGB) — nur serverseitig via Admin-SDK geschrieben
+    // (Admin-SDK umgeht diese Rules). Kein allow write → kein Client kann schreiben.
+    match /widerrufe/{doc} {
+      allow read: if isAdmin();
     }
   }
 }

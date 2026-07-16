@@ -919,11 +919,19 @@ select { height: auto; min-height: 48px; line-height: 1.4; background-image: url
     border: 0;
 }
 
+/* === Kontakt-/Anfahrt-Grid (uber-uns.html: Text links, Karte rechts) === */
+.contact-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+    align-items: start;
+}
+
 /* === DATENSCHUTZ CONSENT-OVERLAY === */
 .consent-overlay {
     position: absolute;
     top: 0; left: 0; width: 100%; height: 100%;
-    background: linear-gradient(135deg, #16213e, #0f3460);
+    background: linear-gradient(135deg, #16213e, var(--primary));
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1049,29 +1057,7 @@ select { height: auto; min-height: 48px; line-height: 1.4; background-image: url
 }
 
 
-.news-image-container img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-    object-position: center;
-    border-radius: var(--radius);
-    transition: opacity 0.5s ease, transform 0.8s ease;
-}
-
-.news-image-container img.fade-out {
-    opacity: 0;
-    transform: scale(1.05);
-}
-
 @media (max-width: 992px) {
-    .news-image-container {
-        position: relative;
-        top: 0;
-        height: auto;
-        aspect-ratio: 4 / 3;
-        order: -1;
-        margin-bottom: 20px;
-    }
     .news-item {
         padding: 25px 15px;
     }
@@ -1823,15 +1809,12 @@ body.admin-mode .delete-btn { display: inline-block; }
 
     .section { padding: 40px 0; }
     .content-block { padding: 25px; }
-    .section-image { min-height: 200px; }
     
     
     .news-wrapper { grid-template-columns: 1fr; gap: 30px; }
 
     
-    .news-image-container { order: -1; }
-    
-    .contact-grid, .impressum-grid { grid-template-columns: 1fr; }
+    .contact-grid { grid-template-columns: 1fr; }
     
     
     .news-wrapper.reverse > *:first-child { order: unset; }

@@ -59,6 +59,36 @@ function limitLength(str, max) {
   return str.substring(0, max);
 }
 
+// Einfaches Rate-Limiting pro IP für den öffentlichen sendPublicEmail-Endpunkt.
+// FAIL-OPEN: Bei jedem internen Fehler (Firestore langsam/nicht erreichbar) wird die
+// Anfrage ZUGELASSEN — ein legitimer Nutzer wird niemals durch Infrastrukturfehler blockiert.
+// Begrenzt Massen-Missbrauch (z. B. Gutschein-Auto-Reply an beliebige Fremdadressen).
+async function checkRateLimit(req) {
+  try {
+    const fwd = (req.headers["x-forwarded-for"] || "").split(",")[0].trim();
+    const rawIp = fwd || req.ip || "unknown";
+    const key = String(rawIp).replace(/[^a-zA-Z0-9_.:-]/g, "_").substring(0, 200) || "unknown";
+    const WINDOW_MS = 10 * 60 * 1000; // 10 Minuten
+    const MAX = 10; // max. 10 Formular-Sendungen pro IP und Zeitfenster
+    const now = Date.now();
+    const ref = getFirestore().collection("rateLimits").doc(key);
+    return await getFirestore().runTransaction(async (tx) => {
+      const snap = await tx.get(ref);
+      const d = snap.exists ? snap.data() : null;
+      if (!d || (now - (d.windowStart || 0)) > WINDOW_MS) {
+        tx.set(ref, {windowStart: now, count: 1});
+        return true;
+      }
+      if ((d.count || 0) >= MAX) return false;
+      tx.update(ref, {count: (d.count || 0) + 1});
+      return true;
+    });
+  } catch (e) {
+    console.error("Rate-Limit-Prüfung fehlgeschlagen (fail-open, Anfrage zugelassen):", e);
+    return true;
+  }
+}
+
 function getFlugdauer(flugart, zusatzMin) {
   const basis = {"Segelflug (Windenstart)": 20, "Segelflug (F-Schlepp)": 20, "Motorsegler": 15};
   let base = basis[flugart];
@@ -255,6 +285,12 @@ exports.sendPublicEmail = onRequest(
         return;
       }
 
+      // Rate-Limiting (fail-open): begrenzt Massen-Versand über den öffentlichen Endpunkt
+      if (!(await checkRateLimit(req))) {
+        res.status(429).json({error: "Zu viele Anfragen. Bitte versuche es in ein paar Minuten erneut."});
+        return;
+      }
+
       const formType = sanitizeHeader(data.formType);
       const name = limitLength(sanitizeHeader(data.name), 200);
       const email = sanitizeHeader(data.email);
@@ -273,8 +309,11 @@ exports.sendPublicEmail = onRequest(
 
       // ===== Widerruf (§ 356a BGB) — eigener Ablauf, eigene Empfänger =====
       if (formType === "widerruf") {
-        const bestelldetails = limitLength(sanitizeHeader(data.bestelldetails), 1000);
-        const grund = limitLength(sanitizeHeader(data.grund), 2000);
+        // KEIN sanitizeHeader: diese Freitextfelder landen nur im HTML-Body (via nl2br,
+        // das HTML escaped) und im Firestore-Protokoll — nie in einem Mail-Header.
+        // sanitizeHeader würde die Zeilenumbrüche der Textareas zerstören.
+        const bestelldetails = limitLength(data.bestelldetails, 1000);
+        const grund = limitLength(data.grund, 2000);
         if (!bestelldetails) {
           res.status(400).json({error: "Bitte geben Sie Angaben zur Identifizierung Ihrer Bestellung an."});
           return;
@@ -672,9 +711,11 @@ exports.deleteImage = onCall(
       const {imageUrl} = request.data;
       if (!imageUrl) return {success: true, skipped: true};
 
-      // Nur GitHub-Raw-URLs mit erlaubtem Pattern
+      // Nur GitHub-Raw-URLs mit erlaubtem Pattern.
+      // [^/?#]+ verbietet '/', '?' und '#' im Dateinamen und verhindert damit
+      // Path-Traversal (z. B. images/news_x/../../CNAME).
       const match = imageUrl.match(
-          /raw\.githubusercontent\.com\/profex1337\/segelfliegen\/main\/(images\/(?:news|aircraft)_[^?]+)/,
+          /raw\.githubusercontent\.com\/profex1337\/segelfliegen\/main\/(images\/(?:news|aircraft)_[^/?#]+)/,
       );
       if (!match) return {success: true, skipped: true};
 
