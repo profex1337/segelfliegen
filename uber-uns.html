@@ -79,6 +79,7 @@
     <main id="main-content" class="container section">
 
         <div class="category-nav">
+            <a href="#Livebetrieb" class="btn-cat">Livebetrieb</a>
             <a href="#Anfahrt" class="btn-cat">Anfahrt</a>
             <a href="#PPR" class="btn-cat">Für Piloten (PPR)</a>
         </div>
@@ -109,7 +110,29 @@
             </div>
         </div>
 
-        
+
+        <div class="content-block" id="Livebetrieb">
+            <h2 class="accent-kicker">Wer ist gerade in der Luft?</h2>
+            <p style="text-align: left;">
+                Sieh live, welche Flugzeuge gerade rund um Altdorf-Hagenhausen unterwegs sind — die Karte aktualisiert sich automatisch und zeigt oben die Tageszahlen (in der Luft, Starts, Flugzeit).
+            </p>
+            <div class="livebetrieb-container">
+                <div class="consent-overlay"
+                     data-src="https://fly.kyth.systems/v/altdorf/embed"
+                     data-title="Livebetrieb Segelflugplatz Altdorf-Hagenhausen">
+                    <div class="consent-message">
+                        <span class="consent-icon">🛩️</span>
+                        <p>Diese Live-Karte wird von fly.kyth.systems geladen (Kartenkacheln von OpenStreetMap).<br>Bitte akzeptiere Cookies zum Anzeigen.</p>
+                        <button class="btn-consent consent-accept-btn">Akzeptieren &amp; anzeigen</button>
+                    </div>
+                </div>
+            </div>
+            <p style="font-size: 0.8rem; color: var(--text-light); margin-top: 10px;">
+                Live-Flugbetrieb am Segelflugplatz Altdorf-Hagenhausen — Datenquelle: Open Glider Network.
+            </p>
+        </div>
+
+
         <div class="content-block" id="Anfahrt">
             <h2 class="accent-kicker">So findest du uns</h2>
             <div class="contact-grid">

@@ -164,7 +164,7 @@ function initSecurityMeta() {
             "img-src 'self' data: https: blob:",
             "font-src 'self' data:",
             "connect-src 'self' https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com https://*.cloudfunctions.net https://*.run.app https://api.qrserver.com https://api.open-meteo.com",
-            "frame-src https://www.google.com https://www.youtube-nocookie.com https://www.youtube.com",
+            "frame-src https://www.google.com https://www.youtube-nocookie.com https://www.youtube.com https://fly.kyth.systems",
             "media-src 'self'",
             "object-src 'none'",
             "base-uri 'self'",
@@ -472,8 +472,8 @@ function initCookieConsent() {
                 Zur Bereitstellung der Inhalte nutzt diese Website technisch erforderliche Dienste:
                 <strong>Google Firebase</strong> (Datenbank &amp; Anmeldung) und
                 <strong>GitHub</strong> (Hosting &amp; Bilder). Dabei wird deine IP-Adresse an die jeweiligen Server übertragen.
-                Optionale Inhalte (<strong>Google Maps</strong>, <strong>YouTube</strong>, Wetter-Widget über <strong>Open-Meteo</strong>)
-                werden erst nach deiner ausdrücklichen Zustimmung geladen.
+                Optionale Inhalte (<strong>Google Maps</strong>, <strong>YouTube</strong>, Wetter-Widget über <strong>Open-Meteo</strong>,
+                Livebetrieb-Karte über <strong>fly.kyth.systems</strong>) werden erst nach deiner ausdrücklichen Zustimmung geladen.
                 <a href="datenschutz.html" style="text-decoration: underline;">Mehr erfahren</a>.
             </p>
             <div class="cookie-buttons">

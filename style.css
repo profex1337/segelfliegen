@@ -919,6 +919,26 @@ select { height: auto; min-height: 48px; line-height: 1.4; background-image: url
     border: 0;
 }
 
+/* === Livebetrieb-Widget (Fly Dash, uber-uns.html) — feste Höhe statt Seitenverhältnis === */
+.livebetrieb-container {
+    position: relative;
+    height: 460px;
+    overflow: hidden;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    background: #eef2f5;
+}
+.livebetrieb-container iframe,
+.livebetrieb-container .consent-overlay {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    border: 0;
+}
+@media (max-width: 600px) {
+    .livebetrieb-container { height: 360px; }
+}
+
 /* === Kontakt-/Anfahrt-Grid (uber-uns.html: Text links, Karte rechts) === */
 .contact-grid {
     display: grid;
