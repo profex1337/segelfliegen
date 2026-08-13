@@ -344,13 +344,29 @@ function buildPaymentInfoHtml(name, wert, zustellung, qrUrl) {
         + '<div style="font-size: 14px; line-height: 1.7; color: #555; margin-bottom: 25px;">Nach Zahlungseingang erstellen wir deinen personalisierten Gutschein und senden ihn dir per E-Mail zu.</div>';
 }
 
-// Direkt-Link ins Admin-Panel (Tab "Gutscheine") — nur für interne Benachrichtigungen
-const VOUCHER_ADMIN_LINK_HTML = '<div style="text-align:center; margin-bottom:5px;">'
-    + '<a href="https://www.segelfliegenaltdorf.de/intern.html#gutscheine" '
-    + 'style="display:inline-block; background:#0ea5e9; color:#ffffff; text-decoration:none; font-weight:bold; font-size:15px; padding:14px 28px; border-radius:8px;">'
-    + 'Gutschein jetzt erstellen</a>'
-    + '<div style="font-size:12px; color:#888; margin-top:8px;">Öffnet den internen Bereich direkt im Tab „Gutscheine“</div>'
-    + '</div>';
+// Aktions-Button für interne Benachrichtigungs-Mails (nur an Vereins-Adressen)
+function buildAdminLinkHtml(url, label, hint) {
+    return '<div style="text-align:center; margin-bottom:5px;">'
+        + '<a href="' + url + '" '
+        + 'style="display:inline-block; background:#0ea5e9; color:#ffffff; text-decoration:none; font-weight:bold; font-size:15px; padding:14px 28px; border-radius:8px;">'
+        + escapeHtml(label) + '</a>'
+        + '<div style="font-size:12px; color:#888; margin-top:8px;">' + escapeHtml(hint) + '</div>'
+        + '</div>';
+}
+
+// Direkt-Link ins Admin-Panel (Tab "Gutscheine") — nach Zahlungseingang
+const VOUCHER_ADMIN_LINK_HTML = buildAdminLinkHtml(
+    'https://www.segelfliegenaltdorf.de/intern.html#gutscheine',
+    'Gutschein jetzt erstellen',
+    'Öffnet den internen Bereich direkt im Tab „Gutscheine“',
+);
+
+// Direkt-Link auf die Bestellungen-Seite — für den Kassier bei neuer Bestellung
+const ORDER_ADMIN_LINK_HTML = buildAdminLinkHtml(
+    'https://www.segelfliegenaltdorf.de/bestellungen/',
+    'Bestellung als bezahlt markieren',
+    'Öffnet die Bestellungen-Seite (Anmeldung erforderlich)',
+);
 
 function buildNotificationHtml(subject, name, email, telefon, message, detailsHtml, extraHtml) {
     return '<div style="font-family:system-ui,sans-serif,Arial; font-size:14px; color:#333; max-width:600px; margin:0 auto;">'
@@ -446,7 +462,7 @@ function generateEmail(type) {
         details += buildDetailRow("Wert im Gutschein", "Ja", i++);
         details += buildDetailRow("Empfänger", TEST.empfaenger, i++);
         details += buildDetailRow("Zustellung", "E-Mail (Zahlung per Überweisung)", i++, "font-weight: bold; color: #6a1b9a;");
-        html = buildNotificationHtml(subject, TEST.name, TEST.email, TEST.telefon, TEST.grusstext, details);
+        html = buildNotificationHtml(subject, TEST.name, TEST.email, TEST.telefon, TEST.grusstext, details, ORDER_ADMIN_LINK_HTML);
     }
     else if (type === "gutschein-reply-bank") {
         subject = "Deine Gutschein-Bestellung beim Segelflugplatz Altdorf";

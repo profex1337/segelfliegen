@@ -36,19 +36,35 @@ function createTransporter() {
 const VEREINS_EMAIL = "info@segelfliegen-altdorf.de";
 const LOGO_URL = "https://raw.githubusercontent.com/profex1337/segelfliegen/main/images/LOGO%20SPN.png";
 
-// Direkt-Link ins Admin-Panel (Tab "Gutscheine") — nur für interne Benachrichtigungen
-const VOUCHER_ADMIN_LINK_HTML = '<div style="text-align:center; margin-bottom:5px;">'
-    + '<a href="https://www.segelfliegenaltdorf.de/intern.html#gutscheine" '
-    + 'style="display:inline-block; background:#0ea5e9; color:#ffffff; text-decoration:none; font-weight:bold; font-size:15px; padding:14px 28px; border-radius:8px;">'
-    + "Gutschein jetzt erstellen</a>"
-    + '<div style="font-size:12px; color:#888; margin-top:8px;">Öffnet den internen Bereich direkt im Tab „Gutscheine“</div>'
-    + "</div>";
-
 function escapeHtml(str) {
   if (!str) return "";
   return str.replace(/&/g, "&amp;").replace(/</g, "&lt;")
       .replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#x27;");
 }
+
+// Aktions-Button für interne Benachrichtigungs-Mails (nur an Vereins-Adressen)
+function buildAdminLinkHtml(url, label, hint) {
+  return '<div style="text-align:center; margin-bottom:5px;">'
+      + '<a href="' + url + '" '
+      + 'style="display:inline-block; background:#0ea5e9; color:#ffffff; text-decoration:none; font-weight:bold; font-size:15px; padding:14px 28px; border-radius:8px;">'
+      + escapeHtml(label) + "</a>"
+      + '<div style="font-size:12px; color:#888; margin-top:8px;">' + escapeHtml(hint) + "</div>"
+      + "</div>";
+}
+
+// Direkt-Link ins Admin-Panel (Tab "Gutscheine") — nach Zahlungseingang
+const VOUCHER_ADMIN_LINK_HTML = buildAdminLinkHtml(
+    "https://www.segelfliegenaltdorf.de/intern.html#gutscheine",
+    "Gutschein jetzt erstellen",
+    "Öffnet den internen Bereich direkt im Tab „Gutscheine“",
+);
+
+// Direkt-Link auf die Bestellungen-Seite — für den Kassier bei neuer Bestellung
+const ORDER_ADMIN_LINK_HTML = buildAdminLinkHtml(
+    "https://www.segelfliegenaltdorf.de/bestellungen/",
+    "Bestellung als bezahlt markieren",
+    "Öffnet die Bestellungen-Seite (Anmeldung erforderlich)",
+);
 
 // E-Mail-Adresse validieren (RFC 5322 vereinfacht)
 function isValidEmail(email) {
@@ -410,7 +426,9 @@ exports.sendPublicEmail = onRequest(
         }
 
         const notificationMsg = formType === "gutschein" ? (data.grusstext || "(kein Grußtext)") : (message || "");
-        const html = buildNotificationHtml(subject, name, email, telefon, notificationMsg, detailsHtml);
+        // Bei Gutschein-Bestellungen: Direkt-Link auf die Bestellungen-Seite (Kassier)
+        const actionHtml = formType === "gutschein" ? ORDER_ADMIN_LINK_HTML : "";
+        const html = buildNotificationHtml(subject, name, email, telefon, notificationMsg, detailsHtml, actionHtml);
 
         // Benachrichtigung an Verein
         await transporter.sendMail({
