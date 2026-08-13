@@ -36,6 +36,14 @@ function createTransporter() {
 const VEREINS_EMAIL = "info@segelfliegen-altdorf.de";
 const LOGO_URL = "https://raw.githubusercontent.com/profex1337/segelfliegen/main/images/LOGO%20SPN.png";
 
+// Direkt-Link ins Admin-Panel (Tab "Gutscheine") — nur für interne Benachrichtigungen
+const VOUCHER_ADMIN_LINK_HTML = '<div style="text-align:center; margin-bottom:5px;">'
+    + '<a href="https://www.segelfliegenaltdorf.de/intern.html#gutscheine" '
+    + 'style="display:inline-block; background:#0ea5e9; color:#ffffff; text-decoration:none; font-weight:bold; font-size:15px; padding:14px 28px; border-radius:8px;">'
+    + "Gutschein jetzt erstellen</a>"
+    + '<div style="font-size:12px; color:#888; margin-top:8px;">Öffnet den internen Bereich direkt im Tab „Gutscheine“</div>'
+    + "</div>";
+
 function escapeHtml(str) {
   if (!str) return "";
   return str.replace(/&/g, "&amp;").replace(/</g, "&lt;")
@@ -155,7 +163,7 @@ function buildPaymentInfoHtml(name, wert, zustellung, qrUrl) {
 }
 
 // Benachrichtigungs-E-Mail an den Verein (ersetzt EmailJS Template 1)
-function buildNotificationHtml(subject, name, email, telefon, message, detailsHtml) {
+function buildNotificationHtml(subject, name, email, telefon, message, detailsHtml, extraHtml) {
   return '<div style="font-family:system-ui,sans-serif,Arial; font-size:14px; color:#333; max-width:600px; margin:0 auto;">'
       + '<div style="background:linear-gradient(135deg,#0f3460,#1a4a8a); padding:25px; border-radius:12px 12px 0 0; text-align:center;">'
       + '<img src="' + LOGO_URL + '" alt="Logo" width="50" height="50" style="width:50px; max-width:50px; border-radius:50%; margin:0 auto 10px; display:block;">'
@@ -169,6 +177,7 @@ function buildNotificationHtml(subject, name, email, telefon, message, detailsHt
       + "</div>"
       + (detailsHtml ? '<table role="presentation" style="width:100%; border-collapse:collapse; margin-bottom:20px;">' + detailsHtml + "</table>" : "")
       + (message ? '<div style="background:#f4f6f8; border-radius:8px; padding:16px; margin-bottom:20px; white-space:pre-wrap; line-height:1.6;">' + escapeHtml(message) + "</div>" : "")
+      + (extraHtml || "")
       + "</div>"
       + '<div style="background:#0f3460; padding:12px; border-radius:0 0 12px 12px; text-align:center;">'
       + '<div style="color:#a8c8f0; font-size:11px;">Segelflieger im Post-SV Nürnberg e.V. · www.segelfliegenaltdorf.de</div>'
@@ -536,7 +545,7 @@ exports.sendAdminEmail = onCall(
           });
 
           const subject = "Gutschein-Bestellung bezahlt: " + (safeOrder.name || "");
-          const html = buildNotificationHtml(subject, safeOrder.name || "", safeOrder.email || "", safeOrder.telefon || "", safeOrder.grusstext || "(kein Grußtext)", detailsHtml);
+          const html = buildNotificationHtml(subject, safeOrder.name || "", safeOrder.email || "", safeOrder.telefon || "", safeOrder.grusstext || "(kein Grußtext)", detailsHtml, VOUCHER_ADMIN_LINK_HTML);
 
           const info = await transporter.sendMail({
             from,

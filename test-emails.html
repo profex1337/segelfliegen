@@ -344,7 +344,15 @@ function buildPaymentInfoHtml(name, wert, zustellung, qrUrl) {
         + '<div style="font-size: 14px; line-height: 1.7; color: #555; margin-bottom: 25px;">Nach Zahlungseingang erstellen wir deinen personalisierten Gutschein und senden ihn dir per E-Mail zu.</div>';
 }
 
-function buildNotificationHtml(subject, name, email, telefon, message, detailsHtml) {
+// Direkt-Link ins Admin-Panel (Tab "Gutscheine") — nur für interne Benachrichtigungen
+const VOUCHER_ADMIN_LINK_HTML = '<div style="text-align:center; margin-bottom:5px;">'
+    + '<a href="https://www.segelfliegenaltdorf.de/intern.html#gutscheine" '
+    + 'style="display:inline-block; background:#0ea5e9; color:#ffffff; text-decoration:none; font-weight:bold; font-size:15px; padding:14px 28px; border-radius:8px;">'
+    + 'Gutschein jetzt erstellen</a>'
+    + '<div style="font-size:12px; color:#888; margin-top:8px;">Öffnet den internen Bereich direkt im Tab „Gutscheine“</div>'
+    + '</div>';
+
+function buildNotificationHtml(subject, name, email, telefon, message, detailsHtml, extraHtml) {
     return '<div style="font-family:system-ui,sans-serif,Arial; font-size:14px; color:#333; max-width:600px; margin:0 auto;">'
         + '<div style="background:linear-gradient(135deg,#0f3460,#1a4a8a); padding:25px; border-radius:12px 12px 0 0; text-align:center;">'
         + '<img src="' + LOGO_URL + '" alt="Logo" width="50" height="50" style="width:50px; max-width:50px; border-radius:50%; margin:0 auto 10px; display:block;">'
@@ -358,6 +366,7 @@ function buildNotificationHtml(subject, name, email, telefon, message, detailsHt
         + '</div>'
         + (detailsHtml ? '<table role="presentation" style="width:100%; border-collapse:collapse; margin-bottom:20px;">' + detailsHtml + '</table>' : '')
         + (message ? '<div style="background:#f4f6f8; border-radius:8px; padding:16px; margin-bottom:20px; white-space:pre-wrap; line-height:1.6;">' + escapeHtml(message) + '</div>' : '')
+        + (extraHtml || '')
         + '</div>'
         + '<div style="background:#0f3460; padding:12px; border-radius:0 0 12px 12px; text-align:center;">'
         + '<div style="color:#a8c8f0; font-size:11px;">Segelflieger im Post-SV Nürnberg e.V. · segelfliegenaltdorf.de</div>'
@@ -511,7 +520,7 @@ function generateEmail(type) {
             {label: "Status", value: "BEZAHLT", style: "font-weight: bold; color: #2e7d32;"},
         ];
         rows.forEach((row) => { if (row.value) details += buildDetailRow(row.label, row.value, i++, row.style); });
-        html = buildNotificationHtml(subject, TEST.name, TEST.email, TEST.telefon, TEST.grusstext, details);
+        html = buildNotificationHtml(subject, TEST.name, TEST.email, TEST.telefon, TEST.grusstext, details, VOUCHER_ADMIN_LINK_HTML);
     }
 
     return { subject, html };
