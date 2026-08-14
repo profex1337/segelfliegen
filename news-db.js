@@ -326,6 +326,77 @@ async function startNewsLogic() {
                 });
             }
 
+            // Beitragstext + "Weiterlesen"-Button. Der Text ist per CSS auf wenige
+            // Zeilen gekürzt (.is-clamped); der Button startet versteckt und wird von
+            // initNewsClamping() nur dort eingeblendet, wo wirklich abgeschnitten wird.
+            function buildTextHTML(item) {
+                const textId = 'news-text-' + escapeHTML(item.id || '');
+                return '<p id="' + textId + '" class="news-text is-clamped" style="white-space: pre-wrap;">' + escapeHTML(item.text) + '</p>'
+                    + '<button type="button" class="news-more-btn" aria-expanded="false" aria-controls="' + textId + '" hidden>'
+                    + 'Weiterlesen <span aria-hidden="true">▾</span></button>';
+            }
+
+            function initNewsClamping(container) {
+                // Resize-Listener der vorherigen Render-Runde abmelden
+                if (container._clampResizeHandler) {
+                    window.removeEventListener('resize', container._clampResizeHandler);
+                    container._clampResizeHandler = null;
+                }
+
+                const pairs = [];
+                container.querySelectorAll('.news-text').forEach(function(textEl) {
+                    const btn = textEl.parentElement.querySelector('.news-more-btn');
+                    if (btn) pairs.push({ textEl: textEl, btn: btn });
+                });
+                if (pairs.length === 0) return;
+
+                // Button nur zeigen, wenn der gekürzte Text tatsächlich überläuft
+                function measure() {
+                    pairs.forEach(function(p) {
+                        if (p.btn.getAttribute('aria-expanded') === 'true') return;
+                        p.btn.hidden = p.textEl.scrollHeight <= p.textEl.clientHeight + 2;
+                    });
+                }
+                // Ausgeblendete Cards (display:none) messen sich als 0 — nach dem
+                // Einblenden über "Alle Neuigkeiten anzeigen" muss neu gemessen werden.
+                container._clampMeasure = measure;
+
+                pairs.forEach(function(p) {
+                    p.btn.addEventListener('click', function() {
+                        const isExpanded = p.btn.getAttribute('aria-expanded') === 'true';
+                        if (isExpanded) {
+                            p.textEl.classList.add('is-clamped');
+                            p.btn.setAttribute('aria-expanded', 'false');
+                            p.btn.innerHTML = 'Weiterlesen <span aria-hidden="true">▾</span>';
+                            // Zurück zur Card-Oberkante, falls die nach oben aus dem Bild gelaufen ist
+                            const card = p.btn.closest('.news-card, .news-featured');
+                            const top = card ? card.getBoundingClientRect().top : 0;
+                            if (top < 0) {
+                                const headerH = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--header-height'), 10) || 80;
+                                window.scrollTo({ top: window.scrollY + top - headerH - 20, behavior: 'smooth' });
+                            }
+                        } else {
+                            p.textEl.classList.remove('is-clamped');
+                            p.btn.setAttribute('aria-expanded', 'true');
+                            p.btn.innerHTML = 'Weniger anzeigen <span aria-hidden="true">▴</span>';
+                        }
+                    });
+                });
+
+                measure();
+                // Eigene Schriften ändern die Zeilenhöhe — nach dem Laden erneut messen
+                if (document.fonts && document.fonts.ready) {
+                    document.fonts.ready.then(measure).catch(function() {});
+                }
+                // Spaltenzahl ändert sich mit der Fensterbreite → Zeilenzahl neu bewerten
+                let resizeTimer = null;
+                container._clampResizeHandler = function() {
+                    clearTimeout(resizeTimer);
+                    resizeTimer = setTimeout(measure, 150);
+                };
+                window.addEventListener('resize', container._clampResizeHandler);
+            }
+
             newsContainer.innerHTML = '';
             if (newsItems.length === 0) {
                 newsContainer.innerHTML = '<p style="text-align:center;">Keine Nachrichten gefunden.</p>';
@@ -351,7 +422,7 @@ async function startNewsLogic() {
                                     + '</div>'
                                     + '<span class="news-date">' + escapeHTML(item.date) + '</span>'
                                     + '<h3>' + escapeHTML(item.title || 'Kein Titel') + '</h3>'
-                                    + '<p style="white-space: pre-wrap;">' + escapeHTML(item.text) + '</p>'
+                                    + buildTextHTML(item)
                                 + '</div>'
                                 + buildCarouselHTML(images, escapeHTML(item.title))
                                 : buildCarouselHTML(images, escapeHTML(item.title))
@@ -362,7 +433,7 @@ async function startNewsLogic() {
                                         + '</div>'
                                         + '<span class="news-date">' + escapeHTML(item.date) + '</span>'
                                         + '<h3>' + escapeHTML(item.title || 'Kein Titel') + '</h3>'
-                                        + '<p style="white-space: pre-wrap;">' + escapeHTML(item.text) + '</p>'
+                                        + buildTextHTML(item)
                                     + '</div>'
                             );
                     } else {
@@ -439,12 +510,16 @@ async function startNewsLogic() {
                             el.classList.remove('news-hidden');
                         });
                         showMoreBtn.remove();
+                        // Jetzt sind die Texte messbar → "Weiterlesen" nachziehen
+                        if (newsContainer._clampMeasure) newsContainer._clampMeasure();
                     });
                     newsContainer.appendChild(showMoreBtn);
                 }
 
                 // Karussell-Interaktivität initialisieren
                 initCarousels(newsContainer);
+                // Textkürzung + "Weiterlesen"-Buttons initialisieren
+                initNewsClamping(newsContainer);
             }
         }, (error) => {
             console.error('Neuigkeiten konnten nicht geladen werden:', error);

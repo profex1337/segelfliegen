@@ -1254,6 +1254,64 @@ select { height: auto; min-height: 48px; line-height: 1.4; background-image: url
     }
 }
 
+/* === News "Weiterlesen" === */
+
+/* Gekürzter Zustand: nach Zeilen, damit die Kürzung sich der Spaltenbreite anpasst */
+.news-text.is-clamped {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 5;
+    line-clamp: 5;
+    overflow: hidden;
+}
+
+.news-featured .news-text.is-clamped {
+    -webkit-line-clamp: 10;
+    line-clamp: 10;
+}
+
+.news-more-btn {
+    align-self: flex-start;
+    margin-top: 12px;
+    padding: 0;
+    background: none;
+    border: none;
+    color: var(--accent);
+    font-family: inherit;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.news-more-btn:hover {
+    color: var(--accent-hover);
+    text-decoration: underline;
+}
+
+.news-more-btn:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+    border-radius: 4px;
+}
+
+/* Featured: Bildspalte streckt sich sonst auf die volle Texthöhe — beim
+   Aufklappen würde das Foto zu einem schmalen senkrechten Streifen beschnitten.
+   Deshalb gedeckelt; damit daneben keine große Leerfläche entsteht, läuft das
+   Bild beim Lesen mit. `clip` statt `hidden`, weil `hidden` einen Scroll-Container
+   erzeugt und sticky damit wirkungslos wäre (ältere Browser ohne `clip` behalten
+   `hidden` — dann steht das Bild einfach oben, wie bisher).
+   Mobil (≤768px) hat das Bild ohnehin eine feste Höhe, dort greift nichts davon. */
+@media (min-width: 769px) {
+    .news-featured {
+        overflow: clip;
+    }
+    .news-featured .news-card-img {
+        max-height: 560px;
+        position: sticky;
+        top: calc(var(--header-height) + 20px);
+    }
+}
+
 /* === News Bildergalerie / Karussell === */
 
 .news-carousel {

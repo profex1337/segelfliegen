@@ -195,6 +195,8 @@ Images for news posts and aircraft are **not** stored on a third-party service. 
 
 On `index.html`, news posts are rendered as a **card-grid** (`.news-card-grid`): 3 columns on desktop, 2 on tablet, 1 on mobile. The **newest post** is displayed as a **featured card** (`.news-featured`) spanning the full grid width, with text on the left and image(s) on the right. Remaining posts use the standard card layout.
 
+**Long posts**: Body text is truncated by CSS line-clamp (`.news-text.is-clamped` — 5 lines in standard cards, 10 in the featured card) with an inline "Weiterlesen" toggle. `initNewsClamping()` measures each post after render (and again after `document.fonts.ready` and on resize) and only reveals the button where the text actually overflows. On the featured card the image column is capped at 560 px and made `position: sticky` so it follows along while a long post is expanded, instead of being stretched into a narrow vertical crop.
+
 **Multiple images**: News posts support multiple images stored as `imageUrls` array (backward compatible with single `imageUrl`). When a post has multiple images, they are rendered as a **carousel** (`.news-carousel`) with prev/next buttons, dot indicators, and touch-swipe support on mobile. Clicking any image opens the lightbox.
 
 On `intern.html`, all news items are rendered in the same card-grid layout (no featured card) with admin controls (Ändern / Löschen) visible in the top-right of each card. The admin form supports **multiple file uploads** — new images are added to existing ones. Thumbnails of existing images are shown with individual delete buttons.
@@ -277,6 +279,7 @@ There is no test suite and no linter/formatter configuration. Validate changes b
 - **`.news-card-grid`** — card layout for news (3 col / 2 col / 1 col).
 - **`.news-featured`** — full-width featured card for newest news (text left, image right; column-reverse on mobile).
 - **`.news-carousel`** — image carousel with prev/next buttons, dots, and touch-swipe.
+- **`.news-text` / `.news-more-btn`** — line-clamped post text plus its "Weiterlesen" toggle. The clamp lives only on `.is-clamped`; removing that class expands the post.
 - **`.aircraft-card-grid`** — card layout for aircraft fleet (3 col / 2 col / 1 col).
 - **Nav hover animation** (desktop only) — `.nav-menu a::after` renders a glider (SVG mask) that flies in from left on hover; `.nav-menu a::before` is the trailing line. On mouse-leave, both **fade out in place** (opacity transition) rather than animating back. This is achieved by using `transition: left 0s 0.3s` (delayed reset after fadeout) in the default state, overridden by the real `left` transition in the `:hover` state.
 
@@ -323,6 +326,7 @@ There is no test suite and no linter/formatter configuration. Validate changes b
 | `startPricesLogic()` | Real-time listener for `prices` collection; renders public list and admin CRUD |
 | `startAircraftLogic()` | Real-time listener for `aircraft` collection; renders fleet on `flugzeugpark.html` and CRUD admin UI on `intern.html` |
 | `startEventsLogic()` | Real-time listener for `events` collection; renders upcoming events on `veranstaltungen.html` and CRUD admin UI on `intern.html` |
+| `initNewsClamping(container)` | Shows the "Weiterlesen" toggle only on posts whose clamped text actually overflows; re-measures after `document.fonts.ready`, on resize, and after "Alle Neuigkeiten anzeigen" reveals the hidden cards |
 | `toggleAdminUI(isAdmin)` | Shows/hides edit+delete buttons on news items based on auth state |
 | `handleInternPageVisibility(isAdmin)` | Shows admin dashboard or login prompt on `intern.html` based on auth state |
 | `loadIntoForm(item)` | Populates the news edit form with an existing document's data |
