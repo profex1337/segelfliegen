@@ -1054,6 +1054,14 @@
                 return;
             }
 
+            // Abholung: Gutschein wird eigentlich persönlich gegen Barzahlung übergeben — Mailversand nur nach Rückfrage
+            if (linkedVoucherOrder && isPickupZustellung(linkedVoucherOrder.zustellung)) {
+                var pickupOrder = (typeof window.getVoucherOrderById === 'function' && window.getVoucherOrderById(linkedVoucherOrder.id)) || linkedVoucherOrder;
+                if (!confirm('⚠️ Diese Bestellung ist eine ABHOLUNG (' + (pickupOrder.zustellung || '') + ')'
+                    + (pickupOrder.paid ? '' : ' und noch NICHT bezahlt') + '.\n\n'
+                    + 'Gutschein trotzdem per E-Mail an ' + email + ' senden?')) return;
+            }
+
             if (!ensureVoucherNumberFree()) return;
 
             const doc = generatePDF();
