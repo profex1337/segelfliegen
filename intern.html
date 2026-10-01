@@ -267,6 +267,12 @@
                         <h3>Gutschein erstellen</h3>
                         <p style="color: var(--text-light); margin-bottom: 20px;">Erstelle einen personalisierten Gutschein als PDF zum Versand per E-Mail.</p>
                         <form id="gutschein-form">
+                            <!-- Verknüpfte Bestellung (gesetzt durch "Übernehmen"); steuert Zahlungsvorbehalt + "An Jörg senden" -->
+                            <input type="hidden" id="voucher-order-id" value="">
+                            <div id="voucher-order-link" style="display:none; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:12px; padding:10px 14px; border-radius:8px; background:#f3e5f5; color:#4a148c; font-size:0.88rem;">
+                                <span id="voucher-order-link-text"></span>
+                                <button type="button" id="voucher-order-unlink" class="btn btn-secondary" style="margin-left:auto; padding:3px 10px; font-size:0.75rem;" title="Gutschein nicht mit dieser Bestellung verknüpfen">Verknüpfung lösen ✕</button>
+                            </div>
                             <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px;">
                                 <div>
                                     <label style="display:block; margin-bottom:6px; font-weight:600; font-size:0.9rem;">Besteller</label>
@@ -328,6 +334,7 @@
                                 <button type="button" id="gutschein-download-btn" class="btn" style="min-width: 260px;">PDF herunterladen</button>
                                 <button type="button" id="gutschein-send-btn" class="btn" style="min-width: 260px; background:#27ae60; border-color:#27ae60;">PDF per E-Mail senden</button>
                                 <button type="button" class="btn btn-secondary" style="min-width: 260px;" onclick="generateEmailTemplate()">E-Mail-Vorlage kopieren</button>
+                                <button type="button" id="gutschein-handover-btn" class="btn" style="display:none; min-width: 260px; background:#6a1b9a; border-color:#6a1b9a;" title="PDF + Übergabe-Link an Jörg Sperber senden">An Jörg senden</button>
                             </div>
                             <div id="send-status" style="display:none; margin-top:10px; padding:10px 14px; border-radius:6px; font-size:0.9rem; font-weight:600;"></div>
                             <div id="email-template-box" style="display:none; margin-top:16px; background:#f4f6f8; border:1px solid #ddd; border-radius:8px; padding:16px; position:relative;">
@@ -918,13 +925,55 @@
             return doc;
         }
 
-        // Gutschein in Firestore speichern + Nr. erneuern
-        // Gutschein in Firestore speichern (ohne Nr. zu erneuern)
+        // Verknüpfte Bestellung (aus "Übernehmen") — null = freier Gutschein ohne Bestellung
+        var linkedVoucherOrder = null;
+        // Gutschein-Nr., für die die Verknüpfung gilt (null = der nächste neu gespeicherte Gutschein).
+        // Verhindert, dass später frei erstellte Gutscheine versehentlich an der Bestellung hängen.
+        var linkedVoucherNumber = null;
+        function isPickupZustellung(z) { return (z || '').indexOf('Abholung') !== -1; }
+        function isAltdorfPickupZustellung(z) { return isPickupZustellung(z) && (z || '').indexOf('Flugplatz') === -1; }
+
+        window.setLinkedVoucherOrder = function(order, voucherNumber) {
+            linkedVoucherOrder = order || null;
+            linkedVoucherNumber = (order && voucherNumber) ? voucherNumber : null;
+            document.getElementById('voucher-order-id').value = order ? (order.id || '') : '';
+            var box = document.getElementById('voucher-order-link');
+            var text = document.getElementById('voucher-order-link-text');
+            var handoverBtn = document.getElementById('gutschein-handover-btn');
+            if (!order) {
+                box.style.display = 'none';
+                handoverBtn.style.display = 'none';
+                return;
+            }
+            var pickup = isPickupZustellung(order.zustellung);
+            var pending = pickup && !order.paid;
+            text.textContent = '🔗 Bestellung von ' + (order.name || '—')
+                + (linkedVoucherNumber ? ' · Gutschein ' + linkedVoucherNumber : '')
+                + (pickup ? ' · 📍 ' + (order.zustellung || '') : '')
+                + (pending ? ' · Gutschein wird mit Zahlungsvorbehalt angelegt (wird bei Bezahlung automatisch freigeschaltet)' : '');
+            box.style.display = 'flex';
+            handoverBtn.style.display = (isAltdorfPickupZustellung(order.zustellung) && order.status !== 'abgeschlossen') ? '' : 'none';
+        };
+        document.getElementById('voucher-order-unlink')?.addEventListener('click', function() {
+            window.setLinkedVoucherOrder(null);
+        });
+
+        // Gutschein in Firestore speichern (ohne Nr. zu erneuern) — gibt ein Promise zurück
         function saveVoucher() {
             const voucherNr = document.getElementById('voucher-number').value.trim();
             var isReprint = typeof window.checkVoucherExists === 'function' && window.checkVoucherExists(voucherNr);
             if (!isReprint && typeof window.saveVoucherToFirestore === 'function') {
-                window.saveVoucherToFirestore({
+                var orderLink = {};
+                // Nur verknüpfen, solange es um "den" Gutschein dieser Bestellung geht
+                if (linkedVoucherOrder && linkedVoucherOrder.id && (!linkedVoucherNumber || linkedVoucherNumber === voucherNr)) {
+                    linkedVoucherNumber = voucherNr;
+                    // Aktuellen Stand der Bestellung nehmen (könnte seit "Übernehmen" bezahlt worden sein)
+                    var currentOrder = (typeof window.getVoucherOrderById === 'function' && window.getVoucherOrderById(linkedVoucherOrder.id)) || linkedVoucherOrder;
+                    orderLink.orderId = currentOrder.id;
+                    // Abholung noch nicht bezahlt → Gutschein erst nach Zahlung gültig
+                    orderLink.paymentPending = isPickupZustellung(currentOrder.zustellung) && !currentOrder.paid;
+                }
+                return window.saveVoucherToFirestore(Object.assign(orderLink, {
                     recipient: document.getElementById('voucher-recipient').value.trim(),
                     flightType: document.getElementById('voucher-flight-type').value,
                     greeting: document.getElementById('voucher-greeting').value.trim() || '',
@@ -935,8 +984,9 @@
                     showValue: document.getElementById('voucher-show-value').checked,
                     flugdauer: document.getElementById('voucher-flugdauer').value || '',
                     redeemed: false
-                });
+                }));
             }
+            return Promise.resolve();
         }
 
         // Neue Gutschein-Nummer erzeugen (Format wie beim Seitenladen; bei Kollision Suffix -2, -3, ...)
@@ -1051,6 +1101,54 @@
             } finally {
                 sendBtn.disabled = false;
                 sendBtn.textContent = 'PDF per E-Mail senden';
+            }
+        });
+
+        // Button 3: Abholung Altdorf — PDF + Übergabe-Link an Jörg (Cloud Function sendPickupHandover)
+        document.getElementById('gutschein-handover-btn')?.addEventListener('click', async () => {
+            if (!linkedVoucherOrder || !linkedVoucherOrder.id) {
+                alert('Bitte zuerst eine Abholungs-Bestellung per „Übernehmen“ laden.');
+                return;
+            }
+            if (!confirm('Gutschein-PDF und Übergabe-Link an Jörg senden?\n\nJörg bestätigt damit später Übergabe + Barzahlung mit einem Klick.')) return;
+            if (!ensureVoucherNumberFree()) return;
+
+            const doc = generatePDF();
+            if (!doc) return;
+
+            const handoverBtn = document.getElementById('gutschein-handover-btn');
+            const voucherNr = document.getElementById('voucher-number').value.trim();
+            const filename = (voucherNr ? 'Gutschein_' + voucherNr : 'Gutschein').replace(/[^A-Za-z0-9._-]/g, '_') + '.pdf';
+            const pdfBase64 = doc.output('datauristring').split(',')[1];
+
+            handoverBtn.disabled = true;
+            handoverBtn.textContent = 'Wird gesendet...';
+            showSendStatus('Gutschein wird an Jörg gesendet...', false);
+
+            try {
+                // Gutschein zuerst speichern (mit Bestell-Verknüpfung), damit der Server ihn findet
+                if (await saveVoucher() === false) {
+                    throw new Error('Gutschein konnte nicht gespeichert werden.');
+                }
+
+                const { getFunctions, httpsCallable } = await import('https://www.gstatic.com/firebasejs/11.6.1/firebase-functions.js');
+                const { getApp } = await import('https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js');
+                const functions = getFunctions(getApp(), 'europe-west1');
+                const sendHandover = httpsCallable(functions, 'sendPickupHandover');
+
+                await sendHandover({
+                    orderId: linkedVoucherOrder.id,
+                    voucherNumber: voucherNr,
+                    pdfBase64: pdfBase64,
+                    pdfFilename: filename
+                });
+                showSendStatus('Gutschein + Übergabe-Link an Jörg gesendet (Kopie an info@). Sobald Jörg bestätigt, wird alles automatisch abgeschlossen.', false);
+            } catch (error) {
+                console.error('Senden an Jörg fehlgeschlagen:', error);
+                showSendStatus('Fehler beim Senden an Jörg: ' + (error.message || error), true);
+            } finally {
+                handoverBtn.disabled = false;
+                handoverBtn.textContent = 'An Jörg senden';
             }
         });
 

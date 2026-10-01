@@ -156,6 +156,8 @@ rateLimits/     — top-level, one doc per IP; written server-side by `sendPubli
   zusatzzeit:  string,           // Extra flight time in minutes (e.g. "10")
   showValue:   boolean,          // Whether to show value on PDF (default: true)
   redeemed:    boolean,          // Whether the voucher has been redeemed
+  orderId?:    string,           // voucherOrders doc id (set when created via "Übernehmen")
+  paymentPending?: boolean,      // true = pickup order not yet paid ("Zahlung offen"); cleared server-side on payment
   timestamp:   number            // Unix ms — creation timestamp
 }
 ```
@@ -176,7 +178,13 @@ rateLimits/     — top-level, one doc per IP; written server-side by `sendPubli
   status:        string,         // "neu" | "abgeschlossen"
   paid:          boolean,        // Whether order has been paid
   timestamp:     number,         // Unix ms — order creation timestamp
-  completedAt:   number | null   // Unix ms — when order was completed
+  completedAt:   number | null,  // Unix ms — when order was completed
+  // Pickup orders only (written server-side):
+  paidAt?:              number,  // Unix ms — when marked paid via markPickupPaid / confirmPickup
+  paidVia?:             string,  // "admin" | "bestellungen" | "uebergabe-link"
+  handoverTokenHash?:   string,  // sha256 of Jörg's one-time confirm link token (plain token never stored)
+  handoverSentAt?:      number,  // Unix ms — when "An Jörg senden" was used
+  handoverVoucherNumber?: string // voucher number sent to Jörg
 }
 ```
 
@@ -358,7 +366,7 @@ There is no test suite and no linter/formatter configuration. Validate changes b
 
 | Service | Config location | Notes |
 |---|---|---|
-| **Firebase** | `news-db.js` lines 5–13, `functions/index.js` | Project ID: `segelfliegen`. SDK version: `11.6.1`. Cloud Functions (europe-west1): `sendPublicEmail` (onRequest, public forms; fail-open IP-Rate-Limit via `rateLimits` collection), `sendAdminEmail` (onCall, admin), `sendVoucherEmail` (onCall, PDF), `uploadImage` (onCall, GitHub upload), `deleteImage` (onCall, GitHub delete), `getGoogleReviews` (onRequest, public; Places-API-Cache in `reviewsCache/latest`), `generateGreetingText` (onCall, any authed user incl. anonymous; Gemini API). Secrets: `SMTP_USER`, `SMTP_PASS`, `GH_PAT`, `GOOGLE_PLACES_KEY`, `GEMINI_API_KEY`. |
+| **Firebase** | `news-db.js` lines 5–13, `functions/index.js` | Project ID: `segelfliegen`. SDK version: `11.6.1`. Cloud Functions (europe-west1): `sendPublicEmail` (onRequest, public forms; fail-open IP-Rate-Limit via `rateLimits` collection), `sendAdminEmail` (onCall, admin), `sendVoucherEmail` (onCall, PDF), `uploadImage` (onCall, GitHub upload), `deleteImage` (onCall, GitHub delete), `getGoogleReviews` (onRequest, public; Places-API-Cache in `reviewsCache/latest`), `generateGreetingText` (onCall, any authed user incl. anonymous; Gemini API), `markPickupPaid` (onCall, admin + bestellung@; pickup "Bezahlt"), `sendPickupHandover` (onCall, admin; PDF + one-time link to Jörg), `confirmPickup` (onRequest, public; token-protected handover confirmation page). Secrets: `SMTP_USER`, `SMTP_PASS`, `GH_PAT`, `GOOGLE_PLACES_KEY`, `GEMINI_API_KEY`. |
 | **GitHub API** | `functions/index.js` `uploadImage()` / `deleteImage()` | Used for news & aircraft image storage. PAT stored as Firebase Secret `GH_PAT` — no client-side token needed. Client calls Cloud Functions via `httpsCallable()`. |
 | **Widerruf (§ 356a BGB)** | `widerruf.html`, `functions/index.js` (`formType: "widerruf"`), `functions/widerruf-mail.js` | Two-stage withdrawal button → customer Eingangsbestätigung (durable medium, server-side Europe/Berlin timestamp, no acknowledgement) + club notification (info@ + CC dan@ + Kassier) + Firestore log `widerrufe`. Widerrufsbelehrung also appended to gutschein confirmation mail (§ 312f BGB). Highlighted footer link `.footer-widerruf` on every page. |
 | **Cloud Functions** | `functions/index.js`, `script.js`, `news-db.js`, `bestellungen/index.html` | `sendPublicEmail` (onRequest, public forms via `fetch()`), `sendAdminEmail` (onCall, admin actions via `httpsCallable()`), `sendVoucherEmail` (onCall, PDF email), `uploadImage` (onCall, image upload to GitHub), `deleteImage` (onCall, image delete from GitHub). SMTP functions use Strato-SMTP via Nodemailer; image functions use GitHub Contents API. All customer emails use "Du" form. **CC-Logik**: dan@ always; kassier@ on gutschein; joergsperber@ only on Abholung orders; Jeremy on Ausbildung. |
@@ -411,6 +419,7 @@ The panel is organised in **five tabs**:
 - The voucher form shows **Besteller** (read-only info) and **E-Mail** (editable, used for "PDF per E-Mail senden") as visible fields. Both are auto-filled when loading an order via "Übernehmen", but the email can also be entered manually for standalone vouchers.
 - Incoming voucher orders from `mitfliegen.html` are stored in Firestore (`voucherOrders` collection) and displayed as a list below the voucher form.
 - Order workflow: **Neu** → mark as **Bezahlt** → **Übernehmen** (loads into PDF form) → **PDF generieren** → manually send PDF to customer → **Abschließen**.
+- **Pickup orders (`zustellung` contains "Abholung")** follow a different flow: **Übernehmen** is allowed before payment; the loaded order is shown as a linked-order banner (`window.setLinkedVoucherOrder`, "Verknüpfung lösen ✕") and the saved voucher gets `orderId` + `paymentPending: true` ("⏳ Zahlung offen" in intern + `/gutschein/`, extra confirm on Einlösen). For **Altdorf** pickups the button **"An Jörg senden"** calls `sendPickupHandover` (PDF + one-time link `confirmPickup?o=…&t=…` to Jörg, CC info@). GET on that link only shows a confirmation page (mail scanners prefetch links); the POST button runs `settlePickupOrder`. **"Bezahlt"** on a pickup order (intern + `/bestellungen/`) calls `markPickupPaid`, which runs the same routine. `settlePickupOrder` (transaction): order `paid: true`; if a voucher with that `orderId` exists also `status: 'abgeschlossen'` and the voucher's `paymentPending` is cleared — without a linked voucher the order stays open so the voucher can still be created. Notification mail to info@ + Dan (not when the admin clicks in intern). Non-pickup orders are unchanged.
 - The "Übernehmen" button and click-to-load only appear **after** the order is marked as paid.
 - **Payment Reminder**: Unpaid orders show a "Reminder" button that sends a reminder email to the customer via Cloud Function `sendAdminEmail`. The reminder dynamically adapts to the payment method (bank transfer vs. pickup).
 - **PDF generation** via jsPDF (self-hosted in `lib/jspdf/`). PDF includes: flight type, value, flight duration (calculated from base + extra time), recipient name, greeting text, voucher number, validity date, club address, and flight time info.
@@ -440,7 +449,7 @@ Two standalone pages provide limited access to specific Firestore collections. T
 - Shows open voucher orders from the `voucherOrders` collection (excludes completed orders).
 - Login: `bestellung@segelfliegen-altdorf.de` (or admin).
 - Features:
-  - **"Bezahlt"** button: marks order as paid + sends notification email to `info@segelfliegen-altdorf.de` via Cloud Function `sendAdminEmail` (with all order details and status "BEZAHLT"). Requires user confirmation before executing.
+  - **"Bezahlt"** button: marks order as paid + sends notification email to `info@segelfliegen-altdorf.de` via Cloud Function `sendAdminEmail` (with all order details and status "BEZAHLT"). Requires user confirmation before executing. For pickup orders it calls `markPickupPaid` instead (paid + auto-complete + voucher release, see Tab 4).
   - **"Reminder"** button: sends payment reminder to customer via Cloud Function `sendAdminEmail` (adapts to bank transfer vs. pickup).
 - Unpaid orders shown prominently; paid orders in a collapsible section.
 - Uses Firebase Functions Compat SDK (`httpsCallable`) for `sendAdminEmail` — no local copies of email template helpers needed (server-side).

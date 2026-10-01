@@ -171,6 +171,31 @@
         if (!order) return;
         if (!confirm('Bestellung von ' + (order.name || '') + ' als bezahlt markieren?')) return;
 
+        // Abholung: serverseitig verbuchen — bezahlt + (falls Gutschein schon erstellt) abschließen
+        // und Gutschein freischalten; die Info-Mail an den Verein verschickt die Function selbst.
+        if ((order.zustellung || '').indexOf('Abholung') !== -1) {
+            functions.httpsCallable('markPickupPaid')({ orderId: docId, notify: true })
+                .then(function(res) {
+                    var d = res.data || {};
+                    var msg = d.status === 'already'
+                        ? 'Diese Bestellung war bereits als bezahlt verbucht.'
+                        : (d.completed
+                            ? 'Abholung als bezahlt verbucht — Bestellung abgeschlossen, Gutschein freigeschaltet.'
+                            : 'Als bezahlt markiert (Gutschein wird noch erstellt).');
+                    if (d.status === 'ok') {
+                        msg += d.mailSent
+                            ? ' Benachrichtigung an info@segelfliegen-altdorf.de gesendet.'
+                            : ' Achtung: Die Benachrichtigungs-Mail konnte nicht gesendet werden.';
+                    }
+                    showSuccess(msg);
+                })
+                .catch(function(e) {
+                    console.error('Fehler:', e);
+                    alert('Fehler: ' + e.message);
+                });
+            return;
+        }
+
         db.collection('voucherOrders').doc(docId).update({ paid: true })
             .then(function() {
                 // Bezahlt-Benachrichtigung an Verein über Cloud Function

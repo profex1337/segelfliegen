@@ -50,6 +50,9 @@
         .badge { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 0.72rem; font-weight: 600; }
         .badge-open { background: #e8f5e9; color: #2e7d32; }
         .badge-redeemed { background: #fff3e0; color: #e65100; }
+        .badge-pending { background: #e65100; color: #fff; }
+        .voucher-row.open.pending { background: #fff8f0; }
+        .voucher-row.open.pending::before { background: #e65100; }
         .btn-toggle { padding: 5px 12px; border: 1px solid #ddd; border-radius: 6px; background: #fff; cursor: pointer; font-size: 0.78rem; font-weight: 500; }
         .btn-toggle:hover { background: #f4f6f8; }
         .btn-logout { padding: 6px 14px; border: none; border-radius: 6px; background: #eee; color: #666; cursor: pointer; font-size: 0.78rem; }
@@ -145,7 +148,8 @@
         return new Date() > expiry;
     }
 
-    function toggleRedeemed(docId, current, expired) {
+    function toggleRedeemed(docId, current, expired, pending) {
+        if (!current && pending && !confirm('⚠️ Dieser Gutschein ist noch NICHT bezahlt (Abholung ausstehend).\n\nTrotzdem einlösen?')) return;
         if (current && !confirm('Gutschein wirklich wieder \u00F6ffnen?')) return;
         if (!current && expired && !confirm('Gutschein ist abgelaufen, trotzdem einl\u00F6sen?')) return;
         db.collection('vouchers').doc(docId).update({ redeemed: !current })
@@ -232,9 +236,11 @@
         var expiredLabel = expired ? '<span class="expired-label">abgelaufen</span>' : '';
         var valid = v.validUntil ? '<div class="voucher-valid">G\u00FCltig bis: ' + escapeHtml(v.validUntil) + expiredLabel + '</div>' : '';
         var nameClass = isR ? 'voucher-name redeemed' : 'voucher-name';
-        var rowClass = isR ? 'voucher-row redeemed' : 'voucher-row open' + (expired ? ' expired' : '');
-        var badgeClass = isR ? 'badge badge-redeemed' : 'badge badge-open';
-        var badgeText = isR ? 'Eingel\u00F6st' : 'Offen';
+        // Abholung noch nicht bezahlt → Gutschein unter Zahlungsvorbehalt
+        var pending = !isR && !!v.paymentPending;
+        var rowClass = isR ? 'voucher-row redeemed' : 'voucher-row open' + (expired ? ' expired' : '') + (pending ? ' pending' : '');
+        var badgeClass = isR ? 'badge badge-redeemed' : (pending ? 'badge badge-pending' : 'badge badge-open');
+        var badgeText = isR ? 'Eingel\u00F6st' : (pending ? 'Zahlung offen' : 'Offen');
         var btnText = isR ? 'Wieder \u00F6ffnen' : 'Einl\u00F6sen';
         var searchText = escapeHtml(((v.recipient || '') + ' ' + (v.number || '') + ' ' + (v.flightType || '') + ' ' + (v.ordererName || '')).toLowerCase());
 
@@ -245,7 +251,7 @@
             + escapeHtml(v.flightType || '') + (v.value ? ' &middot; ' + escapeHtml(v.value) + ' \u20AC' : '') + (v.number ? ' &middot; ' + escapeHtml(v.number) : '') + ' &middot; ' + date
             + '</div>' + valid + '</div>'
             + '<span class="' + badgeClass + '">' + badgeText + '</span> '
-            + '<button class="btn-toggle" onclick="toggleRedeemed(\'' + v.id + '\', ' + isR + ', ' + expired + ')">' + btnText + '</button>'
+            + '<button class="btn-toggle" onclick="toggleRedeemed(\'' + v.id + '\', ' + isR + ', ' + expired + ', ' + pending + ')">' + btnText + '</button>'
             + '</div>';
     }
 

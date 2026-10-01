@@ -1606,6 +1606,12 @@ async function startVoucherLogic() {
         });
     });
 
+    // Aktueller Stand einer Bestellung aus dem Live-Cache (für intern.html)
+    window.getVoucherOrderById = (id) => {
+        if (!id) return null;
+        return cachedOrders.find(function(o) { return o.id === id; }) || null;
+    };
+
     // Prüft ob Gutschein-Nr. schon als offen existiert
     window.checkVoucherExists = (number) => {
         if (!number) return false;
@@ -1614,8 +1620,9 @@ async function startVoucherLogic() {
 
     // Gutschein nach PDF-Generierung speichern (Event von intern.html)
     // Prüft ob Gutschein-Nr. schon existiert — wenn ja, nur aktualisieren
+    // Gibt true/false zurück (Aufrufer wie "An Jörg senden" brechen bei false ab)
     window.saveVoucherToFirestore = async (data) => {
-        if (!auth.currentUser || auth.currentUser.isAnonymous) return;
+        if (!auth.currentUser || auth.currentUser.isAnonymous) return false;
         try {
             var existing = data.number ? cachedVouchers.find(function(v) { return v.number === data.number; }) : null;
             if (existing) {
@@ -1626,8 +1633,10 @@ async function startVoucherLogic() {
                     timestamp: Date.now()
                 });
             }
+            return true;
         } catch (e) {
             console.error('Gutschein speichern fehlgeschlagen:', e);
+            return false;
         }
     };
 
@@ -1641,9 +1650,10 @@ async function startVoucherLogic() {
     };
 
     // Gutschein als eingelöst markieren
-    window.toggleVoucherRedeemed = async (docId, currentStatus, expired) => {
+    window.toggleVoucherRedeemed = async (docId, currentStatus, expired, paymentPending) => {
         if (!auth.currentUser || auth.currentUser.isAnonymous) return;
         if (currentStatus && !confirm('Gutschein wirklich wieder \u00F6ffnen?')) return;
+        if (!currentStatus && paymentPending && !confirm('\u26A0\uFE0F Dieser Gutschein ist noch NICHT bezahlt (Abholung ausstehend).\n\nTrotzdem einl\u00F6sen?')) return;
         if (!currentStatus && expired && !confirm('Gutschein ist abgelaufen, trotzdem einl\u00F6sen?')) return;
         try {
             await updateDoc(doc(db, 'vouchers', docId), { redeemed: !currentStatus });
@@ -1665,6 +1675,19 @@ async function startVoucherLogic() {
 
     // Gutschein erneut drucken (Nachdruck) — befüllt Formular und generiert direkt PDF
     window.loadVoucherForReprint = (item) => {
+        fillVoucherFormFromVoucher(item);
+        // Bestell-Verknüpfung des Gutscheins wiederherstellen (z. B. für "An Jörg senden")
+        if (typeof window.setLinkedVoucherOrder === 'function') {
+            var linkedOrder = item.orderId ? cachedOrders.find(function(o) { return o.id === item.orderId; }) : null;
+            window.setLinkedVoucherOrder(linkedOrder || null, linkedOrder ? item.number : null);
+        }
+        // Direkt PDF herunterladen
+        var downloadBtn = document.getElementById('gutschein-download-btn');
+        if (downloadBtn) downloadBtn.click();
+    };
+
+    // Formular mit den Daten eines gespeicherten Gutscheins befüllen
+    function fillVoucherFormFromVoucher(item) {
         var recipient = document.getElementById('voucher-recipient');
         var flightType = document.getElementById('voucher-flight-type');
         var greeting = document.getElementById('voucher-greeting');
@@ -1695,13 +1718,24 @@ async function startVoucherLogic() {
         if (showValueField) showValueField.checked = item.showValue !== false;
         var flugdauerField = document.getElementById('voucher-flugdauer');
         if (flugdauerField) flugdauerField.value = item.flugdauer || '';
-        // Direkt PDF herunterladen
-        var downloadBtn = document.getElementById('gutschein-download-btn');
-        if (downloadBtn) downloadBtn.click();
-    };
+    }
 
     // Bestellung ins Formular laden
     window.loadVoucherOrder = (order) => {
+        // Gibt es zu dieser Bestellung schon einen (nicht eingelösten) Gutschein, diesen erneut laden
+        // statt einen zweiten anzulegen — z. B. für erneutes "An Jörg senden" nach einem Neuladen
+        var existingVoucher = cachedVouchers.find(function(v) { return v.orderId === order.id && !v.redeemed; });
+        if (existingVoucher) {
+            fillVoucherFormFromVoucher(existingVoucher);
+            var bField = document.getElementById('voucher-besteller');
+            if (bField) bField.value = order.name || '';
+            var eField = document.getElementById('voucher-order-email');
+            if (eField) eField.value = order.email || '';
+            if (typeof window.setLinkedVoucherOrder === 'function') window.setLinkedVoucherOrder(order, existingVoucher.number);
+            var existingForm = document.getElementById('gutschein-form');
+            if (existingForm) existingForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            return;
+        }
         const recipient = document.getElementById('voucher-recipient');
         const flightType = document.getElementById('voucher-flight-type');
         const greeting = document.getElementById('voucher-greeting');
@@ -1734,14 +1768,33 @@ async function startVoucherLogic() {
         // Wert-Anzeige Checkbox setzen (Standard: true)
         var showValueField = document.getElementById('voucher-show-value');
         if (showValueField) showValueField.checked = order.wertAnzeigen !== false;
+        // Bestellung mit dem Gutschein verknüpfen (Zahlungsvorbehalt bei Abholung, "An Jörg senden")
+        if (typeof window.setLinkedVoucherOrder === 'function') window.setLinkedVoucherOrder(order, null);
         // Zum Formular scrollen
         const form = document.getElementById('gutschein-form');
         if (form) form.scrollIntoView({ behavior: 'smooth', block: 'start' });
     };
 
     // Bestellung als bezahlt markieren
-    window.toggleOrderPaid = async (docId, currentStatus) => {
+    // Abholung: "Bezahlt" läuft serverseitig (markPickupPaid) — schließt ab und schaltet den Gutschein frei
+    window.toggleOrderPaid = async (docId, currentStatus, zustellung) => {
         if (!auth.currentUser || auth.currentUser.isAnonymous) return;
+        if (!currentStatus && (zustellung || '').indexOf('Abholung') !== -1) {
+            if (!confirm('Abholung als bezahlt markieren?\n\nIst schon ein Gutschein zu dieser Bestellung erstellt, wird die Bestellung damit auch abgeschlossen und der Gutschein freigeschaltet.')) return;
+            try {
+                const { getFunctions, httpsCallable } = await import('https://www.gstatic.com/firebasejs/11.6.1/firebase-functions.js');
+                const { getApp } = await import('https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js');
+                const markPaid = httpsCallable(getFunctions(getApp(), 'europe-west1'), 'markPickupPaid');
+                const res = await markPaid({ orderId: docId, notify: false });
+                if (res.data && res.data.status === 'ok' && !res.data.completed) {
+                    alert('Als bezahlt markiert.\n\nEs ist noch kein Gutschein mit dieser Bestellung verknüpft \u2014 bitte jetzt \u201EÜbernehmen\u201C, Gutschein erstellen und danach abschließen.');
+                }
+            } catch (e) {
+                console.error('Bezahlt (Abholung) fehlgeschlagen:', e);
+                alert('Fehler: ' + (e.message || e));
+            }
+            return;
+        }
         try {
             await updateDoc(doc(db, 'voucherOrders', docId), { paid: !currentStatus });
         } catch (e) {
@@ -1848,6 +1901,7 @@ function renderOrderRow(order, isClosed) {
         + '<div style="font-size:0.82rem; color:var(--text-light); margin-top:3px;">'
         + flugart + (wert ? ' &middot; ' + wert + ' \u20AC' : '') + ' &middot; F\u00FCr: ' + empfaenger
         + (zustellungRaw ? ' &middot; <span style="font-weight:600; color:' + (istAbholung ? '#6a1b9a' : '#1565c0') + ';">' + zustellungBadgeLabel + '</span>' : '')
+        + (order.handoverSentAt && !isClosed ? ' &middot; <span style="font-weight:600; color:#6a1b9a;">\uD83D\uDCE8 bei J\u00F6rg seit ' + new Date(order.handoverSentAt).toLocaleDateString('de-DE') + '</span>' : '')
         + '</div>'
         + '<div style="font-size:0.78rem; color:#888; margin-top:2px;">'
         + email + (telefon ? ' &middot; ' + telefon : '') + ' &middot; ' + orderDate
@@ -1890,7 +1944,7 @@ function renderOrderRow(order, isClosed) {
             var action = btn.getAttribute('data-action');
             if (action === 'reopen') window.reopenVoucherOrder(order.id);
             else if (action === 'delete') window.deleteVoucherOrder(order.id);
-            else if (action === 'togglePaid') window.toggleOrderPaid(order.id, isPaid);
+            else if (action === 'togglePaid') window.toggleOrderPaid(order.id, isPaid, order.zustellung || '');
             else if (action === 'load') window.loadVoucherOrder(order);
             else if (action === 'reminder') window.sendPaymentReminder(order);
             else if (action === 'complete') window.completeVoucherOrder(order.id);
@@ -2085,17 +2139,22 @@ function renderVoucherRow(item) {
     var statusText = item.redeemed ? 'Eingelöst' : 'Offen';
     var toggleText = item.redeemed ? 'Wieder \u00F6ffnen' : 'Einl\u00F6sen';
     var expiredLabel = expired ? '<span style="color:#c62828; font-weight:700; margin-left:6px;">abgelaufen</span>' : '';
+    // Abholung noch nicht bezahlt → Gutschein unter Zahlungsvorbehalt
+    var paymentPending = !item.redeemed && !!item.paymentPending;
+    if (paymentPending) borderColor = '#e65100';
+    var supersededNote = item.supersededBy ? '<span style="font-size:0.72rem; color:#888; margin-left:8px;">ersetzt durch ' + escapeHTML(item.supersededBy) + '</span>' : '';
+    var pendingBadge = paymentPending ? '<span style="font-size:0.72rem; padding:2px 8px; border-radius:12px; font-weight:700; background:#fff3e0; color:#e65100; margin-left:8px;" title="Wird automatisch freigeschaltet, sobald die Abholung bezahlt ist">\u23F3 Zahlung offen</span>' : '';
     var validLine = item.validUntil ? '<div style="font-size:0.78rem; color:#888;">Gültig bis: ' + escapeHTML(item.validUntil) + expiredLabel + '</div>' : '';
 
     row.innerHTML = '<span style="flex:0 0 auto; width:10px; height:10px; border-radius:50%; background:' + borderColor + ';"></span>'
         + '<div style="flex:1; min-width:200px;">'
-        + '<strong style="font-size:1rem;' + nameStyle + '">' + (escapeHTML(item.recipient) || '\u2014') + '</strong>'
+        + '<strong style="font-size:1rem;' + nameStyle + '">' + (escapeHTML(item.recipient) || '\u2014') + '</strong>' + pendingBadge + supersededNote
         + '<div style="font-size:0.82rem; color:var(--text-light); margin-top:3px;">'
         + escapeHTML(item.flightType || '') + (item.value ? ' &middot; ' + escapeHTML(item.value) + ' \u20AC' : '') + ' &middot; ' + escapeHTML(item.number || '') + ' &middot; Erstellt: ' + createdDate
         + '</div>' + validLine + '</div>'
         + '<div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">'
         + '<button class="btn btn-secondary voucher-reprint-btn" style="padding:6px 12px; font-size:0.78rem; background:var(--primary); color:#fff; border-color:var(--primary);">PDF</button>'
-        + '<button onclick="toggleVoucherRedeemed(\'' + item.id + '\', ' + (!!item.redeemed) + ', ' + (!!expired) + ')" class="btn btn-secondary" style="padding:6px 12px; font-size:0.78rem;">' + toggleText + '</button>'
+        + '<button onclick="toggleVoucherRedeemed(\'' + item.id + '\', ' + (!!item.redeemed) + ', ' + (!!expired) + ', ' + paymentPending + ')" class="btn btn-secondary" style="padding:6px 12px; font-size:0.78rem;">' + toggleText + '</button>'
         + '<button onclick="deleteVoucher(\'' + item.id + '\')" class="btn btn-secondary" style="padding:6px 12px; font-size:0.78rem; background:#c0392b; color:#fff; border-color:#c0392b;">L\u00F6schen</button>'
         + '</div>';
 

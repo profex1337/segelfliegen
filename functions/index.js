@@ -643,6 +643,408 @@ exports.sendVoucherEmail = onCall(
     },
 );
 
+// ========== Abholung: Übergabe & Barzahlung (Ein-Klick-Link für Jörg) ==========
+// Ablauf Abholung Altdorf: Admin erstellt Gutschein (Status "Zahlung offen") → "An Jörg senden"
+// (PDF + Einmal-Link) → Jörg übergibt, kassiert, klickt → Bestellung bezahlt + abgeschlossen,
+// Gutschein freigeschaltet. Abholung Flugplatz: dasselbe über den "Bezahlt"-Button (ohne Link).
+
+const crypto = require("crypto");
+const JOERG_EMAIL = "joergsperber@arcor.de";
+const CONFIRM_PICKUP_URL = "https://europe-west1-segelfliegen.cloudfunctions.net/confirmPickup";
+
+function isPickupOrder(zustellung) {
+  return (zustellung || "").indexOf("Abholung") !== -1;
+}
+
+function isAltdorfPickup(zustellung) {
+  return isPickupOrder(zustellung) && (zustellung || "").indexOf("Flugplatz") === -1;
+}
+
+// Nur der Hash des Links wird gespeichert — wer Firestore lesen kann, kann den Link nicht nachbauen
+function hashToken(token) {
+  return crypto.createHash("sha256").update(String(token)).digest("hex");
+}
+
+function tokenMatches(token, storedHash) {
+  if (!token || !storedHash || typeof token !== "string" || typeof storedHash !== "string") return false;
+  const a = Buffer.from(hashToken(token), "hex");
+  const b = Buffer.from(storedHash, "hex");
+  return a.length === b.length && crypto.timingSafeEqual(a, b);
+}
+
+function isValidDocId(id) {
+  return typeof id === "string" && /^[A-Za-z0-9]{1,64}$/.test(id);
+}
+
+// Abholungs-Bestellung als bezahlt verbuchen (Transaktion):
+// - Bestellung: paid = true; ist ein Gutschein verknüpft, zusätzlich abgeschlossen
+// - verknüpfte Gutscheine: Zahlungsvorbehalt aufheben (paymentPending = false)
+// Ohne verknüpften Gutschein bleibt die Bestellung offen, damit er noch erstellt werden kann.
+async function settlePickupOrder(orderId, via) {
+  const db = getFirestore();
+  const orderRef = db.collection("voucherOrders").doc(orderId);
+  const voucherQuery = db.collection("vouchers").where("orderId", "==", orderId);
+  return db.runTransaction(async (tx) => {
+    const snap = await tx.get(orderRef);
+    if (!snap.exists) return {status: "missing"};
+    const order = snap.data();
+    if (!isPickupOrder(order.zustellung)) return {status: "notPickup", order};
+    const vSnap = await tx.get(voucherQuery);
+    // Wurde ein Gutschein an Jörg geschickt, gilt genau dieser (ältere Fassungen bleiben gesperrt)
+    const vouchers = vSnap.docs.filter((d) => !order.handoverVoucherNumber || d.data().number === order.handoverVoucherNumber);
+    const voucherNumbers = vouchers.map((d) => d.data().number || "").filter(Boolean);
+    const completed = vouchers.length > 0;
+    if (order.paid === true && (order.status === "abgeschlossen" || !completed)) {
+      // Nichts Neues zu verbuchen (verhindert doppelte Info-Mails bei wiederholtem Klick)
+      return {status: "already", order, completed: order.status === "abgeschlossen", voucherNumbers};
+    }
+    const now = Date.now();
+    const update = {paid: true, paidAt: order.paidAt || now, paidVia: order.paidVia || via};
+    if (completed) {
+      update.status = "abgeschlossen";
+      update.completedAt = now;
+    }
+    tx.update(orderRef, update);
+    vouchers.forEach((d) => {
+      if (d.data().paymentPending) tx.update(d.ref, {paymentPending: false});
+    });
+    return {status: "ok", order, completed, voucherNumbers};
+  });
+}
+
+// Info-Mail an den Verein, nachdem eine Abholung bezahlt wurde
+async function sendPickupSettledMail(order, result, viaLabel, fromHandoverLink) {
+  const completed = result.completed;
+  const flugdauer = order.flugdauer || getFlugdauer(order.flugart || "", parseInt(order.zusatzzeit || "0", 10));
+  const rows = [
+    {label: "Flugart", value: order.flugart || ""},
+    {label: "Gutscheinwert", value: (order.wert || "") + " €", style: "font-weight: bold; color: #0ea5e9;"},
+    {label: "Empfänger", value: order.empfaenger || ""},
+    {label: "Zustellung", value: order.zustellung || ""},
+    {label: "Flugdauer", value: flugdauer},
+    {label: "Gutschein-Nr.", value: (result.voucherNumbers || []).join(", ")},
+    {label: "Bestätigt über", value: viaLabel},
+    {label: "Status", value: completed ? "BEZAHLT & ABGESCHLOSSEN" : "BEZAHLT — Gutschein noch erstellen",
+      style: "font-weight: bold; color: #2e7d32;"},
+  ];
+  let detailsHtml = "";
+  let i = 0;
+  rows.forEach((row) => {
+    if (!row.value) return;
+    detailsHtml += buildDetailRow(row.label, row.value, i++, row.style);
+  });
+  const subject = (completed ? "Gutschein übergeben & bezahlt: " : "Gutschein-Abholung bezahlt: ")
+      + sanitizeHeader(order.name || "");
+  const html = buildNotificationHtml(subject, order.name || "", order.email || "", order.telefon || "",
+      completed ? "Der Gutschein wurde übergeben und bar bezahlt. Bestellung ist abgeschlossen, der Gutschein ist freigeschaltet — nichts mehr zu tun."
+                : "Bezahlt, aber es ist noch kein Gutschein mit dieser Bestellung verknüpft. Bitte Gutschein erstellen und die Bestellung danach abschließen.",
+      detailsHtml, completed ? "" : VOUCHER_ADMIN_LINK_HTML);
+  await createTransporter().sendMail({
+    from: `"Segelflugplatz Altdorf" <${process.env.SMTP_USER}>`,
+    to: VEREINS_EMAIL,
+    // Jörg bei Altdorf-Abholungen informieren — außer er hat selbst über seinen Link bestätigt
+    cc: "dan@segelfliegen-altdorf.de"
+        + (isAltdorfPickup(order.zustellung) && !fromHandoverLink ? "," + JOERG_EMAIL : ""),
+    subject,
+    html,
+  });
+}
+
+// "Bezahlt" bei Abholungs-Bestellungen (intern.html + /bestellungen/) — bezahlt + abschließen + freischalten
+exports.markPickupPaid = onCall(
+    {
+      secrets: ["SMTP_USER", "SMTP_PASS"],
+      cors: [
+        "https://www.segelfliegenaltdorf.de",
+        "https://segelfliegenaltdorf.de",
+      ],
+    },
+    async (request) => {
+      if (!request.auth) {
+        throw new HttpsError("unauthenticated", "Nicht eingeloggt.");
+      }
+      const userEmail = request.auth.token.email;
+      if (userEmail !== VEREINS_EMAIL && userEmail !== "bestellung@segelfliegen-altdorf.de") {
+        throw new HttpsError("permission-denied", "Keine Berechtigung.");
+      }
+      const {orderId, notify} = request.data || {};
+      if (!isValidDocId(orderId)) {
+        throw new HttpsError("invalid-argument", "Ungültige Bestell-ID.");
+      }
+      const viaLabel = userEmail === VEREINS_EMAIL ? "Admin (intern)" : "Bestellungen-Seite";
+      const result = await settlePickupOrder(orderId, userEmail === VEREINS_EMAIL ? "admin" : "bestellungen");
+      if (result.status === "missing") throw new HttpsError("not-found", "Bestellung nicht gefunden.");
+      if (result.status === "notPickup") throw new HttpsError("failed-precondition", "Keine Abholungs-Bestellung.");
+
+      let mailSent = false;
+      if (result.status === "ok" && notify) {
+        try {
+          await sendPickupSettledMail(result.order, result, viaLabel);
+          mailSent = true;
+        } catch (e) {
+          // Buchung ist bereits gespeichert — Mailfehler nicht als Gesamtfehler melden
+          console.error("markPickupPaid: Info-Mail fehlgeschlagen:", e);
+        }
+      }
+      return {status: result.status, completed: !!result.completed, mailSent};
+    },
+);
+
+// "An Jörg senden": Gutschein-PDF + Einmal-Link zur Übergabe-Bestätigung an Jörg (Abholung Altdorf)
+exports.sendPickupHandover = onCall(
+    {
+      secrets: ["SMTP_USER", "SMTP_PASS"],
+      cors: [
+        "https://www.segelfliegenaltdorf.de",
+        "https://segelfliegenaltdorf.de",
+      ],
+    },
+    async (request) => {
+      if (!request.auth) {
+        throw new HttpsError("unauthenticated", "Nicht eingeloggt.");
+      }
+      if (request.auth.token.email !== VEREINS_EMAIL) {
+        throw new HttpsError("permission-denied", "Nur Admin.");
+      }
+      const {orderId, voucherNumber, pdfBase64, pdfFilename} = request.data || {};
+      if (!isValidDocId(orderId)) {
+        throw new HttpsError("invalid-argument", "Ungültige Bestell-ID.");
+      }
+      if (typeof voucherNumber !== "string" || !voucherNumber.trim() || voucherNumber.length > 60) {
+        throw new HttpsError("invalid-argument", "Gutschein-Nummer fehlt.");
+      }
+      if (typeof pdfBase64 !== "string" || !pdfBase64 || pdfBase64.length > 8 * 1024 * 1024) {
+        throw new HttpsError("invalid-argument", "PDF fehlt oder ist zu groß.");
+      }
+      const safeFilename = /^[A-Za-z0-9._-]{1,100}\.pdf$/.test(pdfFilename || "") ? pdfFilename : "Gutschein.pdf";
+
+      const db = getFirestore();
+      const orderRef = db.collection("voucherOrders").doc(orderId);
+      const orderSnap = await orderRef.get();
+      if (!orderSnap.exists) throw new HttpsError("not-found", "Bestellung nicht gefunden.");
+      const order = orderSnap.data();
+      if (!isAltdorfPickup(order.zustellung)) {
+        throw new HttpsError("failed-precondition", "Nur für Abholung in Altdorf.");
+      }
+      if (order.status === "abgeschlossen") {
+        throw new HttpsError("failed-precondition", "Bestellung ist bereits abgeschlossen.");
+      }
+
+      // Gutschein verknüpfen + neuer Einmal-Link — in einer Transaktion:
+      // - nur ein Gutschein ohne fremde Bestellung und nicht eingelöst
+      // - ältere, für diese Bestellung angelegte Fassungen werden entkoppelt (bleiben gesperrt)
+      // - ein erneutes Senden macht den alten Link ungültig
+      const number = voucherNumber.trim();
+      const token = crypto.randomBytes(24).toString("hex");
+      const isPaid = order.paid === true;
+      await db.runTransaction(async (tx) => {
+        const vSnap = await tx.get(db.collection("vouchers").where("number", "==", number).limit(1));
+        if (vSnap.empty) {
+          throw new HttpsError("failed-precondition", "Gutschein ist noch nicht gespeichert — bitte erneut versuchen.");
+        }
+        const v = vSnap.docs[0].data();
+        if (v.orderId && v.orderId !== orderId) {
+          throw new HttpsError("failed-precondition", "Diese Gutschein-Nr. gehört zu einer anderen Bestellung.");
+        }
+        if (v.redeemed) {
+          throw new HttpsError("failed-precondition", "Dieser Gutschein ist bereits eingelöst.");
+        }
+        const others = await tx.get(db.collection("vouchers").where("orderId", "==", orderId));
+        others.forEach((d) => {
+          if (d.id !== vSnap.docs[0].id && !d.data().redeemed) {
+            tx.update(d.ref, {orderId: null, supersededBy: number, paymentPending: true});
+          }
+        });
+        tx.update(vSnap.docs[0].ref, {orderId, paymentPending: !isPaid});
+        tx.update(orderRef, {
+          handoverTokenHash: hashToken(token),
+          handoverSentAt: Date.now(),
+          handoverVoucherNumber: number,
+        });
+      });
+      const confirmUrl = CONFIRM_PICKUP_URL + "?o=" + encodeURIComponent(orderId) + "&t=" + token;
+
+      const wert = order.wert || "";
+      const flugdauer = order.flugdauer || getFlugdauer(order.flugart || "", parseInt(order.zusatzzeit || "0", 10));
+      let detailsHtml = "";
+      let i = 0;
+      [
+        {label: "Gutschein-Nr.", value: number},
+        {label: "Empfänger", value: order.empfaenger || ""},
+        {label: "Flugart", value: order.flugart || ""},
+        {label: "Flugdauer", value: flugdauer},
+        isPaid
+          ? {label: "Zahlung", value: "Bereits bezahlt — NICHTS kassieren", style: "font-weight: bold; color: #2e7d32; font-size: 16px;"}
+          : {label: "Bar kassieren", value: wert ? wert + " €" : "", style: "font-weight: bold; color: #c62828; font-size: 16px;"},
+      ].forEach((row) => {
+        if (!row.value) return;
+        detailsHtml += buildDetailRow(row.label, row.value, i++, row.style);
+      });
+      const buttonHtml = buildAdminLinkHtml(
+          confirmUrl,
+          isPaid ? "Gutschein übergeben" : "Übergeben & " + (wert ? wert + " € " : "Geld ") + "erhalten",
+          isPaid ? "Erst klicken, wenn der Gutschein übergeben ist — danach folgt noch eine Bestätigungsseite."
+                 : "Erst klicken, wenn der Gutschein übergeben und bezahlt ist — danach folgt noch eine Bestätigungsseite.",
+      );
+      const subject = "Gutschein zur Abholung: " + sanitizeHeader(order.empfaenger || order.name || "");
+      const html = buildNotificationHtml(subject, order.name || "", order.email || "", order.telefon || "",
+          "Hallo Jörg,\n\nder Gutschein für diese Bestellung liegt als PDF im Anhang. "
+          + (isPaid ? "Der Besteller holt ihn bei dir ab — er ist bereits bezahlt, bitte nichts kassieren.\n\n"
+                    : "Der Besteller holt ihn bei dir ab und zahlt bar.\n\n")
+          + "Sobald der Gutschein übergeben" + (isPaid ? "" : " und bezahlt") + " ist, klick bitte einfach auf den Button unten — "
+          + "damit ist die Bestellung erledigt und der Gutschein freigeschaltet.",
+          detailsHtml, buttonHtml);
+
+      try {
+        const info = await createTransporter().sendMail({
+          from: `"Segelflugplatz Altdorf" <${process.env.SMTP_USER}>`,
+          to: JOERG_EMAIL,
+          cc: VEREINS_EMAIL,
+          subject,
+          html,
+          attachments: [{
+            filename: safeFilename,
+            content: Buffer.from(pdfBase64, "base64"),
+            contentType: "application/pdf",
+          }],
+        });
+        return {success: true, messageId: info.messageId};
+      } catch (error) {
+        console.error("sendPickupHandover SMTP Fehler:", error);
+        throw new HttpsError("internal", "Mail konnte nicht gesendet werden.");
+      }
+    },
+);
+
+// Einfache, eigenständige HTML-Seite für den Übergabe-Link (kein Login, keine externen Skripte)
+function buildPickupPage(title, bodyHtml, tone) {
+  const color = tone === "ok" ? "#2e7d32" : (tone === "warn" ? "#c62828" : "#0f3460");
+  return "<!DOCTYPE html><html lang=\"de\"><head><meta charset=\"utf-8\">"
+      + "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">"
+      + "<meta name=\"robots\" content=\"noindex, nofollow\">"
+      + "<title>" + escapeHtml(title) + " — Segelflugplatz Altdorf</title>"
+      + "<style>body{margin:0;padding:0 16px;background:#f4f6f8;font-family:system-ui,sans-serif,Arial;color:#333;}"
+      + ".card{max-width:480px;margin:24px auto;background:#fff;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.08);overflow:hidden;}"
+      + ".head{background:linear-gradient(135deg,#0f3460,#1a4a8a);color:#fff;padding:20px;text-align:center;}"
+      + ".head img{width:48px;height:48px;border-radius:50%;display:block;margin:0 auto 8px;}"
+      + ".body{padding:22px;font-size:16px;line-height:1.6;}"
+      + "h1{font-size:20px;color:" + color + ";margin:0 0 12px;}"
+      + "table{width:100%;border-collapse:collapse;margin:14px 0;font-size:15px;}"
+      + "td{padding:8px 6px;border-bottom:1px solid #eee;}td:first-child{color:#666;width:42%;}"
+      + "button{width:100%;padding:16px;font-size:17px;font-weight:bold;color:#fff;background:#2e7d32;border:0;border-radius:10px;cursor:pointer;}"
+      + ".hint{font-size:13px;color:#888;margin-top:10px;text-align:center;}"
+      + "</style></head><body><div class=\"card\"><div class=\"head\">"
+      + "<img src=\"" + LOGO_URL + "\" alt=\"\"><div style=\"font-size:13px;color:#a8c8f0;\">Segelflugplatz Altdorf-Hagenhausen</div></div>"
+      + "<div class=\"body\"><h1>" + escapeHtml(title) + "</h1>" + bodyHtml + "</div></div></body></html>";
+}
+
+function sendPickupPage(res, statusCode, title, bodyHtml, tone) {
+  res.set("Content-Type", "text/html; charset=utf-8");
+  res.set("Cache-Control", "no-store");
+  res.set("X-Frame-Options", "DENY");
+  res.set("Referrer-Policy", "no-referrer");
+  res.set("X-Robots-Tag", "noindex, nofollow");
+  res.set("Content-Security-Policy",
+      "default-src 'none'; style-src 'unsafe-inline'; img-src https://raw.githubusercontent.com; frame-ancestors 'none'; base-uri 'none'");
+  res.status(statusCode).send(buildPickupPage(title, bodyHtml, tone));
+}
+
+// Übergabe-Link: GET zeigt nur die Bestätigungsseite (Mail-Virenscanner, die Links vorab
+// aufrufen, lösen so nichts aus); erst der POST über den Button verbucht die Zahlung.
+exports.confirmPickup = onRequest(
+    {
+      secrets: ["SMTP_USER", "SMTP_PASS"],
+      invoker: "public",
+      cors: false,
+    },
+    async (req, res) => {
+      if (req.method !== "GET" && req.method !== "POST") {
+        res.status(405).send("Nur GET/POST erlaubt");
+        return;
+      }
+      const params = req.method === "POST" ? Object.assign({}, req.query, req.body || {}) : req.query;
+      const orderId = typeof params.o === "string" ? params.o : "";
+      const token = typeof params.t === "string" ? params.t : "";
+      const invalidHtml = "<p>Dieser Link ist ungültig oder wurde durch einen neueren Link ersetzt.</p>"
+          + "<p>Bitte melde dich kurz bei Stefan bzw. unter info@segelfliegen-altdorf.de.</p>";
+
+      try {
+        if (!isValidDocId(orderId) || !/^[a-f0-9]{48}$/.test(token)) {
+          sendPickupPage(res, 404, "Link ungültig", invalidHtml, "warn");
+          return;
+        }
+        const snap = await getFirestore().collection("voucherOrders").doc(orderId).get();
+        const order = snap.exists ? snap.data() : null;
+        if (!order || !tokenMatches(token, order.handoverTokenHash)) {
+          sendPickupPage(res, 404, "Link ungültig", invalidHtml, "warn");
+          return;
+        }
+
+        const alreadyPaid = order.paid === true;
+        const summary = "<table>"
+            + "<tr><td>Gutschein-Nr.</td><td><strong>" + escapeHtml(order.handoverVoucherNumber || "—") + "</strong></td></tr>"
+            + "<tr><td>Besteller</td><td>" + escapeHtml(order.name || "—") + "</td></tr>"
+            + "<tr><td>Empfänger</td><td>" + escapeHtml(order.empfaenger || "—") + "</td></tr>"
+            + "<tr><td>Flugart</td><td>" + escapeHtml(order.flugart || "—") + "</td></tr>"
+            + (alreadyPaid
+              ? "<tr><td>Zahlung</td><td><strong style=\"color:#2e7d32;\">bereits bezahlt — nichts kassieren</strong></td></tr>"
+              : "<tr><td>Betrag (bar)</td><td><strong>" + escapeHtml(order.wert ? order.wert + " €" : "—") + "</strong></td></tr>")
+            + "</table>";
+
+        if (order.paid === true && order.status === "abgeschlossen") {
+          sendPickupPage(res, 200, "Bereits erledigt", summary
+              + "<p>Diese Übergabe ist schon bestätigt — es ist nichts mehr zu tun. Danke!</p>", "ok");
+          return;
+        }
+
+        if (req.method === "GET") {
+          sendPickupPage(res, 200, "Gutschein übergeben?", summary
+              + (alreadyPaid
+                ? "<p>Bitte erst bestätigen, wenn du den Gutschein <strong>übergeben</strong> hast.</p>"
+                : "<p>Bitte erst bestätigen, wenn du den Gutschein <strong>übergeben</strong> und das Geld <strong>erhalten</strong> hast.</p>")
+              // o/t zusätzlich in der URL — funktioniert auch, falls der Formular-Body nicht geparst wird
+              + "<form method=\"post\" action=\"" + CONFIRM_PICKUP_URL + "?o=" + encodeURIComponent(orderId) + "&amp;t=" + encodeURIComponent(token) + "\">"
+              + "<input type=\"hidden\" name=\"o\" value=\"" + escapeHtml(orderId) + "\">"
+              + "<input type=\"hidden\" name=\"t\" value=\"" + escapeHtml(token) + "\">"
+              + "<button type=\"submit\">✔ " + (alreadyPaid ? "Gutschein übergeben"
+                : "Übergeben &amp; " + escapeHtml(order.wert ? order.wert + " € " : "Geld ") + "erhalten") + "</button>"
+              + "</form><div class=\"hint\">Danach ist die Bestellung abgeschlossen und der Gutschein freigeschaltet.</div>", "info");
+          return;
+        }
+
+        // POST: verbuchen
+        const result = await settlePickupOrder(orderId, "uebergabe-link");
+        if (result.status === "missing" || result.status === "notPickup") {
+          sendPickupPage(res, 404, "Link ungültig", invalidHtml, "warn");
+          return;
+        }
+        let mailOk = result.status !== "ok";
+        if (result.status === "ok") {
+          try {
+            await sendPickupSettledMail(result.order, result, "Jörg (Übergabe-Link)", true);
+            mailOk = true;
+          } catch (e) {
+            console.error("confirmPickup: Info-Mail fehlgeschlagen:", e);
+          }
+        }
+        if (!result.completed) {
+          // Kein (gültiger) Gutschein mehr verknüpft — Zahlung ist verbucht, Rest muss der Verein klären
+          sendPickupPage(res, 200, "Zahlung verbucht", summary
+              + "<p>Die Zahlung ist verbucht. Der Gutschein ist im System aber nicht mehr mit dieser Bestellung verknüpft — "
+              + "bitte kurz bei Stefan bzw. unter info@segelfliegen-altdorf.de melden.</p>", "warn");
+          return;
+        }
+        sendPickupPage(res, 200, "Danke — erledigt!", summary
+            + "<p>Die Bestellung ist als <strong>bezahlt und abgeschlossen</strong> verbucht, der Gutschein ist freigeschaltet."
+            + (mailOk ? " Der Verein wurde automatisch informiert." : "") + "</p>", "ok");
+      } catch (e) {
+        console.error("confirmPickup Fehler:", e);
+        sendPickupPage(res, 500, "Technischer Fehler",
+            "<p>Das hat leider nicht geklappt. Bitte versuch es gleich nochmal oder melde dich bei info@segelfliegen-altdorf.de.</p>", "warn");
+      }
+    },
+);
+
 // ========== uploadImage (onCall — Bild auf GitHub hochladen) ==========
 
 const GH_OWNER = "profex1337";
