@@ -480,6 +480,32 @@
             '_default': 'images/Gutschein.jpg'
         };
 
+        // "Fliegt aus dem Rahmen": Bildteile (Flügelspitze, Rumpf, Rauchspuren), die über den Rahmen ragen.
+        // Unveränderte Pixel aus dem jeweiligen Aquarell, nur freigestellt; Lage auf der A4-Seite in mm.
+        // Wird ein Aquarell ersetzt, müssen die Freisteller neu erzeugt werden (vorlagen/gutschein-freisteller/make.py).
+        const gutscheinFreisteller = {
+            'images/Gutschein_Kunstflug.jpg': [
+                { src: 'images/Gutschein_Kunstflug_Freisteller_1.png', x: -1.550, y: 89.209, w: 13.670, h: 40.657 },
+                { src: 'images/Gutschein_Kunstflug_Freisteller_2.png', x: -1.550, y: 161.684, w: 13.670, h: 18.266 },
+                { src: 'images/Gutschein_Kunstflug_Freisteller_3.png', x: 0.218, y: 172.054, w: 11.902, h: 31.818 },
+                { src: 'images/Gutschein_Kunstflug_Freisteller_4.png', x: 40.403, y: 197.980, w: 6.364, h: 12.020 }
+            ],
+            'images/Gutschein_Motorflug.jpg': [
+                { src: 'images/Gutschein_Motorflug_Freisteller_1.png', x: -1.505, y: 96.715, w: 13.514, h: 9.871 }
+            ],
+            'images/Gutschein_Segelflug.jpg': [
+                { src: 'images/Gutschein_Segelflug_Freisteller_1.png', x: 0.114, y: 124.515, w: 11.717, h: 4.126 }
+            ]
+            // Gutschein_Flugzeugschlepp.jpg: nichts reicht über den Rahmen
+        };
+        // Gutschein.jpg ist dasselbe Aquarell wie Gutschein_Motorflug.jpg
+        gutscheinFreisteller['images/Gutschein.jpg'] = gutscheinFreisteller['images/Gutschein_Motorflug.jpg'];
+        const gutscheinFreistellerImages = {};
+
+        // Weißverlauf am rechten Rand des Aquarells (1024 × 1 px, weiß mit Transparenz-Rampe).
+        // Eine einzige Bildschicht statt vieler halbtransparenter Streifen, die sichtbare Längsstreifen erzeugt haben.
+        const gutscheinVerlauf = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAABAAAAAABCAYAAABADtw1AAAAUklEQVR42u2NQRIAIAgC8/+Pthc0kwcMSE+isERmruIEUL/aHbuZWA4ZZZ8Cw/HH1sHoZckiWZ3s0XWt2vFjxsWjnGPhz42X2Zln9iIZt/fjvgGR9AP+Di15QAAAAABJRU5ErkJggg==';
+
         let watermarkBase64 = null;
         let watermarkW = 0;
         let watermarkH = 0;
@@ -515,6 +541,9 @@
                 };
                 img.src = d;
             }).catch(() => {});
+        });
+        [...new Set(Object.values(gutscheinFreisteller).flat().map(p => p.src))].forEach(src => {
+            loadImageAsBase64(src).then(d => { gutscheinFreistellerImages[src] = d; }).catch(() => {});
         });
 
         // HTML-Sonderzeichen escapen (XSS-Schutz f\u00FCr User-Eingaben in HTML-Vorlage)
@@ -753,9 +782,18 @@
             const imgSrc = gutscheinImageMap[flightType]
                 || Object.keys(gutscheinImageMap).filter(function(k) { return k !== '_default' && ftLower.indexOf(k.toLowerCase()) !== -1; }).map(function(k) { return gutscheinImageMap[k]; })[0]
                 || gutscheinImageMap['_default'];
-            const bgData = gutscheinImages[imgSrc] || gutscheinImages[gutscheinImageMap['_default']];
+            const bgSrc = gutscheinImages[imgSrc] ? imgSrc : gutscheinImageMap['_default'];
+            const bgData = gutscheinImages[bgSrc];
+            const rahmenLw = 0.5;
+            const rahmenInnen = margin + rahmenLw / 2;
             if (bgData) {
+                // Aquarell nur innerhalb des Rahmens, außen bleibt ein weißer Rand
+                doc.saveGraphicsState();
                 try {
+                    doc.rect(rahmenInnen, rahmenInnen, w - rahmenInnen * 2, h - rahmenInnen * 2, null);
+                    doc.clip();
+                    doc.discardPath();
+
                     const aspectRatio = bgData.w / bgData.h;
                     let drawW = h * aspectRatio;
                     let drawH = h;
@@ -769,23 +807,29 @@
 
                     const fadeStart = imgAreaW - 40;
                     const fadeEnd = imgAreaW + 5;
-                    const steps = 50;
-                    for (let i = 0; i < steps; i++) {
-                        const x = fadeStart + (i / steps) * (fadeEnd - fadeStart);
-                        const opacity = i / steps;
-                        doc.setGState(new doc.GState({ opacity: opacity }));
-                        doc.setFillColor(255, 255, 255);
-                        doc.rect(x, 0, (fadeEnd - fadeStart) / steps + 0.3, h, 'F');
-                    }
-                    doc.setGState(new doc.GState({ opacity: 1 }));
+                    doc.addImage(gutscheinVerlauf, 'PNG', fadeStart, 0, fadeEnd - fadeStart, h, 'gutscheinVerlauf');
                     doc.setFillColor(255, 255, 255);
-                    doc.rect(imgAreaW + 5, 0, w - imgAreaW - 5, h, 'F');
+                    doc.rect(fadeEnd, 0, w - fadeEnd, h, 'F');
                 } catch(e) {}
+                doc.restoreGraphicsState();
             }
 
+            // Schlanker Doppelrahmen: 0,5 mm Navy, feine Haarlinie 1,8 mm weiter innen
             doc.setDrawColor(15, 52, 96);
-            doc.setLineWidth(1.5);
+            doc.setLineWidth(rahmenLw);
             doc.rect(margin, margin, w - margin * 2, h - margin * 2);
+            doc.setLineWidth(0.18);
+            doc.rect(margin + 1.8, margin + 1.8, w - (margin + 1.8) * 2, h - (margin + 1.8) * 2);
+
+            // Was im Aquarell über den Rahmen ragt, obenauf legen
+            if (bgData) {
+                (gutscheinFreisteller[bgSrc] || []).forEach(function(p) {
+                    if (!gutscheinFreistellerImages[p.src]) return;
+                    try {
+                        doc.addImage(gutscheinFreistellerImages[p.src], 'PNG', p.x, p.y, p.w, p.h, p.src, 'FAST');
+                    } catch(e) {}
+                });
+            }
 
             const textCenterX = imgAreaW + (w - imgAreaW) / 2;
             const textLeft = imgAreaW + 15;
