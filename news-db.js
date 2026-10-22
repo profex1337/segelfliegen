@@ -929,39 +929,48 @@ function renderPublicPrices(container, items) {
     });
 }
 
+// Preise aus Firestore extrahieren (Format "48,00 €" → 48)
+function parsePrice(str) {
+    if (!str) return 0;
+    return parseFloat(str.replace(/[^\d,]/g, '').replace(',', '.')) || 0;
+}
+
+// Fuer eine Basis-Flugart den passenden Minutenpreis (perMinute=true) finden
+// Matching: Label des Minutenpreises enthaelt Schluesselwort der Basis-Flugart
+// z.B. "Verlängerung Segelflug" passt zu "Segelflug (Windenstart)", "Verlängerung Motorsegler" zu "Motorsegler"
+function findPerMinPrice(items, baseLabel) {
+    const lower = baseLabel.toLowerCase();
+    const perMinItems = items.filter(function(i) { return !!i.perMinute; });
+    for (var i = 0; i < perMinItems.length; i++) {
+        var pmKeywords = perMinItems[i].label.toLowerCase().replace(/verl.ngerung\s*/i, '').trim();
+        if (pmKeywords && lower.indexOf(pmKeywords) !== -1) {
+            return parsePrice(perMinItems[i].price);
+        }
+    }
+    return 0;
+}
+
+// Gutscheinwert aus der Preisliste wie im Bestellformular: Grundpreis + Zusatzminuten × Minutenpreis.
+// Flugart "Motorsegler" (intern) passt auch zum Preis-Label "Motorsegler (Rundflug)". Ohne Treffer → null
+window.calcVoucherValue = (flightType, zusatzMin) => {
+    const ft = (flightType || '').trim().toLowerCase();
+    if (!ft) return null;
+    const baseItems = currentPriceItems.filter(function(i) { return !!i.gutschein && i.label; });
+    const item = baseItems.find(function(i) { return i.label.toLowerCase() === ft; })
+        || baseItems.find(function(i) { var l = i.label.toLowerCase(); return l.indexOf(ft) === 0 || ft.indexOf(l) === 0; });
+    if (!item) return null;
+    const total = parsePrice(item.price) + (parseInt(zusatzMin, 10) || 0) * findPerMinPrice(currentPriceItems, item.label);
+    return total.toFixed(2).replace('.', ',');
+};
+
 // Gutschein-Dropdown dynamisch aus Firestore-Preisen befuellen
 function updateGutscheinDropdown(items) {
     const select = document.getElementById('gutschein-flugart');
     if (!select || items.length === 0) return;
 
-    // Preise aus Firestore extrahieren (Format "48,00 €" → 48)
-    function parsePrice(str) {
-        if (!str) return 0;
-        return parseFloat(str.replace(/[^\d,]/g, '').replace(',', '.')) || 0;
-    }
-
-    // Basis-Flugarten (gutschein=true) und Zusatzzeit-Preise (perMinute=true) trennen
+    // Basis-Flugarten (gutschein=true)
     const baseItems = items.filter(function(i) { return !!i.gutschein; });
-    const perMinItems = items.filter(function(i) { return !!i.perMinute; });
-
-    // Fuer jede Basis-Flugart den passenden Minutenpreis finden
-    // Matching: Label des Minutenpreises enthaelt Schluesselwort der Basis-Flugart
-    function findPerMin(baseLabel) {
-        // Schluesselwoerter extrahieren (z.B. "Segelflug (Windenstart)" → ["segelflug"])
-        // "Segelkunstflug" → ["kunstflug", "segelkunstflug"]
-        const lower = baseLabel.toLowerCase();
-        for (var i = 0; i < perMinItems.length; i++) {
-            var pmLabel = perMinItems[i].label.toLowerCase();
-            // Pruefe ob der Minutenpreis-Label ein Schluesselwort der Basis-Flugart enthaelt
-            // z.B. "verlängerung segelflug" matched "segelflug (windenstart)" weil beide "segelflug" enthalten
-            // z.B. "verlängerung motorsegler" matched "motorsegler"
-            var pmKeywords = pmLabel.replace(/verl.ngerung\s*/i, '').trim();
-            if (pmKeywords && lower.indexOf(pmKeywords) !== -1) {
-                return parsePrice(perMinItems[i].price);
-            }
-        }
-        return 0;
-    }
+    const findPerMin = function(baseLabel) { return findPerMinPrice(items, baseLabel); };
 
     // Aktuelle Auswahl merken
     const currentValue = select.value;

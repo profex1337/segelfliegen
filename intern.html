@@ -727,6 +727,23 @@
         };
 
         // PDF generieren — gibt jsPDF doc zurück (ohne zu speichern)
+        // Wert automatisch aus Flugart + Zusatzzeit (Preisliste, window.calcVoucherValue in news-db.js).
+        // Überschreibt nur ein leeres oder selbst eingetragenes Feld — von Hand oder aus einer Bestellung gesetzte Werte bleiben.
+        var lastAutoVoucherValue = '';
+        function autoFillVoucherValue() {
+            const valueField = document.getElementById('voucher-value');
+            const current = valueField.value.trim();
+            if (current && current !== lastAutoVoucherValue) return;
+            const value = typeof window.calcVoucherValue === 'function'
+                ? window.calcVoucherValue(document.getElementById('voucher-flight-type').value, document.getElementById('voucher-zusatzzeit').value)
+                : null;
+            if (!value) return;
+            valueField.value = value;
+            lastAutoVoucherValue = value;
+        }
+        document.getElementById('voucher-flight-type').addEventListener('change', autoFillVoucherValue);
+        document.getElementById('voucher-zusatzzeit').addEventListener('input', autoFillVoucherValue);
+
         // opts.number: Gutschein-Nr. statt Formularfeld; opts.doc: bestehendes PDF, Gutschein kommt auf eine neue Seite (Serie)
         function generatePDF(opts) {
             opts = opts || {};
@@ -761,11 +778,17 @@
             const flightType = document.getElementById('voucher-flight-type').value;
             const greeting = document.getElementById('voucher-greeting').value.trim();
             const voucherNr = opts.number || document.getElementById('voucher-number').value.trim();
+            // Leeres Wertfeld: aus der Preisliste ergänzen (jeder Gutschein braucht einen Wert, auch wenn er nicht aufgedruckt wird)
+            if (!document.getElementById('voucher-value').value.trim()) autoFillVoucherValue();
             const voucherValue = document.getElementById('voucher-value').value.trim();
             const validUntil = document.getElementById('voucher-valid-until').value.trim();
 
             if (!recipient || !flightType) {
                 alert('Bitte Empf\u00E4nger-Name und Flugart ausf\u00FCllen.');
+                return null;
+            }
+            if (!voucherValue) {
+                alert('Bitte einen Wert eintragen. Soll er nicht auf dem Gutschein stehen, \u201EWert im Gutschein anzeigen\u201C abhaken.');
                 return null;
             }
 
