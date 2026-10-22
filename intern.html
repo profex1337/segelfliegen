@@ -319,6 +319,10 @@
                                         <input type="checkbox" id="voucher-show-value" checked style="width: auto; margin: 0;">
                                         Wert im Gutschein anzeigen
                                     </label>
+                                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: normal; margin-top: 4px; font-size: 0.85rem;" title="Vom Verein verschenkt (z. B. Kirwa) — zählt nicht im offenen Wert der verkauften Gutscheine">
+                                        <input type="checkbox" id="voucher-sponsored" style="width: auto; margin: 0;">
+                                        Gesponsert (kein Verkauf)
+                                    </label>
                                 </div>
                                 <div>
                                     <label style="display:block; margin-bottom:6px; font-weight:600; font-size:0.9rem;">Zusatzzeit (Min.)</label>
@@ -1011,10 +1015,13 @@
             linkedVoucherOrder = order || null;
             linkedVoucherNumber = (order && voucherNumber) ? voucherNumber : null;
             document.getElementById('voucher-order-id').value = order ? (order.id || '') : '';
-            // Eine Bestellung = ein Gutschein
+            // Eine Bestellung = ein verkaufter Gutschein
             var countField = document.getElementById('voucher-count');
             countField.disabled = !!order;
             if (order) countField.value = '1';
+            var sponsoredField = document.getElementById('voucher-sponsored');
+            sponsoredField.disabled = !!order;
+            if (order) sponsoredField.checked = false;
             var box = document.getElementById('voucher-order-link');
             var text = document.getElementById('voucher-order-link-text');
             var handoverBtn = document.getElementById('gutschein-handover-btn');
@@ -1065,7 +1072,8 @@
                     showValue: document.getElementById('voucher-show-value').checked,
                     flugdauer: document.getElementById('voucher-flugdauer').value || '',
                     redeemed: false
-                }, ordererName ? { ordererName: ordererName } : {}));
+                }, ordererName ? { ordererName: ordererName } : {},
+                document.getElementById('voucher-sponsored').checked ? { sponsored: true } : {}));
             }
             return Promise.resolve();
         }

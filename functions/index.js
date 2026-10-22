@@ -828,11 +828,14 @@ function csvCell(v) {
   return /[";\r\n]/.test(s) ? `"${s.replace(/"/g, "\"\"")}"` : s;
 }
 
-// Offener Wert = nicht eingelöst, nicht ersetzt, nicht unter Zahlungsvorbehalt (abgelaufene zählen mit)
+// Offener Wert = verkaufte Gutscheine: nicht eingelöst, nicht ersetzt, nicht gesponsert,
+// nicht unter Zahlungsvorbehalt (abgelaufene zählen mit). Gesponserte werden getrennt summiert.
 function buildVoucherReport(vouchers) {
   let openCount = 0;
   let pendingCount = 0;
   let openValue = 0;
+  let sponsoredCount = 0;
+  let sponsoredValue = 0;
   const rows = vouchers.slice()
       .sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0))
       .map((v) => {
@@ -842,6 +845,10 @@ function buildVoucherReport(vouchers) {
           status = "eingelöst";
         } else if (v.supersededBy) {
           status = "ersetzt";
+        } else if (v.sponsored) {
+          sponsoredCount++;
+          sponsoredValue += value || 0;
+          status = isVoucherExpiredBerlin(v.validUntil) ? "abgelaufen" : "offen";
         } else {
           openCount++;
           if (v.paymentPending) {
@@ -855,15 +862,17 @@ function buildVoucherReport(vouchers) {
         return [
           v.number, v.recipient, v.ordererName, v.flightType,
           value === null ? "" : value.toFixed(2).replace(".", ","),
+          v.sponsored ? "gesponsert" : "verkauft",
           berlinDisplayDate(v.timestamp), v.validUntil, status,
           v.redeemed ? berlinDisplayDate(v.redeemedAt) : "",
         ];
       });
-  const header = ["Nummer", "Empfänger", "Besteller", "Flugart", "Wert (€)",
+  const header = ["Nummer", "Empfänger", "Besteller", "Flugart", "Wert (€)", "Art",
     "Erstellt", "Gültig bis", "Status", "Eingelöst am"];
   const csv = [header].concat(rows).map((r) => r.map(csvCell).join(";")).join("\r\n");
   return {
     openCount, pendingCount, openValue: Math.round(openValue * 100) / 100,
+    sponsoredCount, sponsoredValue: Math.round(sponsoredValue * 100) / 100,
     csv, date: berlinIsoDate(),
   };
 }

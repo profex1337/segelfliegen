@@ -1757,6 +1757,8 @@ async function startVoucherLogic() {
         if (flugdauerField) flugdauerField.value = item.flugdauer || '';
         var bestellerField = document.getElementById('voucher-besteller');
         if (bestellerField) bestellerField.value = item.ordererName || '';
+        var sponsoredField = document.getElementById('voucher-sponsored');
+        if (sponsoredField) sponsoredField.checked = !!item.sponsored;
         // Nachdruck betrifft immer genau diesen einen Gutschein
         var countField = document.getElementById('voucher-count');
         if (countField) countField.value = '1';
@@ -2044,6 +2046,7 @@ function renderVoucherList(container, items, orders) {
     orders = orders || [];
     const openCount = items.filter(v => !v.redeemed).length;
     const redeemedCount = items.filter(v => v.redeemed).length;
+    const valueSummary = voucherValueSummary(items);
 
     var html = '<div style="display:flex; gap:16px; margin-bottom:20px; flex-wrap:wrap;">'
         + '<div style="background:var(--bg-light); padding:12px 20px; border-radius:8px; flex:1; min-width:100px; text-align:center;">'
@@ -2055,9 +2058,13 @@ function renderVoucherList(container, items, orders) {
         + '<div style="background:#fff3e0; padding:12px 20px; border-radius:8px; flex:1; min-width:100px; text-align:center;">'
         + '<div style="font-size:1.8rem; font-weight:700; color:#e65100;">' + redeemedCount + '</div>'
         + '<div style="font-size:0.8rem; color:#e65100;">Eingelöst</div></div>'
-        + '<div style="background:#e8f5e9; padding:12px 20px; border-radius:8px; flex:1; min-width:140px; text-align:center;" title="Summe der nicht eingelösten Gutscheine (ohne ersetzte und ohne offene Zahlung)">'
-        + '<div style="font-size:1.8rem; font-weight:700; color:#2e7d32; white-space:nowrap;">' + formatEuro(openVoucherValue(items)) + '</div>'
-        + '<div style="font-size:0.8rem; color:#2e7d32;">Offener Wert</div></div>';
+        + '<div style="background:#e8f5e9; padding:12px 20px; border-radius:8px; flex:1; min-width:140px; text-align:center;" title="Summe der verkauften, nicht eingelösten Gutscheine (ohne gesponserte, ersetzte und offene Zahlung)">'
+        + '<div style="font-size:1.8rem; font-weight:700; color:#2e7d32; white-space:nowrap;">' + formatEuro(valueSummary.openValue) + '</div>'
+        + '<div style="font-size:0.8rem; color:#2e7d32;">Offener Wert</div>'
+        + '<div style="font-size:0.72rem; color:#2e7d32; opacity:0.8;">' + valueSummary.openCount + ' verkauft'
+        + (valueSummary.pendingCount ? ' &middot; ' + valueSummary.pendingCount + ' Zahlung offen' : '')
+        + (valueSummary.sponsoredCount ? ' &middot; ' + valueSummary.sponsoredCount + ' gesponsert (' + formatEuro(valueSummary.sponsoredValue) + ')' : '')
+        + '</div></div>';
 
     if (orders.length > 0) {
         html += '<div style="background:#e3f2fd; padding:12px 20px; border-radius:8px; flex:1; min-width:100px; text-align:center;">'
@@ -2173,12 +2180,23 @@ function parseEuroValue(v) {
     return isFinite(n) ? n : null;
 }
 
-// Offener Wert = nicht eingelöst, nicht ersetzt, nicht unter Zahlungsvorbehalt (wie getVoucherReport in functions/index.js)
-function openVoucherValue(items) {
-    return items.reduce(function(sum, v) {
-        if (v.redeemed || v.supersededBy || v.paymentPending) return sum;
-        return sum + (parseEuroValue(v.value) || 0);
-    }, 0);
+// Offener Wert = verkaufte Gutscheine: nicht eingelöst, nicht ersetzt, nicht gesponsert, nicht unter
+// Zahlungsvorbehalt; gesponserte getrennt (wie buildVoucherReport in functions/index.js)
+function voucherValueSummary(items) {
+    var s = { openCount: 0, pendingCount: 0, openValue: 0, sponsoredCount: 0, sponsoredValue: 0 };
+    items.forEach(function(v) {
+        if (v.redeemed || v.supersededBy) return;
+        var value = parseEuroValue(v.value) || 0;
+        if (v.sponsored) {
+            s.sponsoredCount++;
+            s.sponsoredValue += value;
+            return;
+        }
+        s.openCount++;
+        if (v.paymentPending) s.pendingCount++;
+        else s.openValue += value;
+    });
+    return s;
 }
 
 function formatEuro(n) {
@@ -2217,6 +2235,7 @@ function renderVoucherRow(item) {
         + '<div style="font-size:0.82rem; color:var(--text-light); margin-top:3px;">'
         + escapeHTML(item.flightType || '') + (item.value ? ' &middot; ' + escapeHTML(item.value) + ' \u20AC' : '') + ' &middot; ' + escapeHTML(item.number || '') + ' &middot; Erstellt: ' + createdDate
         + (item.ordererName ? ' &middot; bestellt von ' + escapeHTML(item.ordererName) : '')
+        + (item.sponsored ? ' &middot; gesponsert' : '')
         + '</div>' + validLine + '</div>'
         + '<div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">'
         + '<button class="btn btn-secondary voucher-reprint-btn" style="padding:6px 12px; font-size:0.78rem; background:var(--primary); color:#fff; border-color:var(--primary);">PDF</button>'

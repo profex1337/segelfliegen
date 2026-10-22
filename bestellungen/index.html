@@ -82,7 +82,7 @@
             <div class="stat stat-open"><div class="stat-num" id="count-total">0</div><div class="stat-label">Gesamt</div></div>
             <div class="stat stat-unpaid"><div class="stat-num" id="count-unpaid">0</div><div class="stat-label">Unbezahlt</div></div>
             <div class="stat stat-paid"><div class="stat-num" id="count-paid">0</div><div class="stat-label">Bezahlt</div></div>
-            <div class="stat stat-value" id="stat-voucher-value" style="display:none;" title="Summe der nicht eingel&ouml;sten Gutscheine (ohne ersetzte und ohne offene Zahlung)"><div class="stat-num" id="voucher-open-value"></div><div class="stat-label">Offener Gutscheinwert</div><div class="stat-sub" id="voucher-open-count"></div></div>
+            <div class="stat stat-value" id="stat-voucher-value" style="display:none;" title="Summe der verkauften, nicht eingel&ouml;sten Gutscheine (ohne gesponserte, ersetzte und offene Zahlung)"><div class="stat-num" id="voucher-open-value"></div><div class="stat-label">Offener Gutscheinwert</div><div class="stat-sub" id="voucher-open-count"></div></div>
         </div>
         <div style="display:flex; gap:8px; flex-wrap:wrap;">
             <button class="btn" id="btn-export" style="display:none;" onclick="exportVouchers(this)" title="Alle Gutscheine als Tabelle f&uuml;r Excel (CSV)">Gutscheinliste exportieren</button>
@@ -176,7 +176,9 @@
         return functions.httpsCallable('getVoucherReport')().then(function(res) {
             var r = res.data;
             document.getElementById('voucher-open-value').textContent = r.openValue.toLocaleString('de-DE', { style: 'currency', currency: 'EUR' });
-            document.getElementById('voucher-open-count').textContent = r.openCount + ' nicht eingelöst' + (r.pendingCount ? ' · ' + r.pendingCount + ' Zahlung offen' : '');
+            document.getElementById('voucher-open-count').textContent = r.openCount + ' verkauft'
+                + (r.pendingCount ? ' · ' + r.pendingCount + ' Zahlung offen' : '')
+                + (r.sponsoredCount ? ' · ' + r.sponsoredCount + ' gesponsert (' + r.sponsoredValue.toLocaleString('de-DE', { style: 'currency', currency: 'EUR' }) + ')' : '');
             document.getElementById('stat-voucher-value').style.display = '';
             document.getElementById('btn-export').style.display = '';
             return r;
