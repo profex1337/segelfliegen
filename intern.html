@@ -307,7 +307,7 @@
                                 <textarea id="voucher-greeting" rows="6" maxlength="800" placeholder="z.B. Alles Gute zum Geburtstag! (max. 10 Zeilen)" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:6px;"></textarea>
                                 <div style="font-size: 0.8rem; color: #888; margin-top: 4px;">Maximal 10 Zeilen — längere Texte werden im PDF abgeschnitten. Emojis werden im PDF ersetzt bzw. entfernt.</div>
                             </div>
-                            <div style="display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:10px; margin-bottom:20px;">
+                            <div style="display:grid; grid-template-columns:1fr 1fr 1fr 1fr 80px; gap:10px; margin-bottom:20px;">
                                 <div>
                                     <label style="display:block; margin-bottom:6px; font-weight:600; font-size:0.9rem;">Gutschein-Nummer</label>
                                     <input type="text" id="voucher-number" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:6px;">
@@ -328,6 +328,10 @@
                                 <div>
                                     <label style="display:block; margin-bottom:6px; font-weight:600; font-size:0.9rem;">Gültig bis</label>
                                     <input type="text" id="voucher-valid-until" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:6px;">
+                                </div>
+                                <div>
+                                    <label style="display:block; margin-bottom:6px; font-weight:600; font-size:0.9rem;">Anzahl</label>
+                                    <input type="number" id="voucher-count" value="1" min="1" max="20" step="1" title="Mehrere gleiche Gutscheine mit fortlaufender Nummer (-1, -2, …) in einem PDF" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:6px;">
                                 </div>
                             </div>
                             <div style="display:flex; gap:10px; flex-wrap:wrap;">
@@ -723,7 +727,9 @@
         };
 
         // PDF generieren — gibt jsPDF doc zurück (ohne zu speichern)
-        function generatePDF() {
+        // opts.number: Gutschein-Nr. statt Formularfeld; opts.doc: bestehendes PDF, Gutschein kommt auf eine neue Seite (Serie)
+        function generatePDF(opts) {
+            opts = opts || {};
             // Emoji durch PDF-kompatible Zeichen ersetzen (Helvetica hat keine Emoji-Glyphen)
             function replaceEmoji(text) {
                 var map = [
@@ -754,7 +760,7 @@
             const recipient = replaceEmoji(document.getElementById('voucher-recipient').value.trim());
             const flightType = document.getElementById('voucher-flight-type').value;
             const greeting = document.getElementById('voucher-greeting').value.trim();
-            const voucherNr = document.getElementById('voucher-number').value.trim();
+            const voucherNr = opts.number || document.getElementById('voucher-number').value.trim();
             const voucherValue = document.getElementById('voucher-value').value.trim();
             const validUntil = document.getElementById('voucher-valid-until').value.trim();
 
@@ -769,7 +775,8 @@
             }
 
             const { jsPDF } = jspdf;
-            const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+            const doc = opts.doc || new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+            if (opts.doc) doc.addPage('a4', 'landscape');
             const w = doc.internal.pageSize.getWidth();
             const h = doc.internal.pageSize.getHeight();
             const margin = 8;
@@ -981,6 +988,10 @@
             linkedVoucherOrder = order || null;
             linkedVoucherNumber = (order && voucherNumber) ? voucherNumber : null;
             document.getElementById('voucher-order-id').value = order ? (order.id || '') : '';
+            // Eine Bestellung = ein Gutschein
+            var countField = document.getElementById('voucher-count');
+            countField.disabled = !!order;
+            if (order) countField.value = '1';
             var box = document.getElementById('voucher-order-link');
             var text = document.getElementById('voucher-order-link-text');
             var handoverBtn = document.getElementById('gutschein-handover-btn');
@@ -1003,8 +1014,9 @@
         });
 
         // Gutschein in Firestore speichern (ohne Nr. zu erneuern) — gibt ein Promise zurück
-        function saveVoucher() {
-            const voucherNr = document.getElementById('voucher-number').value.trim();
+        // nrOverride: Nummer eines Serien-Gutscheins statt Formularfeld
+        function saveVoucher(nrOverride) {
+            const voucherNr = nrOverride || document.getElementById('voucher-number').value.trim();
             var isReprint = typeof window.checkVoucherExists === 'function' && window.checkVoucherExists(voucherNr);
             if (!isReprint && typeof window.saveVoucherToFirestore === 'function') {
                 var orderLink = {};
@@ -1017,6 +1029,8 @@
                     // Abholung noch nicht bezahlt → Gutschein erst nach Zahlung gültig
                     orderLink.paymentPending = isPickupZustellung(currentOrder.zustellung) && !currentOrder.paid;
                 }
+                // Besteller mitspeichern, damit die Gutschein-Suche ihn findet
+                var ordererName = document.getElementById('voucher-besteller').value.trim();
                 return window.saveVoucherToFirestore(Object.assign(orderLink, {
                     recipient: document.getElementById('voucher-recipient').value.trim(),
                     flightType: document.getElementById('voucher-flight-type').value,
@@ -1028,22 +1042,68 @@
                     showValue: document.getElementById('voucher-show-value').checked,
                     flugdauer: document.getElementById('voucher-flugdauer').value || '',
                     redeemed: false
-                }));
+                }, ordererName ? { ordererName: ordererName } : {}));
             }
             return Promise.resolve();
         }
 
         // Neue Gutschein-Nummer erzeugen (Format wie beim Seitenladen; bei Kollision Suffix -2, -3, ...)
-        function regenerateVoucherNumber() {
+        // count > 1: Basisnummer einer Serie, bei der keine der Nummern -1 … -count vergeben ist
+        function regenerateVoucherNumber(count) {
             const now = new Date();
             const pad = n => String(n).padStart(2, '0');
             const base = `GS-${now.getFullYear()}-${pad(now.getMonth()+1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}`;
+            const taken = nr => (count > 1 ? seriesNumbers(nr, count) : [nr]).some(n => window.checkVoucherExists(n));
             let candidate = base, suffix = 2;
-            while (typeof window.checkVoucherExists === 'function' && window.checkVoucherExists(candidate)) {
+            while (typeof window.checkVoucherExists === 'function' && taken(candidate)) {
                 candidate = base + '-' + (suffix++);
             }
             document.getElementById('voucher-number').value = candidate;
             return candidate;
+        }
+
+        // Anzahl gleicher Gutscheine (eine verknüpfte Bestellung ergibt immer genau einen)
+        function getVoucherCount() {
+            if (linkedVoucherOrder) return 1;
+            const n = parseInt(document.getElementById('voucher-count').value, 10);
+            return Math.min(Math.max(isNaN(n) ? 1 : n, 1), 20);
+        }
+
+        // Nummern einer Serie: Basisnummer + -1, -2, … (z. B. GS-2026-1018-0954-1)
+        function seriesNumbers(base, count) {
+            const nums = [];
+            for (let i = 1; i <= count; i++) nums.push(base + '-' + i);
+            return nums;
+        }
+
+        // Stimmt ein gespeicherter Gutschein in den Kerndaten mit dem Formular überein (= Nachdruck)?
+        function voucherMatchesForm(existing) {
+            return (existing.recipient || '') === document.getElementById('voucher-recipient').value.trim() &&
+                (existing.flightType || '') === document.getElementById('voucher-flight-type').value &&
+                (existing.value || '') === document.getElementById('voucher-value').value.trim() &&
+                (existing.validUntil || '') === document.getElementById('voucher-valid-until').value.trim();
+        }
+
+        // Serie: ein PDF mit einer Seite je Gutschein; jeder wird einzeln gespeichert und ist einzeln einlösbar
+        function downloadVoucherSeries(count) {
+            let base = document.getElementById('voucher-number').value.trim() || regenerateVoucherNumber(count);
+            let nums = seriesNumbers(base, count);
+            const existing = nums.map(nr => window.checkVoucherExists(nr));
+            const isReprint = existing.every(e => e && voucherMatchesForm(e));
+            if (!isReprint && existing.some(Boolean)) {
+                if (!confirm('⚠️ Die Nummern ' + nums[0] + ' bis ' + nums[nums.length - 1] + ' sind schon teilweise vergeben.\n\n' +
+                    'OK = neue Nummern erzeugen und fortfahren\n' +
+                    'Abbrechen = Vorgang abbrechen')) return;
+                base = regenerateVoucherNumber(count);
+                nums = seriesNumbers(base, count);
+            }
+            let doc = null;
+            for (const nr of nums) {
+                doc = generatePDF({ doc: doc, number: nr });
+                if (!doc) return;
+            }
+            doc.save('Gutscheine_' + nums[0] + '_bis_' + count + '.pdf');
+            if (!isReprint) nums.forEach(nr => saveVoucher(nr));
         }
 
         // Prueft VOR der PDF-Erzeugung, ob die Gutschein-Nr. bereits vergeben ist.
@@ -1053,12 +1113,7 @@
             const voucherNr = document.getElementById('voucher-number').value.trim();
             const existing = typeof window.checkVoucherExists === 'function' && window.checkVoucherExists(voucherNr);
             if (!existing) return true;
-            const sameData =
-                (existing.recipient || '') === document.getElementById('voucher-recipient').value.trim() &&
-                (existing.flightType || '') === document.getElementById('voucher-flight-type').value &&
-                (existing.value || '') === document.getElementById('voucher-value').value.trim() &&
-                (existing.validUntil || '') === document.getElementById('voucher-valid-until').value.trim();
-            if (sameData) return true; // Nachdruck desselben Gutscheins
+            if (voucherMatchesForm(existing)) return true; // Nachdruck desselben Gutscheins
             const makeNew = confirm(
                 '⚠️ Die Gutschein-Nr. ' + voucherNr + ' ist bereits an „' + (existing.recipient || 'unbekannt') + '“ vergeben.\n\n' +
                 'OK = neue Nummer erzeugen und fortfahren\n' +
@@ -1080,6 +1135,8 @@
 
         // Button 1: PDF herunterladen
         document.getElementById('gutschein-download-btn')?.addEventListener('click', () => {
+            const count = getVoucherCount();
+            if (count > 1) { downloadVoucherSeries(count); return; }
             if (!ensureVoucherNumberFree()) return;
             const doc = generatePDF();
             if (!doc) return;
@@ -1095,6 +1152,10 @@
             const email = document.getElementById('voucher-order-email').value.trim();
             if (!besteller || !email) {
                 alert('Bitte Besteller und E-Mail-Adresse eingeben.');
+                return;
+            }
+            if (getVoucherCount() > 1) {
+                alert('Mehrere Gutscheine (Anzahl > 1) bitte über „PDF herunterladen“ erstellen.');
                 return;
             }
 

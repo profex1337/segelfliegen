@@ -1665,6 +1665,31 @@ async function startVoucherLogic() {
         }
     };
 
+    // Gutscheinliste als CSV (Cloud Function getVoucherReport — dieselbe Liste bekommt der Kassier auf /bestellungen/)
+    window.exportVoucherList = async (btn) => {
+        if (!auth.currentUser || auth.currentUser.isAnonymous) return;
+        if (btn) btn.disabled = true;
+        try {
+            const { getFunctions, httpsCallable } = await import('https://www.gstatic.com/firebasejs/11.6.1/firebase-functions.js');
+            const { getApp } = await import('https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js');
+            const res = await httpsCallable(getFunctions(getApp(), 'europe-west1'), 'getVoucherReport')();
+            // BOM, damit Excel die Umlaute als UTF-8 erkennt
+            const blob = new Blob(['﻿' + res.data.csv], { type: 'text/csv;charset=utf-8' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'Gutscheine_' + res.data.date + '.csv';
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            setTimeout(function() { URL.revokeObjectURL(a.href); }, 1000);
+        } catch (e) {
+            console.error('Export fehlgeschlagen:', e);
+            alert('Export fehlgeschlagen: ' + (e.message || e));
+        } finally {
+            if (btn) btn.disabled = false;
+        }
+    };
+
     // Gutschein löschen
     window.deleteVoucher = async (docId) => {
         if (!auth.currentUser || auth.currentUser.isAnonymous) return;
@@ -1721,6 +1746,11 @@ async function startVoucherLogic() {
         if (showValueField) showValueField.checked = item.showValue !== false;
         var flugdauerField = document.getElementById('voucher-flugdauer');
         if (flugdauerField) flugdauerField.value = item.flugdauer || '';
+        var bestellerField = document.getElementById('voucher-besteller');
+        if (bestellerField) bestellerField.value = item.ordererName || '';
+        // Nachdruck betrifft immer genau diesen einen Gutschein
+        var countField = document.getElementById('voucher-count');
+        if (countField) countField.value = '1';
     }
 
     // Bestellung ins Formular laden
@@ -1954,6 +1984,8 @@ function renderOrderRow(order, isClosed) {
         });
     });
 
+    // Suchtext für die Gutschein-Suche
+    row.setAttribute('data-search', [order.name, order.empfaenger, order.email].join(' ').toLowerCase());
     return row;
 }
 
@@ -2013,7 +2045,10 @@ function renderVoucherList(container, items, orders) {
         + '<div style="font-size:0.8rem; color:#2e7d32;">Offen</div></div>'
         + '<div style="background:#fff3e0; padding:12px 20px; border-radius:8px; flex:1; min-width:100px; text-align:center;">'
         + '<div style="font-size:1.8rem; font-weight:700; color:#e65100;">' + redeemedCount + '</div>'
-        + '<div style="font-size:0.8rem; color:#e65100;">Eingelöst</div></div>';
+        + '<div style="font-size:0.8rem; color:#e65100;">Eingelöst</div></div>'
+        + '<div style="background:#e8f5e9; padding:12px 20px; border-radius:8px; flex:1; min-width:140px; text-align:center;" title="Summe der nicht eingelösten Gutscheine (ohne ersetzte und ohne offene Zahlung)">'
+        + '<div style="font-size:1.8rem; font-weight:700; color:#2e7d32; white-space:nowrap;">' + formatEuro(openVoucherValue(items)) + '</div>'
+        + '<div style="font-size:0.8rem; color:#2e7d32;">Offener Wert</div></div>';
 
     if (orders.length > 0) {
         html += '<div style="background:#e3f2fd; padding:12px 20px; border-radius:8px; flex:1; min-width:100px; text-align:center;">'
@@ -2027,8 +2062,9 @@ function renderVoucherList(container, items, orders) {
     var closedOrders = orders.filter(function(o) { return o.status === 'abgeschlossen'; });
 
     // Suchfeld
-    html += '<div style="margin-bottom:20px;">'
-        + '<input type="text" id="voucher-search" placeholder="Suche nach Name, Empfänger oder Gutscheinnummer..." style="width:100%; padding:12px 16px; border:2px solid #ddd; border-radius:8px; font-size:0.95rem; outline:none; transition:border-color 0.2s;" onfocus="this.style.borderColor=\'var(--primary)\'" onblur="this.style.borderColor=\'#ddd\'">'
+    html += '<div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:20px;">'
+        + '<input type="text" id="voucher-search" placeholder="Suche nach Besteller, Empfänger oder Gutscheinnummer..." style="flex:1; min-width:220px; padding:12px 16px; border:2px solid #ddd; border-radius:8px; font-size:0.95rem; outline:none; transition:border-color 0.2s;" onfocus="this.style.borderColor=\'var(--primary)\'" onblur="this.style.borderColor=\'#ddd\'">'
+        + '<button type="button" class="btn btn-secondary" onclick="exportVoucherList(this)" title="Alle Gutscheine als Tabelle für Excel (CSV)">Gutscheinliste exportieren</button>'
         + '</div>';
 
     // --- Offene Bestellungen ---
@@ -2092,41 +2128,52 @@ function renderVoucherList(container, items, orders) {
         });
     }
 
-    // Suchlogik
+    // Suchlogik: filtert alle Listen (auch eingelöste Gutscheine und abgeschlossene Bestellungen)
     var searchInput = container.querySelector('#voucher-search');
     if (searchInput) {
+        var savedOpen = null;
         searchInput.addEventListener('input', function() {
             var q = this.value.toLowerCase().trim();
-            // Bestellungen filtern
+            // Bei aktiver Suche alle Aufklapper öffnen, damit Treffer sichtbar sind; leeres Feld stellt den Ausgangszustand wieder her
+            var details = Array.from(container.querySelectorAll('details'));
+            if (q && !savedOpen) savedOpen = details.map(function(d) { return d.open; });
+            if (q) {
+                details.forEach(function(d) { d.open = true; });
+            } else if (savedOpen) {
+                details.forEach(function(d, i) { d.open = savedOpen[i]; });
+                savedOpen = null;
+            }
+            container.querySelectorAll('[data-search]').forEach(function(row) {
+                row.style.display = !q || row.getAttribute('data-search').indexOf(q) !== -1 ? '' : 'none';
+            });
             var ordersContainer = container.querySelector('#voucher-orders');
             var ordersCountEl = container.querySelector('#voucher-orders-count');
-            if (ordersContainer) {
-                var visibleOrders = 0;
-                Array.from(ordersContainer.children).forEach(function(row, i) {
-                    var o = openOrders[i];
-                    if (!o) return;
-                    var match = !q || (o.name || '').toLowerCase().indexOf(q) !== -1
-                        || (o.empfaenger || '').toLowerCase().indexOf(q) !== -1
-                        || (o.email || '').toLowerCase().indexOf(q) !== -1;
-                    row.style.display = match ? '' : 'none';
-                    if (match) visibleOrders++;
-                });
-                if (ordersCountEl) ordersCountEl.textContent = visibleOrders;
-            }
-            // Offene Gutscheine filtern
-            if (itemsContainer) {
-                Array.from(itemsContainer.children).forEach(function(row, i) {
-                    var v = openVouchers[i];
-                    if (!v) { return; }
-                    var match = !q || (v.recipient || '').toLowerCase().indexOf(q) !== -1
-                        || (v.number || '').toLowerCase().indexOf(q) !== -1
-                        || (v.flightType || '').toLowerCase().indexOf(q) !== -1
-                        || (v.ordererName || '').toLowerCase().indexOf(q) !== -1;
-                    row.style.display = match ? '' : 'none';
-                });
+            if (ordersContainer && ordersCountEl) {
+                ordersCountEl.textContent = Array.from(ordersContainer.children).filter(function(r) { return r.style.display !== 'none'; }).length;
             }
         });
     }
+}
+
+// Euro-Betrag aus Freitext ("80,00", "48", "1.000,00") → Zahl; leer/ungültig → null
+function parseEuroValue(v) {
+    var s = String(v || '').replace(/[€\s]/g, '');
+    if (!s) return null;
+    if (s.indexOf(',') !== -1) s = s.replace(/\./g, '').replace(',', '.');
+    var n = parseFloat(s);
+    return isFinite(n) ? n : null;
+}
+
+// Offener Wert = nicht eingelöst, nicht ersetzt, nicht unter Zahlungsvorbehalt (wie getVoucherReport in functions/index.js)
+function openVoucherValue(items) {
+    return items.reduce(function(sum, v) {
+        if (v.redeemed || v.supersededBy || v.paymentPending) return sum;
+        return sum + (parseEuroValue(v.value) || 0);
+    }, 0);
+}
+
+function formatEuro(n) {
+    return n.toLocaleString('de-DE', { style: 'currency', currency: 'EUR' });
 }
 
 function renderVoucherRow(item) {
@@ -2160,6 +2207,7 @@ function renderVoucherRow(item) {
         + '<strong style="font-size:1rem;' + nameStyle + '">' + (escapeHTML(item.recipient) || '\u2014') + '</strong>' + pendingBadge + supersededNote
         + '<div style="font-size:0.82rem; color:var(--text-light); margin-top:3px;">'
         + escapeHTML(item.flightType || '') + (item.value ? ' &middot; ' + escapeHTML(item.value) + ' \u20AC' : '') + ' &middot; ' + escapeHTML(item.number || '') + ' &middot; Erstellt: ' + createdDate
+        + (item.ordererName ? ' &middot; bestellt von ' + escapeHTML(item.ordererName) : '')
         + '</div>' + validLine + '</div>'
         + '<div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">'
         + '<button class="btn btn-secondary voucher-reprint-btn" style="padding:6px 12px; font-size:0.78rem; background:var(--primary); color:#fff; border-color:var(--primary);">PDF</button>'
@@ -2175,6 +2223,8 @@ function renderVoucherRow(item) {
         }
     });
 
+    // Suchtext für die Gutschein-Suche
+    row.setAttribute('data-search', [item.recipient, item.number, item.flightType, item.ordererName].join(' ').toLowerCase());
     return row;
 }
 

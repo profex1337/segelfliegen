@@ -29,6 +29,8 @@
         .stat-open .stat-num { color: #1565c0; }
         .stat-unpaid .stat-num { color: #e65100; }
         .stat-paid .stat-num { color: #2e7d32; }
+        .stat-value .stat-num { color: #0f3460; white-space: nowrap; }
+        .stat-sub { font-size: 0.7rem; color: #888; }
 
         .search { width: 100%; padding: 9px 14px; border: 2px solid #ddd; border-radius: 8px; font-size: 13px; margin-bottom: 16px; }
         .search:focus { border-color: #0f3460; outline: none; }
@@ -80,8 +82,10 @@
             <div class="stat stat-open"><div class="stat-num" id="count-total">0</div><div class="stat-label">Gesamt</div></div>
             <div class="stat stat-unpaid"><div class="stat-num" id="count-unpaid">0</div><div class="stat-label">Unbezahlt</div></div>
             <div class="stat stat-paid"><div class="stat-num" id="count-paid">0</div><div class="stat-label">Bezahlt</div></div>
+            <div class="stat stat-value" id="stat-voucher-value" style="display:none;" title="Summe der nicht eingel&ouml;sten Gutscheine (ohne ersetzte und ohne offene Zahlung)"><div class="stat-num" id="voucher-open-value"></div><div class="stat-label">Offener Gutscheinwert</div><div class="stat-sub" id="voucher-open-count"></div></div>
         </div>
-        <div style="display:flex; gap:8px;">
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <button class="btn" id="btn-export" style="display:none;" onclick="exportVouchers(this)" title="Alle Gutscheine als Tabelle f&uuml;r Excel (CSV)">Gutscheinliste exportieren</button>
             <button class="btn-logout" onclick="history.back()">Zur&uuml;ck</button>
             <button class="btn-logout" onclick="doLogout()">Abmelden</button>
         </div>
@@ -161,7 +165,40 @@
             // Nur offene Bestellungen (nicht abgeschlossen)
             orders = orders.filter(function(o) { return o.status !== 'abgeschlossen'; });
             renderList();
+            // Offener Gutscheinwert ändert sich mit Bestellungen (z. B. Abholung bezahlt) — mit aktualisieren
+            loadVoucherReport().catch(function(e) { console.error('Gutschein-Übersicht nicht verfügbar:', e); });
         });
+    }
+
+    // --- Gutschein-Übersicht (Cloud Function getVoucherReport; Gutscheine selbst sind für diesen Login nicht lesbar) ---
+
+    function loadVoucherReport() {
+        return functions.httpsCallable('getVoucherReport')().then(function(res) {
+            var r = res.data;
+            document.getElementById('voucher-open-value').textContent = r.openValue.toLocaleString('de-DE', { style: 'currency', currency: 'EUR' });
+            document.getElementById('voucher-open-count').textContent = r.openCount + ' nicht eingelöst' + (r.pendingCount ? ' · ' + r.pendingCount + ' Zahlung offen' : '');
+            document.getElementById('stat-voucher-value').style.display = '';
+            document.getElementById('btn-export').style.display = '';
+            return r;
+        });
+    }
+
+    function exportVouchers(btn) {
+        btn.disabled = true;
+        loadVoucherReport().then(function(r) {
+            // BOM, damit Excel die Umlaute als UTF-8 erkennt
+            var blob = new Blob(['﻿' + r.csv], { type: 'text/csv;charset=utf-8' });
+            var a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'Gutscheine_' + r.date + '.csv';
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            setTimeout(function() { URL.revokeObjectURL(a.href); }, 1000);
+        }).catch(function(e) {
+            console.error('Export fehlgeschlagen:', e);
+            alert('Export fehlgeschlagen: ' + (e.message || e));
+        }).then(function() { btn.disabled = false; });
     }
 
     // --- Bezahlt markieren + Benachrichtigung ---

@@ -256,6 +256,7 @@
             + '<span class="' + nameClass + '">' + (escapeHtml(v.recipient) || '\u2014') + '</span>'
             + '<div class="voucher-meta">'
             + escapeHtml(v.flightType || '') + (v.value ? ' &middot; ' + escapeHtml(v.value) + ' \u20AC' : '') + (v.number ? ' &middot; ' + escapeHtml(v.number) : '') + ' &middot; ' + date
+            + (v.ordererName ? ' &middot; bestellt von ' + escapeHtml(v.ordererName) : '')
             + '</div>' + valid + '</div>'
             + '<span class="' + badgeClass + '">' + badgeText + '</span> '
             + '<button class="btn-toggle" onclick="toggleRedeemed(\'' + v.id + '\', ' + isR + ', ' + expired + ', ' + pending + ')">' + btnText + '</button>'

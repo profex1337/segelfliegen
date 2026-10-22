@@ -790,6 +790,106 @@ exports.markPickupPaid = onCall(
     },
 );
 
+// ========== Gutschein-Übersicht (offener Wert + CSV-Export) ==========
+
+// Euro-Betrag aus Freitext ("80,00", "48", "1.000,00") → Zahl; leer/ungültig → null
+function parseEuroValue(v) {
+  let s = String(v || "").replace(/[€\s]/g, "");
+  if (!s) return null;
+  if (s.indexOf(",") !== -1) s = s.replace(/\./g, "").replace(",", ".");
+  const n = parseFloat(s);
+  return isFinite(n) ? n : null;
+}
+
+// Heutiges Datum in deutscher Zeit als "JJJJ-MM-TT"
+function berlinIsoDate(ms) {
+  return new Date(ms || Date.now()).toLocaleDateString("sv-SE", {timeZone: "Europe/Berlin"});
+}
+
+function berlinDisplayDate(ms) {
+  if (!ms) return "";
+  return new Date(ms).toLocaleDateString("de-DE", {
+    timeZone: "Europe/Berlin", day: "2-digit", month: "2-digit", year: "numeric",
+  });
+}
+
+// "Gültig bis" (TT.MM.JJJJ) liegt vor heute?
+function isVoucherExpiredBerlin(validUntil) {
+  const m = /^(\d{1,2})\.(\d{1,2})\.(\d{4})$/.exec(String(validUntil || "").trim());
+  if (!m) return false;
+  const iso = `${m[3]}-${m[2].padStart(2, "0")}-${m[1].padStart(2, "0")}`;
+  return iso < berlinIsoDate();
+}
+
+// CSV-Zelle für Excel (Semikolon); Formel-Injection verhindern, da Namen aus Kundeneingaben stammen
+function csvCell(v) {
+  let s = String(v === undefined || v === null ? "" : v);
+  if (/^[=+\-@\t\r]/.test(s)) s = "'" + s;
+  return /[";\r\n]/.test(s) ? `"${s.replace(/"/g, "\"\"")}"` : s;
+}
+
+// Offener Wert = nicht eingelöst, nicht ersetzt, nicht unter Zahlungsvorbehalt (abgelaufene zählen mit)
+function buildVoucherReport(vouchers) {
+  let openCount = 0;
+  let pendingCount = 0;
+  let openValue = 0;
+  const rows = vouchers.slice()
+      .sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0))
+      .map((v) => {
+        const value = parseEuroValue(v.value);
+        let status;
+        if (v.redeemed) {
+          status = "eingelöst";
+        } else if (v.supersededBy) {
+          status = "ersetzt";
+        } else {
+          openCount++;
+          if (v.paymentPending) {
+            pendingCount++;
+            status = "Zahlung offen";
+          } else {
+            openValue += value || 0;
+            status = isVoucherExpiredBerlin(v.validUntil) ? "abgelaufen" : "offen";
+          }
+        }
+        return [
+          v.number, v.recipient, v.ordererName, v.flightType,
+          value === null ? "" : value.toFixed(2).replace(".", ","),
+          berlinDisplayDate(v.timestamp), v.validUntil, status,
+          v.redeemed ? berlinDisplayDate(v.redeemedAt) : "",
+        ];
+      });
+  const header = ["Nummer", "Empfänger", "Besteller", "Flugart", "Wert (€)",
+    "Erstellt", "Gültig bis", "Status", "Eingelöst am"];
+  const csv = [header].concat(rows).map((r) => r.map(csvCell).join(";")).join("\r\n");
+  return {
+    openCount, pendingCount, openValue: Math.round(openValue * 100) / 100,
+    csv, date: berlinIsoDate(),
+  };
+}
+
+// Kassier (/bestellungen/) + Admin: offener Gutscheinwert und Gutscheinliste als CSV.
+// Der Bestellungs-User darf vouchers per Rules nicht lesen — daher serverseitig.
+exports.getVoucherReport = onCall(
+    {
+      cors: [
+        "https://www.segelfliegenaltdorf.de",
+        "https://segelfliegenaltdorf.de",
+      ],
+    },
+    async (request) => {
+      if (!request.auth) {
+        throw new HttpsError("unauthenticated", "Nicht eingeloggt.");
+      }
+      const userEmail = request.auth.token.email;
+      if (userEmail !== VEREINS_EMAIL && userEmail !== "bestellung@segelfliegen-altdorf.de") {
+        throw new HttpsError("permission-denied", "Keine Berechtigung.");
+      }
+      const snap = await getFirestore().collection("vouchers").get();
+      return buildVoucherReport(snap.docs.map((d) => d.data()));
+    },
+);
+
 // "An Jörg senden": Gutschein-PDF + Einmal-Link zur Übergabe-Bestätigung an Jörg (Abholung Altdorf)
 exports.sendPickupHandover = onCall(
     {
