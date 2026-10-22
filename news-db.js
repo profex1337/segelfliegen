@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
 import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+import { getFirestore, collection, addDoc, updateDoc, deleteDoc, deleteField, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyB1X5H3LOGKOSrq59_am4YnkISyOyEUAg4",
@@ -1656,7 +1656,10 @@ async function startVoucherLogic() {
         if (!currentStatus && paymentPending && !confirm('\u26A0\uFE0F Dieser Gutschein ist noch NICHT bezahlt (Abholung ausstehend).\n\nTrotzdem einl\u00F6sen?')) return;
         if (!currentStatus && expired && !confirm('Gutschein ist abgelaufen, trotzdem einl\u00F6sen?')) return;
         try {
-            await updateDoc(doc(db, 'vouchers', docId), { redeemed: !currentStatus });
+            // Einlösedatum mitschreiben, beim Wiederöffnen entfernen
+            await updateDoc(doc(db, 'vouchers', docId), currentStatus
+                ? { redeemed: false, redeemedAt: deleteField() }
+                : { redeemed: true, redeemedAt: Date.now() });
         } catch (e) {
             console.error('Status-Update fehlgeschlagen:', e);
         }
@@ -2036,7 +2039,9 @@ function renderVoucherList(container, items, orders) {
 
     // Gutscheine aufteilen
     var openVouchers = items.filter(function(v) { return !v.redeemed; });
-    var redeemedVouchers = items.filter(function(v) { return v.redeemed; });
+    // Eingelöste: zuletzt eingelöst zuerst (ältere Einträge ohne Datum nach Erstelldatum)
+    var redeemedVouchers = items.filter(function(v) { return v.redeemed; })
+        .sort(function(a, b) { return (b.redeemedAt || b.timestamp || 0) - (a.redeemedAt || a.timestamp || 0); });
 
     if (openVouchers.length > 0) {
         html += '<details style="margin-top:25px;"><summary style="cursor:pointer; font-weight:600; color:var(--primary); font-size:0.95rem; padding:8px 0;">Offene Gutscheine (' + openVouchers.length + ')</summary>';
@@ -2075,7 +2080,7 @@ function renderVoucherList(container, items, orders) {
     if (redeemedVouchers.length > 0) {
         var redeemedContainer = container.querySelector('#voucher-items-redeemed');
         appendGroupedByYear(redeemedContainer, redeemedVouchers,
-            function(item) { return yearOf(item.timestamp); },
+            function(item) { return yearOf(item.redeemedAt || item.timestamp); },
             renderVoucherRow);
     }
 
@@ -2145,6 +2150,10 @@ function renderVoucherRow(item) {
     var supersededNote = item.supersededBy ? '<span style="font-size:0.72rem; color:#888; margin-left:8px;">ersetzt durch ' + escapeHTML(item.supersededBy) + '</span>' : '';
     var pendingBadge = paymentPending ? '<span style="font-size:0.72rem; padding:2px 8px; border-radius:12px; font-weight:700; background:#fff3e0; color:#e65100; margin-left:8px;" title="Wird automatisch freigeschaltet, sobald die Abholung bezahlt ist">\u23F3 Zahlung offen</span>' : '';
     var validLine = item.validUntil ? '<div style="font-size:0.78rem; color:#888;">Gültig bis: ' + escapeHTML(item.validUntil) + expiredLabel + '</div>' : '';
+    // Eingelöst: Einlösedatum statt Gültigkeit
+    if (item.redeemed && item.redeemedAt) {
+        validLine = '<div style="font-size:0.78rem; color:#888;">Eingelöst am ' + new Date(item.redeemedAt).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' }) + '</div>';
+    }
 
     row.innerHTML = '<span style="flex:0 0 auto; width:10px; height:10px; border-radius:50%; background:' + borderColor + ';"></span>'
         + '<div style="flex:1; min-width:200px;">'

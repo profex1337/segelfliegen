@@ -152,7 +152,10 @@
         if (!current && pending && !confirm('⚠️ Dieser Gutschein ist noch NICHT bezahlt (Abholung ausstehend).\n\nTrotzdem einlösen?')) return;
         if (current && !confirm('Gutschein wirklich wieder \u00F6ffnen?')) return;
         if (!current && expired && !confirm('Gutschein ist abgelaufen, trotzdem einl\u00F6sen?')) return;
-        db.collection('vouchers').doc(docId).update({ redeemed: !current })
+        // Einlösedatum mitschreiben, beim Wiederöffnen entfernen
+        db.collection('vouchers').doc(docId).update(current
+            ? { redeemed: false, redeemedAt: firebase.firestore.FieldValue.delete() }
+            : { redeemed: true, redeemedAt: Date.now() })
             .catch(function(e) { console.error('Fehler:', e); });
     }
 
@@ -180,7 +183,9 @@
 
     function renderList() {
         var open = vouchers.filter(function(v) { return !v.redeemed; });
-        var redeemed = vouchers.filter(function(v) { return v.redeemed; });
+        // Eingelöste: zuletzt eingelöst zuerst (ältere Einträge ohne Datum nach Erstelldatum)
+        var redeemed = vouchers.filter(function(v) { return v.redeemed; })
+            .sort(function(a, b) { return (b.redeemedAt || b.timestamp || 0) - (a.redeemedAt || a.timestamp || 0); });
         document.getElementById('count-open').textContent = open.length;
         document.getElementById('count-redeemed').textContent = redeemed.length;
 
@@ -192,7 +197,7 @@
         if (redeemed.length > 0) {
             html += '<details style="margin-top:12px;"' + (redeemed.length <= 5 ? ' open' : '') + '>';
             html += '<summary class="section-title" style="cursor:pointer;">Eingelöste Gutscheine (' + redeemed.length + ')</summary>';
-            html += groupByYearHtml(redeemed, function(v) { return v.timestamp ? new Date(v.timestamp).getFullYear() : null; });
+            html += groupByYearHtml(redeemed, function(v) { var t = v.redeemedAt || v.timestamp; return t ? new Date(t).getFullYear() : null; });
             html += '</details>';
         }
         if (vouchers.length === 0) {
@@ -235,6 +240,8 @@
         var date = v.timestamp ? new Date(v.timestamp).toLocaleDateString('de-DE') : '\u2014';
         var expiredLabel = expired ? '<span class="expired-label">abgelaufen</span>' : '';
         var valid = v.validUntil ? '<div class="voucher-valid">G\u00FCltig bis: ' + escapeHtml(v.validUntil) + expiredLabel + '</div>' : '';
+        // Eingelöst: Einlösedatum statt Gültigkeit
+        if (isR && v.redeemedAt) valid = '<div class="voucher-valid">Eingel\u00F6st am ' + new Date(v.redeemedAt).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' }) + '</div>';
         var nameClass = isR ? 'voucher-name redeemed' : 'voucher-name';
         // Abholung noch nicht bezahlt → Gutschein unter Zahlungsvorbehalt
         var pending = !isR && !!v.paymentPending;

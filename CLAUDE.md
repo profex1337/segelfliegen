@@ -156,6 +156,7 @@ rateLimits/     — top-level, one doc per IP; written server-side by `sendPubli
   zusatzzeit:  string,           // Extra flight time in minutes (e.g. "10")
   showValue:   boolean,          // Whether to show value on PDF (default: true)
   redeemed:    boolean,          // Whether the voucher has been redeemed
+  redeemedAt?: number,           // Unix ms — set on "Einlösen", removed on "Wieder öffnen"; shown instead of "Gültig bis", redeemed lists sort/group by it
   orderId?:    string,           // voucherOrders doc id (set when created via "Übernehmen")
   paymentPending?: boolean,      // true = pickup order not yet paid ("Zahlung offen"); cleared server-side on payment
   timestamp:   number            // Unix ms — creation timestamp
