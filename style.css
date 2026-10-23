@@ -723,7 +723,7 @@ header {
 
 .card-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr)); /* min(): auf sehr schmalen Handys nicht breiter als der Platz */
     gap: 30px;
 }
 
@@ -1099,6 +1099,14 @@ select { height: auto; min-height: 48px; line-height: 1.4; background-image: url
 
 @media (max-width: 600px) {
     .aircraft-card-grid { grid-template-columns: 1fr; }
+}
+
+/* Highlight-Flugzeug: Akzentrahmen, ohne Hover-Anheben. Leicht vergrößert erst ab 1241px –
+   darunter reicht das Raster bis an den Bildschirmrand, die Karte würde dort angeschnitten
+   oder seitlich hinausragen (Seite ließe sich verschieben). */
+.aircraft-card-grid .card.card-highlight { border: 2px solid var(--accent); position: relative; transform: none; }
+@media (min-width: 1241px) {
+    .aircraft-card-grid .card.card-highlight { transform: scale(1.02); }
 }
 
 /* Drag & Drop Admin */

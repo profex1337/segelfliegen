@@ -1118,13 +1118,22 @@ function initSwipeNavigation() {
 // damit Strich + Segler bei ein- und mehrzeiligen Titeln in jeder Auflösung passgenau sind.
 function measureGliderUnderlines() {
     if (typeof document.createRange !== 'function') return;
+    const maxRight = document.documentElement.clientWidth - 8;
     document.querySelectorAll('.accent-kicker').forEach(h => {
         const range = document.createRange();
         range.selectNodeContents(h);
         const rects = range.getClientRects();
         if (!rects.length) return;
         const last = rects[rects.length - 1];
-        if (last.width) h.style.setProperty('--ulw', Math.round(last.width) + 'px');
+        if (!last.width) return;
+        // Der Segler ragt 34 px über das Strichende hinaus. Füllt der Titel die Zeile (Handy),
+        // läge er sonst jenseits des Bildschirmrands und die Seite ließe sich seitlich verschieben.
+        const box = h.getBoundingClientRect();
+        const room = h.classList.contains('ak-center')
+            ? 2 * (maxRight - 34 - (box.left + box.width / 2))
+            : maxRight - 34 - box.left;
+        const ulw = room > 0 ? Math.min(last.width, room) : last.width;
+        h.style.setProperty('--ulw', Math.round(ulw) + 'px');
     });
 }
 // Global aufrufbar, damit dynamisch nachgeladene Titel (z. B. Flugzeugpark-Kategorien

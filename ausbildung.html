@@ -152,7 +152,7 @@
             z-index: 200;
             bottom: 130%;
             left: 50%;
-            transform: translateX(-50%);
+            transform: translateX(calc(-50% + var(--tt-shift, 0px)));
             width: 230px;
             font-size: 0.85rem;
             font-weight: normal;
@@ -165,7 +165,7 @@
             content: "";
             position: absolute;
             top: 100%;
-            left: 50%;
+            left: calc(50% - var(--tt-shift, 0px));
             transform: translateX(-50%);
             border: 6px solid transparent;
             border-top-color: var(--primary);
@@ -386,6 +386,27 @@
     <footer id="main-footer"></footer>
     <button id="btn-back-to-top" title="Nach oben" aria-label="Zurück nach oben">↑</button>
     <script src="script.js"></script>
+    <script>
+        // Tooltips mittig über dem Begriff, aber nie über den Bildschirmrand hinaus – sonst sind sie
+        // abgeschnitten und die Seite lässt sich seitlich verschieben (auch unsichtbar zählt ihre Breite).
+        // Der Pfeil bleibt über dem Begriff (--tt-shift wird im ::after wieder abgezogen).
+        (function () {
+            const tips = document.querySelectorAll('.tooltip .tooltip-text');
+            const place = () => {
+                const max = document.documentElement.clientWidth - 8;
+                tips.forEach(tip => {
+                    tip.style.setProperty('--tt-shift', '0px');
+                    const r = tip.getBoundingClientRect();
+                    const shift = r.left < 8 ? 8 - r.left : (r.right > max ? max - r.right : 0);
+                    tip.style.setProperty('--tt-shift', Math.round(shift) + 'px');
+                });
+            };
+            place();
+            if (document.fonts && document.fonts.ready) document.fonts.ready.then(place);
+            let t;
+            window.addEventListener('resize', () => { clearTimeout(t); t = setTimeout(place, 150); });
+        })();
+    </script>
 </body>
 </html>
 

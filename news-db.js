@@ -1543,7 +1543,7 @@ function renderAircraftPublic(container, items) {
         byCategory[cat].forEach(item => {
             const card = document.createElement('div');
             card.className = 'card';
-            if (item.highlight) card.style.cssText = 'border: 2px solid var(--accent); transform: scale(1.02); position:relative;';
+            if (item.highlight) card.classList.add('card-highlight');
 
             const specsLines = (item.specs || '').split('\n').filter(l => l.trim());
             const specsList = specsLines.map(l => `<li>${escapeHTML(l.trim())}</li>`).join('');
