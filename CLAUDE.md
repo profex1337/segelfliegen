@@ -324,6 +324,7 @@ There is no test suite and no linter/formatter configuration. Validate changes b
 | `initSwipeNavigation()` | Mobile-only horizontal swipe between the 7 main pages (index/uber-uns/mitfliegen/flugzeugpark/ausbildung/veranstaltungen/kontakt). Prefetches neighbours via `<link rel="prefetch">`, fades `#main-content` on transition, respects `prefers-reduced-motion`, and ignores swipes inside slideshows, news-carousels, the lightbox, the reviews sidebar, form inputs, and when the mobile menu is open. |
 | `getAvatarColor()` | Returns a random brand colour for review avatar backgrounds |
 | `measureGliderUnderlines()` / `window.remeasureGliderUnderlines` | Measures the last line of every `.accent-kicker` heading and sets `--ulw` so the glider-underline width is exact; the `window`-exposed variant lets dynamically-rendered headings (e.g. Flugzeugpark categories) re-measure after render |
+| `initAnchorTargets()` | Keeps `#anchor` jump targets in place while content above still loads (Firestore lists, lazy images without fixed height) and jumps to targets that only appear later (Flugzeugpark categories). Runs on fresh page loads with a hash (instant, not on reload/back) and on in-page anchor clicks (smooth); stops on wheel/touch/key/mouse input or after 10 s. `initStickyNav()` sets `--anchor-offset` (header + measured sticky-nav height + 12 px) used by `scroll-padding-top`, so multi-row navs on mobile don't cover the heading. |
 | `initSkipLink()` | Makes `#main-content` programmatically focusable (`tabindex="-1"`) and moves keyboard focus there when the skip-link is used |
 | `initSecurityMeta()` | Injects a Content-Security-Policy and Referrer-Policy `<meta>` tag as early as possible (no server-header option on GitHub Pages) |
 
@@ -415,7 +416,7 @@ The panel is organised in **five tabs**:
 - Fields: Titel, Datum-Label (free text), Beschreibung, Aktiv-Checkbox.
 - Admin list with drag & drop reordering (updates `order` field in Firestore).
 - Active events are displayed on `veranstaltungen.html` as card-grid (real-time `onSnapshot` listener).
-- When no active events exist, the "Nächste Termine" section is hidden on the public page.
+- When no active events exist, the "Nächste Termine" section and its sub-nav button are hidden on the public page (both start hidden in the HTML and are shown by `renderEventsPublic()`).
 
 ### Voucher Orders & PDF Generation (Tab 4 — Gutscheine)
 

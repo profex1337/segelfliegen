@@ -242,6 +242,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initHeroVideos();
     initWeather();
     initStickyNav();
+    initAnchorTargets();
     initFaqAnimation();
     initCookieConsent();
     initReviews();
@@ -884,6 +885,15 @@ function initStickyNav() {
 
     // Stuck-Effekt: Schatten wenn sticky
     const headerHeight = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--header-height')) || 80;
+
+    // Sprungziele unterhalb von Header + Nav ausrichten (scroll-padding-top). Die Nav bricht
+    // auf dem Handy in zwei bis drei Zeilen um, ein fester Wert würde die Überschrift verdecken.
+    const setAnchorOffset = () => {
+        document.documentElement.style.setProperty('--anchor-offset', (headerHeight + nav.offsetHeight + 12) + 'px');
+    };
+    setAnchorOffset();
+    if ('ResizeObserver' in window) new ResizeObserver(setAnchorOffset).observe(nav);
+
     let ticking = false;
     window.addEventListener('scroll', () => {
         if (!ticking) {
@@ -921,6 +931,76 @@ function initStickyNav() {
     }, { rootMargin: '-20% 0px -60% 0px' });
 
     sections.forEach(s => observer.observe(s.el));
+}
+
+// Sprungziele (#anker): Der Browser berechnet die Zielposition nur einmal. Wachsen danach noch
+// Inhalte oberhalb (Firestore-Listen, Lazy-Bilder ohne feste Höhe) oder entsteht das Ziel erst
+// per Firestore (Flugzeugpark-Kategorien), landet die Seite daneben – typisch beim ersten Aufruf.
+// Deshalb das Ziel nachführen, bis der Nutzer selbst scrollt oder tippt (höchstens 10 s).
+function initAnchorTargets() {
+    const root = document.documentElement;
+    let targetId = null, lastDest = null, ro = null, poll = null, maxTimer = null;
+
+    // Ziel-Scrollposition: Oberkante minus scroll-padding, begrenzt auf das (noch kurze) Seitenende
+    const destination = (el) => {
+        const pad = parseFloat(getComputedStyle(root).scrollPaddingTop) || 0;
+        const maxY = root.scrollHeight - window.innerHeight;
+        return Math.round(Math.min(el.getBoundingClientRect().top + window.scrollY - pad, maxY));
+    };
+
+    const check = () => {
+        const el = targetId && document.getElementById(targetId);
+        if (!el || !el.getClientRects().length) return; // fehlt noch oder ist ausgeblendet
+        const dest = destination(el);
+        if (lastDest !== null && Math.abs(dest - lastDest) < 2) return;
+        lastDest = dest;
+        el.scrollIntoView({ block: 'start' });
+    };
+
+    const stop = () => {
+        targetId = null;
+        if (ro) ro.disconnect();
+        clearInterval(poll);
+        clearTimeout(maxTimer);
+        root.style.scrollBehavior = '';
+    };
+
+    const start = (id, viaClick) => {
+        stop();
+        targetId = id;
+        const el = document.getElementById(id);
+        // Beim Klick scrollt der Browser selbst (weich) – nur spätere Verschiebungen korrigieren.
+        // Beim Seitenaufruf sofort springen, damit keine laufende Animation ein veraltetes Ziel ansteuert.
+        lastDest = viaClick && el && el.getClientRects().length ? destination(el) : null;
+        if (!viaClick) root.style.scrollBehavior = 'auto';
+        if ('ResizeObserver' in window) {
+            ro = ro || new ResizeObserver(check);
+            ro.observe(document.body);
+        }
+        poll = setInterval(check, 250);
+        maxTimer = setTimeout(stop, 10000);
+        if (!viaClick) check();
+    };
+
+    ['wheel', 'touchstart', 'keydown', 'mousedown'].forEach(type => {
+        window.addEventListener(type, () => { if (targetId) stop(); }, { passive: true, capture: true });
+    });
+
+    const idFromHash = (hash) => {
+        try { return decodeURIComponent(hash.slice(1)); } catch (e) { return ''; }
+    };
+
+    document.addEventListener('click', (e) => {
+        const link = e.target.closest ? e.target.closest('a[href^="#"]') : null;
+        if (!link || e.defaultPrevented) return;
+        const id = idFromHash(link.getAttribute('href'));
+        if (id) start(id, true);
+    });
+
+    // Nur bei frischem Aufruf – bei Neuladen/Zurück stellt der Browser die alte Position wieder her
+    const navEntry = performance.getEntriesByType ? performance.getEntriesByType('navigation')[0] : null;
+    const id = idFromHash(location.hash);
+    if (id && (!navEntry || navEntry.type === 'navigate')) start(id, false);
 }
 
 // Transparenter Header über Hero-Video (Mobil): blendet beim Scrollen

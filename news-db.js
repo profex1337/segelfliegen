@@ -2305,14 +2305,12 @@ async function startEventsLogic() {
     // Öffentliche Darstellung
     function renderEventsPublic(container, items) {
         const activeItems = items.filter(i => i.active !== false && !isExpired(i));
-        if (activeItems.length === 0) {
-            // Abschnitt ausblenden wenn keine aktiven Termine
-            const section = container.closest('.content-block');
-            if (section) section.style.display = 'none';
-            return;
-        }
+        // Abschnitt samt Sprung-Button nur zeigen, wenn es aktive Termine gibt
         const section = container.closest('.content-block');
-        if (section) section.style.display = '';
+        const navBtn = section && section.id ? document.querySelector(`.category-nav a[href="#${section.id}"]`) : null;
+        if (section) section.style.display = activeItems.length ? '' : 'none';
+        if (navBtn) navBtn.style.display = activeItems.length ? '' : 'none';
+        if (activeItems.length === 0) return;
 
         container.innerHTML = '';
         const grid = document.createElement('div');
@@ -2331,6 +2329,8 @@ async function startEventsLogic() {
         });
         container.innerHTML = '';
         container.appendChild(grid);
+        // Titel war beim Laden ausgeblendet – Segler-Unterstrich jetzt vermessen
+        if (typeof window.remeasureGliderUnderlines === 'function') window.remeasureGliderUnderlines();
     }
 
     // Admin-Darstellung
