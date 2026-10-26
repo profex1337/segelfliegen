@@ -19,6 +19,7 @@
         .login-box button { width: 100%; padding: 10px; background: #0f3460; color: #fff; border: none; border-radius: 8px; font-size: 14px; cursor: pointer; font-weight: 600; }
         .login-box button:hover { background: #1a4a8a; }
         .login-error { color: #c62828; font-size: 0.82rem; margin-top: 8px; display: none; }
+        .login-hint { color: #0f3460; font-size: 0.82rem; margin-bottom: 14px; display: none; }
 
         .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px; }
         .header h1 { font-size: 1.2rem; color: #0f3460; }
@@ -70,6 +71,7 @@
 <div id="login-view" class="login-box">
     <h2>Gutschein-Bestellungen</h2>
     <p>Segelflugplatz Altdorf-Hagenhausen</p>
+    <div id="login-hint" class="login-hint"></div>
     <input type="password" id="login-pw" placeholder="Passwort" autocomplete="current-password">
     <button onclick="doLogin()">Anmelden</button>
     <div id="login-error" class="login-error"></div>
@@ -142,8 +144,12 @@
 
     // --- Auth State ---
 
-    auth.onAuthStateChanged(function(user) {
-        if (user && !user.isAnonymous) {
+    // Bestellungen lesen dürfen nur Bestellungen-Login und Admin (firestore-rules.txt)
+    var ALLOWED_EMAILS = ['bestellung@segelfliegen-altdorf.de', 'info@segelfliegen-altdorf.de'];
+
+    function handleUser(user) {
+        var hint = document.getElementById('login-hint');
+        if (user && !user.isAnonymous && ALLOWED_EMAILS.indexOf(user.email) !== -1) {
             document.getElementById('login-view').style.display = 'none';
             document.getElementById('app-view').style.display = '';
             startListening();
@@ -151,8 +157,17 @@
             document.getElementById('login-view').style.display = '';
             document.getElementById('app-view').style.display = 'none';
             if (unsubscribeFn) { unsubscribeFn(); unsubscribeFn = null; }
+            // Die Anmeldung gilt für die ganze Domain, z. B. noch vom Gutschein-Login
+            if (user && !user.isAnonymous) {
+                hint.textContent = 'Angemeldet als ' + user.email + '. Die Bestellungen brauchen das Bestellungen-Passwort.';
+                hint.style.display = 'block';
+            } else {
+                hint.style.display = 'none';
+            }
         }
-    });
+    }
+
+    auth.onAuthStateChanged(handleUser);
 
     // --- Firestore Listener ---
 
@@ -167,6 +182,10 @@
             renderList();
             // Offener Gutscheinwert ändert sich mit Bestellungen (z. B. Abholung bezahlt) — mit aktualisieren
             loadVoucherReport().catch(function(e) { console.error('Gutschein-Übersicht nicht verfügbar:', e); });
+        }, function(e) {
+            console.error('Bestellungen nicht ladbar:', e);
+            unsubscribeFn = null;
+            document.getElementById('order-content').innerHTML = '<div class="empty">Bestellungen konnten nicht geladen werden (' + escapeHtml(e.code || e.message) + ')</div>';
         });
     }
 
