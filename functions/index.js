@@ -5,13 +5,15 @@ const widerrufMail = require("./widerruf-mail");
 
 setGlobalOptions({maxInstances: 5, region: "europe-west1"});
 
-// Lazy-Init für Firestore (nur für Reviews benötigt)
+// Lazy-Init für Firestore
 let _db = null;
 function getFirestore() {
   if (!_db) {
     const {initializeApp, getApps} = require("firebase-admin/app");
     const {getFirestore: gfs} = require("firebase-admin/firestore");
-    if (!getApps().length) initializeApp();
+    // Gezielt nach der Default-App fragen: Bei onCall legt firebase-functions für die
+    // Token-Prüfung vorher eine eigene benannte App an, getApps() ist dann nicht leer
+    if (!getApps().some((a) => a.name === "[DEFAULT]")) initializeApp();
     _db = gfs();
   }
   return _db;
