@@ -938,14 +938,32 @@
             let nextY = lineY + 32;
             if (greeting) {
                 doc.setFont('helvetica', 'italic');
-                doc.setFontSize(10);
                 doc.setTextColor(100, 100, 100);
-                var cleanGreeting = replaceEmoji(greeting);
-                var allLines = doc.splitTextToSize('\u201E' + cleanGreeting + '\u201C', textWidth - 10);
-                var maxLines = 11;
-                if (allLines.length > maxLines) allLines = allLines.slice(0, maxLines);
-                doc.text(allLines, textCenterX, nextY, { align: 'center' });
-                nextY += allLines.length * 5 + 14;
+                var greetingText = '\u201E' + replaceEmoji(greeting) + '\u201C';
+                // Langer Gru\u00DFtext: erst Leerzeilen halbieren, dann Schrift schrittweise verkleinern,
+                // bis er vollst\u00E4ndig \u00FCber NR./G\u00DCLTIG BIS passt \u2014 nie stillschweigend abschneiden
+                var greetingBottom = h - 42 - 8;
+                var stufen = [[10, 1], [10, 0.5], [9.5, 0.5], [9, 0.5], [8.5, 0.5], [8, 0.5], [7.5, 0.5], [7, 0.5]];
+                var satz = null;
+                for (var s = 0; s < stufen.length && !satz; s++) {
+                    var fs = stufen[s][0], leerzeile = stufen[s][1];
+                    doc.setFontSize(fs);
+                    var lh = fs * 25.4 / 72 * doc.getLineHeightFactor();
+                    var lines = doc.splitTextToSize(greetingText, textWidth - 10);
+                    var y = nextY, pos = [];
+                    lines.forEach(function(line) {
+                        if (!line.trim()) { y += lh * leerzeile; return; }
+                        pos.push([line, y]);
+                        y += lh;
+                    });
+                    if (pos[pos.length - 1][1] <= greetingBottom) satz = { pos: pos, zeilen: lines.length, verkleinert: s > 0 };
+                }
+                if (!satz) {
+                    alert('Der Gru\u00DFtext ist zu lang f\u00FCr den Gutschein. Bitte k\u00FCrzen.');
+                    return null;
+                }
+                satz.pos.forEach(function(p) { doc.text(p[0], textCenterX, p[1], { align: 'center' }); });
+                nextY = satz.verkleinert ? h - 42 : nextY + satz.zeilen * 5 + 14;
             }
 
             nextY = Math.max(nextY, lineY + 50);
