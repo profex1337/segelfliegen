@@ -344,7 +344,7 @@
                                 <button type="button" class="btn btn-secondary" style="min-width: 260px;" onclick="generateEmailTemplate()">E-Mail-Vorlage kopieren</button>
                                 <button type="button" id="gutschein-handover-btn" class="btn" style="display:none; min-width: 260px; background:#6a1b9a; border-color:#6a1b9a;" title="PDF + Übergabe-Link an Jörg Sperber senden">An Jörg senden</button>
                             </div>
-                            <div id="send-status" style="display:none; margin-top:10px; padding:10px 14px; border-radius:6px; font-size:0.9rem; font-weight:600;"></div>
+                            <div id="send-status" style="display:none; margin-top:10px; font-size:0.9rem; font-weight:600;"></div>
                             <div id="email-template-box" style="display:none; margin-top:16px; background:#f4f6f8; border:1px solid #ddd; border-radius:8px; padding:16px; position:relative;">
                                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
                                     <strong style="color:#0f3460; font-size:0.9rem;">E-Mail-Vorlage</strong>
@@ -1172,14 +1172,16 @@
             return false;
         }
 
-        // Status-Anzeige f\u00FCr Senden
+        // Status-Anzeige f\u00FCr Senden \u2014 bleibt stehen, bis der n\u00E4chste Versand sie ersetzt
         function showSendStatus(msg, isError) {
             var el = document.getElementById('send-status');
             el.textContent = msg;
             el.style.display = 'block';
-            el.style.background = isError ? '#fdecea' : '#e8f5e9';
             el.style.color = isError ? '#c62828' : '#2e7d32';
-            if (!isError) setTimeout(function() { el.style.display = 'none'; }, 5000);
+        }
+
+        function sendTimeLabel() {
+            return new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }) + ' Uhr';
         }
 
         // Button 1: PDF herunterladen
@@ -1255,7 +1257,7 @@
                     pdfFilename: filename
                 });
 
-                showSendStatus('E-Mail erfolgreich an ' + email + ' gesendet!', false);
+                showSendStatus('✓ ' + sendTimeLabel() + ': Gutschein ' + (voucherNr ? voucherNr + ' ' : '') + 'an ' + email + ' gesendet', false);
                 saveVoucher();
             } catch (error) {
                 console.error('Senden fehlgeschlagen:', error);
@@ -1304,7 +1306,7 @@
                     pdfBase64: pdfBase64,
                     pdfFilename: filename
                 });
-                showSendStatus('Gutschein + Übergabe-Link an Jörg gesendet (Kopie an info@). Sobald Jörg bestätigt, wird alles automatisch abgeschlossen.', false);
+                showSendStatus('✓ ' + sendTimeLabel() + ': Gutschein ' + (voucherNr ? voucherNr + ' ' : '') + '+ Übergabe-Link an Jörg gesendet (Kopie an info@). Sobald Jörg bestätigt, wird alles automatisch abgeschlossen.', false);
             } catch (error) {
                 console.error('Senden an Jörg fehlgeschlagen:', error);
                 showSendStatus('Fehler beim Senden an Jörg: ' + (error.message || error), true);
